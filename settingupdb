@@ -1,0 +1,35 @@
+FOR LINUX (go to this link for windows or mac http://www.tutorialspoint.com/sqlite/sqlite_installation.htm)
+
+sudo get-app install sqlite3
+
+sqlite3 project.db
+
+	.header on			// adds column names
+	PRAGMA foreign_keys = ON;	// turns on foreign key constraints (always turn on if inserting)
+
+	// type in the following to create tables
+	// the schema can be viewed using the command .schema
+	// the schema for a specific table can be viewed using .schema [tablename]
+
+  insert into user values(NULL,'Aaron','Oni','aoni','gainsbruh','aarononi@optusnet.com.au',183,84,'10/12/1994','gain');
+  //inserting null into an 'integer primary key' will autoincrement
+
+FOR LINUX  (go to this link for windows or mac http://www.tutorialspoint.com/sqlite/sqlite_perl.htm)
+
+To install the Perl DBI API
+$ wget http://search.cpan.org/CPAN/authors/id/T/TI/TIMB/DBI-1.634.tar.gz
+$ tar xvfz DBI-1.634.tar.gz
+$ cd DBI-1.634
+$ perl Makefile.PL
+$ make
+$ sudo make install
+
+
+To install SQLite driver for DBI
+$ wget http://search.cpan.org/CPAN/authors/id/M/MS/MSERGEANT/DBD-SQLite-1.14.tar.gz
+$ tar xvfz DBD-SQLite-1.14.tar.gz
+$ cd DBD-SQLite-1.14
+$ perl Makefile.PL
+$ make
+$ sudo make install
+
