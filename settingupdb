@@ -33,3 +33,15 @@ $ perl Makefile.PL
 $ make
 $ sudo make install
 
+To run CGI script locally in ubuntu
+sudo get-app install apache2
+mv index.cgi /usr/lib/cgi-bin
+mv images /var/www/html
+mv css /var/www/html
+mv fonts /var/www/html
+mv js /var/www/html
+cd /usr/lib/cgi-bin
+chmod +X XXXXX.cgi
+sudo a2enmod cgi
+sudo service apache2 restart
+
