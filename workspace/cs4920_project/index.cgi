@@ -6,7 +6,6 @@ use Data::Dumper;
 use List::Util qw/min max/;
 warningsToBrowser(1);
 
-# print start of HTML ASAP to assist debugging if there is an error in the script
 print page_header();
 print <<EOF;
 <link href="css/style.css" rel="stylesheet" type="text/css" media="all" />
@@ -77,7 +76,6 @@ print <<EOF;
 <p><center><small><marquee><h2 style="color:white;">Welcome</h2></marquee></center></p></body>
 <pre>
 
-
           </pre>
             <a href="?login_screen=1" class="button" role="button">GET FIT NOW</a>
      </div>
@@ -115,19 +113,12 @@ sub browse_screen {
     p, "\n";
 }
 
-#
-# HTML placed at bottom of every screen
-#
+
 sub page_header {
   return header,
       start_html("-title"=>"DoYouEvenFit"),
 }
 
-#
-# HTML placed at bottom of every screen
-# It includes all supplied parameter values as a HTML comment
-# if global variable $debug is set
-#
 sub page_trailer {
   my $html = "";
   $html .= join("", map("<!-- $_=".param($_)." -->\n", param())) if $debug;
