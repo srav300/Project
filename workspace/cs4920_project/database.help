@@ -2,3 +2,9 @@ $wget www.cse.unsw.edu.au/~xyux331/doyouevenfit/project.db
 
 
 
+sqlite> select * from user;
+1|Xuange|Yu|xyux331|123456|xyux331@cse.unsw.edu.au|180|50|19950806|maintain
+2|Jiaxin|Huang|jhua980|123456|jina-huang@hotmail.com|168|50|19940625|maintain
+3|Aaron|Oni|aoni|654321|aoni@cse.unsw.edu.au|190|70|19000101|gain
+4|Michael|Yu|ryur|654321|ryur@cse.unsw.edu.au|185|64|19000101|gain
+5|Aaron|Oni|aoni|gainsbruh|aarononi.com.au|183|84|10/12/1994|gain
