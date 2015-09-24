@@ -28,16 +28,23 @@ $ sudo make install
 
 To run CGI script locally in ubuntu
 sudo get-app install apache2
-mv index.cgi /usr/lib/cgi-bin
-mv images /var/www/html
-mv css /var/www/html
-mv fonts /var/www/html
-mv js /var/www/html
+
+DOWNLOAD PROJECT ZIP ON GITHUB
+UNZIP AND THEN GO INTO PROJECT DIRECTORY
+sudo mv index.cgi /usr/lib/cgi-bin
+sudo mv images /var/www/html
+sudo mv css /var/www/html
+sudo mv fonts /var/www/html
+sudo mv js /var/www/html
+cd /var/www/html
+sudo chmod 755 *
 cd /usr/lib/cgi-bin
-chmod +X XXXXX.cgi
+sudo chmod 755 *.cgi
 sudo a2enmod cgi
 sudo service apache2 restart
 
+URL TO VIEW IN BROWSER
+http://localhost/cgi-bin/index.cgi
 
 CREATE TABLE user (
 	id INTEGER PRIMARY KEY,
