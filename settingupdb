@@ -27,10 +27,12 @@ $ make
 $ sudo make install
 
 To run CGI script locally in ubuntu
-sudo get-app install apache2
+
+sudo apt-get install apache2
 
 DOWNLOAD PROJECT ZIP ON GITHUB
 UNZIP AND THEN GO INTO PROJECT DIRECTORY
+
 sudo mv index.cgi /usr/lib/cgi-bin
 sudo mv images /var/www/html
 sudo mv css /var/www/html
@@ -45,6 +47,8 @@ sudo service apache2 restart
 
 URL TO VIEW IN BROWSER
 http://localhost/cgi-bin/index.cgi
+
+DATABASE SCHEMA
 
 CREATE TABLE user (
 	id INTEGER PRIMARY KEY,
