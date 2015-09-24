@@ -6,18 +6,6 @@ $ ./configure
 $ make
 $ sudo make install
 
-sqlite3 project.db
-
-	.header on			// adds column names
-	PRAGMA foreign_keys = ON;	// turns on foreign key constraints (always turn on if inserting)
-
-	// type in the following to create tables
-	// the schema can be viewed using the command .schema
-	// the schema for a specific table can be viewed using .schema [tablename]
-
-  insert into user values(NULL,'Aaron','Oni','aoni','gainsbruh','aarononi@optusnet.com.au',183,84,'10/12/1994','gain');
-  //inserting null into an 'integer primary key' will autoincrement
-
 FOR LINUX  (go to this link for windows or mac http://www.tutorialspoint.com/sqlite/sqlite_perl.htm)
 
 To install the Perl DBI API
@@ -27,7 +15,6 @@ $ cd DBI-1.634
 $ perl Makefile.PL
 $ make
 $ sudo make install
-
 
 To install SQLite driver for DBI
 $ wget http://search.cpan.org/CPAN/authors/id/M/MS/MSERGEANT/DBD-SQLite-1.14.tar.gz
@@ -49,3 +36,92 @@ chmod +X XXXXX.cgi
 sudo a2enmod cgi
 sudo service apache2 restart
 
+
+CREATE TABLE user (
+	id INTEGER PRIMARY KEY,
+	fName TEXT,
+	lName TEXT,
+	username TEXT,
+	password TEXT,
+	email TEXT,
+	height INTEGER,
+	weight INTEGER,
+	dob TEXT,
+	goal TEXT
+);
+
+CREATE TABLE weight (
+	value INTEGER,
+	userid INTEGER,
+	year INTEGER,
+	month INTEGER,
+	day INTEGER,
+	time INTEGER,
+	FOREIGN KEY(userid) REFERENCES user(id)
+);
+
+create TABLE meal (
+	id INTEGER PRIMARY KEY,
+	userid INTEGER,
+	name TEXT,
+	date TEXT,
+	time INTEGER,
+	FOREIGN KEY(userid) REFERENCES user(id)
+);
+
+create TABLE food (
+	id INTEGER PRIMARY KEY,
+	name TEXT,
+	energy TEXT,
+	protein TEXT,
+	fat TEXT,
+	monounsatfat TEXT,
+	polyunsatfat TEXT,
+	satfat TEXT,
+	transfat TEXT,
+	carbs TEXT,
+	fibre TEXT,
+	sugars TEXT,
+	cholesterol TEXT
+);
+
+create TABLE minerals (
+	fid INTEGER,
+	calcium TEXT,
+	iron TEXT,
+	magnesium TEXT,
+	manganese TEXT,
+	phosphorous TEXT,
+	potassium TEXT,
+	sodium TEXT,
+	zinc TEXT,
+	FOREIGN KEY(fid) REFERENCES food(id)
+);
+
+create TABLE vitamins (
+	fid INTEGER,
+	A TEXT,
+	B1 TEXT,
+	B2 TEXT,
+	B3 TEXT,
+	B5 TEXT,
+	B6 TEXT,
+	B7 TEXT,
+	B9 TEXT,
+	B12 TEXT,
+	C TEXT,
+	D TEXT,
+	E TEXT,
+	K TEXT,
+	FOREIGN KEY(fid) REFERENCES food(id)
+);
+
+create TABLE meal_contains (
+	mid INTEGER,
+	fid INTEGER,
+	FOREIGN KEY(mid) REFERENCES meal(id),
+	FOREIGN KEY(fid) REFERENCES food(id)
+);
+
+insert into user values(NULL,'Aaron','Oni','aoni','gainsbruh','aarononi@optusnet.com.au',183,84,'10/12/1994','gain');
+//inserting null into an 'integer primary key' will autoincrement
