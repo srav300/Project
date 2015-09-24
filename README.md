@@ -1,1 +1,7 @@
-# cs2911_project
+# cs4920_project
+
+- Aaron
+- Shyam
+- Xuange
+- Michael
+- Jiaxin
