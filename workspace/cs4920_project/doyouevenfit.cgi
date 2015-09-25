@@ -55,7 +55,7 @@ sub login_screen(){
 		</pre>
 		<h2><font color="red" size="2">&nbsp</font></h2>		
 		<p><center><small><marquee></marquee></center></p></body>
-		<form action="index.cgi" method="post">
+		<form action="doyouevenfit.cgi" method="post">
 		<input type="hidden" name="page" value="">
 		<input type="text" name="username" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="Username" onfocus="javascript:if(this.value=='Username')this.value='';"><br>
 		<input type="password" name="password" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="********" onfocus="javascript:if(this.value=='********')this.value='';"><br>
@@ -107,7 +107,7 @@ sub wrong_login() {
 		</pre>
 		<h2><font color="red" size="2">Your login details seem to be incorrect,</font></h2>		
 		<p><center><small><marquee></marquee></center></p></body>
-		<form action="index.cgi" method="post">
+		<form action="doyouevenfit.cgi" method="post">
 		<input type="hidden" name="page" value="">
 		<input type="text" name="username" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="Username" onfocus="javascript:if(this.value=='Username')this.value='';"><br>
 		<input type="password" name="password" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="Password" onfocus="javascript:if(this.value=='Password')this.value='';"><br>
@@ -132,7 +132,7 @@ sub home_screen() {
     	<pre>
 		</pre>
 		<h2><font color="red" size="2">HOME PAGE.</font></h2>
-		<form action="index.cgi" method="post">
+		<form action="doyouevenfit.cgi" method="post">
 		<input type="submit" name="diet" value="DIET" class="button" style="height:45px;"><br>
 		),
 		hidden('username'),
