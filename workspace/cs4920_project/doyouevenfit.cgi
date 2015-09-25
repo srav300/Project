@@ -141,8 +141,8 @@ sub home_screen() {
 }
 
 sub diet_screen() {
-	$u = param('username');
-	$p = param('password');
+	$u = param('username');	#just testing/showing how to pass through parameters using hidden()
+	$p = param('password'); #username and password need to be passed through every page for authentication
 	return "Username: ", $u, "Password: ", $p;
 }
 
