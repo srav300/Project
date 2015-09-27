@@ -141,9 +141,57 @@ sub home_screen() {
 }
 
 sub diet_screen() {
-	$u = param('username');	#just testing/showing how to pass through parameters using hidden()
-	$p = param('password'); #username and password need to be passed through every page for authentication
-	return "Username: ", $u, "Password: ", $p;
+	if(check_login()){
+		
+	} else {
+		wrong_login();	
+	}
+	#$u = param('username');	#just testing/showing how to pass through parameters using hidden()
+	#$p = param('password'); #username and password need to be passed through every page for authentication
+	#return "Username: ", $u, "Password: ", $p;
+}
+
+sub calorie_calculator() {
+	my ($gender, $weight, $height, $age, $exeLevelID, $goalID) = @_;	
+	if($gender eq 'Male'){
+		$var = -5;
+	} elsif($gender eq 'Female'){
+		$var = 161;
+	}
+
+	$BMR = 10*$weight + 6.25*$height + 5*$age + $var;	
+	
+	if($exeLevelID eq 'Sedentary'){
+		$exeLevel = 1.2;	
+	} elsif($exeLevelID eq 'Lightly Active'){
+		$exeLevel = 1.375;
+	} elsif($exeLevelID eq 'Moderately Active'){
+		$exeLevel = 1.550;
+	} elsif($exeLevelID eq 'Very Active'){
+		$exeLevel = 1.725;
+	} elsif($exeLevelID eq 'Extremely Active'){
+		$exeLevel = 1.900;
+	}	
+
+	$BMR *= $exeLevel;
+
+	if($goalID eq 'Weight Loss'){
+		$BMR *= 0.8;	
+	} elsif($goalID eq 'Extreme Weight Loss'){
+		$BMR *= 0.6;
+		$minCalPday = 17.6*$weight;	
+		if($BMR lt $minCalPday){
+			$BMR = $minCalPday;		
+		}
+	} elsif($goalID eq 'Weight Gain'){
+		$BMR *= 1.2;
+	} elsif($goalID eq 'Extreme Weight Gain'){
+		$BMR *= 1.4;
+	}
+	
+	$cloriePday = $BMR;
+			
+	return $caloriePday;
 }
 
 sub page_footer() {
