@@ -6,9 +6,9 @@ use strict;
 my $driver   = "SQLite"; 
 my $database = "project.db";
 my $dsn = "DBI:$driver:dbname=$database";
-my $uid = "";
+my $userid = "";
 my $password = "";
-my $dbh = DBI->connect($dsn, $uid, $password, { RaiseError => 1 }) 
+my $dbh = DBI->connect($dsn, $userid, $password, { RaiseError => 1 }) 
                       or die $DBI::errstr;
 
 print "Opened database successfully\n";
