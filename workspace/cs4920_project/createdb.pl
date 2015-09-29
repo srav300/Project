@@ -20,6 +20,7 @@ my $stmt = qq(CREATE TABLE user (
 	username TEXT,
 	password TEXT,
 	email TEXT,
+	gender TEXT,
 	height INTEGER,
 	weight INTEGER,
 	age INTEGER,
