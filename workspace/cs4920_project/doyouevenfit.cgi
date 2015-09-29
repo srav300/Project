@@ -178,7 +178,7 @@ sub register_screen() {
 	<option>Extremely Active
 	</select>
 	<pre> </pre> <pre> </pre>
-	<center><h3 style="color:white;">In terms of weight, what is your goal?</h3></center></body>
+	<center><h3 style="color:white;">What is your goal?</h3></center></body>
 	<select name="goal" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:116px;width:350px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>
 	<option>Extreme Weight Loss
 	<option>Weight Loss
@@ -481,7 +481,7 @@ sub register_help() {
 		$help .= qq(<text style="color:white";> * an exercise level must be selected<p></p>);
 	}
 	$help .= qq(<pre> </pre> <pre> </pre>
-		<center><h3 style="color:white;">In terms of weight, what is your goal?</h3></center></body>
+		<center><h3 style="color:white;">What is your goal?</h3></center></body>
 		<select name="goal" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:116px;width:350px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>
 		<option);
 	if ($goal eq "Extreme Weight Loss") {
@@ -530,7 +530,7 @@ sub registered(){
         <pre>
 	</pre>
 	<h2><font color="white" size="2">&nbsp</font></h2>		
-	<p><center><font color="white"><small>Registration successful. You can now proceed to login.</font></center></p></body>
+	<p><center><font color="white"><small>Registration successful. You can now proceed to log in.</font></center></p></body>
 	<form action="doyouevenfit.cgi" method="post">
 	<input type="hidden" name="page" value="">
 	<input type="text" name="username" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="Username" onfocus="javascript:if(this.value=='Username')this.value='';"><br>
