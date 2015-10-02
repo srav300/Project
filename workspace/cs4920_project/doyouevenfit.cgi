@@ -330,7 +330,7 @@ sub register_help() {
 	$help .= param('new_username');
 	$help .= qq("size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>);
 	if ($new_username eq "") {
-		$help .= qq(<text style="color:white";> * username is a mandatory field<p></p>);
+		$help .= qq(<text style="color:white";> * a username must be entered<p></p>);
 	} elsif (length($new_username) < 6) {
 		$help .= qq(<text style="color:white";> * username must be at least 6 characters long<p></p>);
 	}
@@ -359,7 +359,7 @@ sub register_help() {
 	$help .= param('password1');
 	$help .= qq("size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>);
 	if ($password1 eq "") {
-		$help .= qq(<text style="color:white";> * password is a mandatory field<p></p>);
+		$help .= qq(<text style="color:white";> * a password must be entered<p></p>);
 	} elsif (length($password1) < 6) {
 		$help .= qq(<text style="color:white";> * password must be at least 6 characters long<p></p>);
 	}
@@ -377,7 +377,7 @@ sub register_help() {
 	$help .= param('fname');
 	$help .= qq("size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>);
 	if ($fname eq "") {
-		$help .= qq(<text style="color:white";> * first name is a mandatory field<p></p>);
+		$help .= qq(<text style="color:white";> * a first name must be entered<p></p>);
 	} elsif ($fname !~ /^[a-zA-Z-]*\n*$/) {
 		$help .= qq(<text style="color:white";> * first name must consist of alphabetic characters only<p></p>);
 	}
@@ -387,7 +387,7 @@ sub register_help() {
 	$help .= param('lname');
 	$help .= qq("size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>);
 	if ($lname eq "") {
-		$help .= qq(<text style="color:white";> * last name is a mandatory field<p></p>);
+		$help .= qq(<text style="color:white";> * a last name must be entered<p></p>);
 	} elsif ($lname !~ /^[a-zA-Z-]*\n*$/) {
 		$help .= qq(<text style="color:white";> * last name must consist of alphabetic characters only<p></p>);
 	}
@@ -397,7 +397,7 @@ sub register_help() {
 	$help .= param('email');
 	$help .= qq("size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>);
 	if ($email eq "") {
-		$help .= qq(<text style="color:white";> * email is a mandatory field<p></p>);
+		$help .= qq(<text style="color:white";> * an email must be entered<p></p>);
 	} elsif ($email !~ /^\w+\@\w+(\.\w+)+$/) {
 		$help .= qq(<text style="color:white";> * invalid email address<p></p>);
 	}
@@ -424,7 +424,7 @@ sub register_help() {
 	$help .= param('height');
 	$help .= qq("size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>);
 	if ($height eq "") {
-		$help .= qq(<text style="color:white";> * height is a mandatory field<p></p>);
+		$help .= qq(<text style="color:white";> * a height must be entered<p></p>);
 	} elsif ($height !~ /^\d+$/) {
 		$help .= qq(<text style="color:white";> * height must consist of numeric characters only<p></p>);
 	}
@@ -434,7 +434,7 @@ sub register_help() {
 	$help .= param('weight');
 	$help .= qq("size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>);
 	if ($weight eq "") {
-		$help .= qq(<text style="color:white";> * weight is a mandatory field<p></p>);
+		$help .= qq(<text style="color:white";> * a weight must be entered<p></p>);
 	} elsif ($weight !~ /^\d+$/) {
 		$help .= qq(<text style="color:white";> * weight must consist of numeric characters only<p></p>);
 	}
@@ -444,7 +444,7 @@ sub register_help() {
 	$help .= param('age');
 	$help .= qq("size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>);
 	if ($age eq "") {
-		$help .= qq(<text style="color:white";> * age is a mandatory field<p></p>);
+		$help .= qq(<text style="color:white";> * an age must be entered<p></p>);
 	} elsif ($age !~ /^\d+$/) {
 		$help .= qq(<text style="color:white";> * age must consist of numeric characters only<p></p>);
 	}
@@ -548,7 +548,31 @@ sub registered(){
 }
 
 sub diet_screen() {
-	return "Diet Screen";
+	$output = qq(
+	<div class="header-bottom" id="tour">
+	<div class="wrap">
+	<h1>);
+	$day = `date +%d`;
+	$month = `date +%m`;
+	$year = `date +%Y`;
+	$date = "$day/$month/$year";
+	$date =~ s/^0//;
+	$date =~ s/\/0/\//g;
+	$output .= $date;
+	$output .= qq(</h1>  
+	<pre>
+	</pre>
+	<h2><font color="red" size="2">&nbsp</font></h2>		
+	<p><center><small><marquee></marquee></center></p></body>
+	<form action="doyouevenfit.cgi" method="post">
+	<input type="hidden" name="page" value="">
+	<p>&nbsp</p>
+	<input type="submit" name="add_meal" value="+ ADD MEAL" class="button" style="height:45px;"><br>
+	</form>
+	</div>
+	</div>
+	);
+	return $output;
 }
 
 sub calorie_calculator() {
