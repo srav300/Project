@@ -4,6 +4,7 @@ use CGI qw/:all/;
 use CGI::Carp qw(fatalsToBrowser warningsToBrowser);
 use Data::Dumper;  
 use List::Util qw/min max/;
+use WWW::Machanize;
 warningsToBrowser(1);
 
 use DBI;
@@ -624,4 +625,112 @@ sub page_footer() {
 	</div>
 	</body>
 	)
+}
+
+sub extractInfo () {
+	#if the search bar param is checked then this function is called.
+	#the search bar is search of Food and amount in grams 
+	#the results will add the food to the DB
+	
+	
+	my %info = nutriInfo(#param(Search), param(amount of food));
+	my @infoNeeded = ("Energy", "Water", "Protein", "Total lipid", "Carbohydrate, by difference", "Fiber, total dietary", "Sugars, total", 			"Calcium", "Iron", "Magnesium", "Phosphorus", "Potassium", "Zinc", "Vitamin C", "Thiamin", "Riboflavin", "Niacin", "Vitamin B-6", 			"Folate", 	"Vitamin E", "Vitamin K");	
+	my @keys = keys %info;
+
+	my %diff;
+
+	@diff{ @keys } = undef;
+	delete @diff{ @infoNeeded };
+
+	my @keys2 = keys %diff;
+	
+	my $driver = "SQLite"; 
+	my $database = "project.db"; 
+	my $dsn = "DBI:$driver:dbname=$database";
+	my $userid = ""; my $dbpassword = "";  
+	my $dbh = DBI->connect($dsn, $userid, $dbpassword, { RaiseError => 1 }) or die $DBI::errstr; 
+	my $stmt = qq(insert into food values(null,'$keys2[0]','$infoNeeded[0]', '$infoNeeded[1]', '$infoNeeded[2]', '$infoNeeded[3]', '$infoNeeded[4]', '$infoNeeded[5]', '$infoNeeded[6]')); 
+	my $rv = $dbh->do($stmt) or die $DBI::errstr; 
+	
+	#Still gotta figure out how to add them
+	$stmt = qq(insert into minarels values(null,'$keys2[0]','$infoNeeded[0]', '$infoNeeded[1]', '$infoNeeded[2]', '$infoNeeded[3]', '$infoNeeded[4]', '$infoNeeded[5]', '$infoNeeded[6]')); 
+	$rv = $dbh->do($stmt) or die $DBI::errstr; 
+	
+	$stmt = qq(insert into vitamins values(null,'$keys2[0]','$infoNeeded[0]', '$infoNeeded[1]', '$infoNeeded[2]', '$infoNeeded[3]', '$infoNeeded[4]', '$infoNeeded[5]', '$infoNeeded[6]')); 
+	$rv = $dbh->do($stmt) or die $DBI::errstr; 
+
+	$dbh->disconnect();
+
+}
+
+sub nutriInfo(){
+	my $mech = WWW::Mechanize->new;
+	
+	my @input = @_;
+	print "@input\n";
+	my $search = $input[0];
+	#print "$search\n";
+	$mech->get('http://ndb.nal.usda.gov/ndb/foods');
+	$mech->submit_form(
+			form_name => 'quickform', 
+			fields => {'qlookup' => $search,},);
+
+	my $content = $mech->content;
+	
+	my @matches = ($content =~ m/<a href=.*?Click to view reports for this food\">\D+[0-9]*\D*?<\/a>/gi);
+	my %food_urls;
+	my $food;
+	my $url;
+	my $match;
+	foreach $match (@matches){
+		$match =~ m/Click to view reports for this food\">(\D+[0-9]*\D*?)<\/a>/;
+		$food = $1;
+		$match =~ m/<a href=\"(.*?)\"/;
+		$url = $1;	
+		$food_urls{$food} = $url;
+		#print "$food ($url)\n";
+	}
+	
+	#my $userSelection = "BURGER KING, WHOPPER, with cheese";
+	my @foods = keys %food_urls;
+	my $userSelection = $foods[0];
+	my $user_url = $food_urls{$userSelection};
+	$mech->get("http\:\/\/ndb\.nal\.usda\.gov$user_url");
+	
+	$content = $mech->content;
+
+	my $oneServing;
+	$content =~ m/item\n.*?<br\/>(.*)/;
+	$oneServing = $1;
+	$oneServing =~ s/g//;
+	print "One Serving $oneServing\n";
+
+	my $userServing = $oneServing;
+
+	if($input[1]=~ m/\d/){
+		$userServing = $input[1];
+	}
+
+	print "User Serving $userServing\n";
+	my %nutritionalInfo;
+	$nutritionalInfo{$userSelection} = $oneServing;
+	my @infoNeeded = ("Energy", "Water", "Protein", "Total lipid", "Carbohydrate, by difference", "Fiber, total dietary", "Sugars, total", 			"Calcium", "Iron", "Magnesium", "Phosphorus", "Potassium", "Zinc", "Vitamin C", "Thiamin", "Riboflavin", "Niacin", "Vitamin B-6", 			"Folate", 	"Vitamin E", "Vitamin K");
+	#my @values;
+	
+	my $serving;
+
+	foreach my $info (@infoNeeded){
+		#@values = ();
+		#$content =~ m/$info.*\n.*\n.*\n.*?<\/td>.*\n.*?<td.*?<\/td>\n.*?<td.*?>(.*?)<\/td>/;
+		#push @values, $1;
+		if($content =~ m/$info.*\n.*\n.*\n.*?<\/td>.*\n.*?<td.*?<\/td>\n.*?<td.*?>.*?<\/td>\n.*\n.*\n.*\n.*<td.*?>(.*?)<\/td>/){
+		#push @values, $1;
+		#$nutritionalInfo{$info} = \@values;		
+			$serving = $1;
+			$nutritionalInfo{$info} = ($userServing*$serving)/$oneServing;
+			#print "$nutritionalInfo{$info}\n";
+		}
+	}
+
+	return %nutritionalInfo;
 }
