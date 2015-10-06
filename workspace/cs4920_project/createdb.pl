@@ -145,6 +145,7 @@ if($rv < 0){
 
 my $stmt = qq(CREATE TABLE calories (
 	uid INTEGER,
+	current INTEGER,
 	goal INTEGER,
 	date TEXT,
 	FOREIGN KEY(uid) REFERENCES user(id)
