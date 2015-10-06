@@ -1,4 +1,4 @@
-# cs4920_project
+cs4920_project
 
 
 FOR LINUX (go to this link for windows or mac http://www.tutorialspoint.com/sqlite/sqlite_installation.htm)
