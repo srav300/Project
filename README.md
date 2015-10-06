@@ -64,6 +64,7 @@ http://localhost/cgi-bin/index.cgi
 NEED TO INSTALL THESE MODULES (HOW TO INSTALL IN READMEs)
 http://search.cpan.org/~stbey/Carp-Clan-6.04/lib/Carp/Clan.pod
 http://search.cpan.org/~stbey/Date-Calc-6.4/lib/Date/Calc.pod
+http://search.cpan.org/~ether/WWW-Mechanize-1.75/lib/WWW/Mechanize.pm
 
 
 //inserting null into an 'integer primary key' will autoincrement
