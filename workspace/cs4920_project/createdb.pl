@@ -35,12 +35,10 @@ if($rv < 0){
 }
 
 my $stmt = qq(CREATE TABLE weight (
-	value INTEGER,
+	id INTEGER PRIMARY KEY,
 	uid INTEGER,
-	year INTEGER,
-	month INTEGER,
-	day INTEGER,
-	time INTEGER,
+	value INTEGER,
+	date TEXT,
 	FOREIGN KEY(uid) REFERENCES user(id)
 ););
 my $rv = $dbh->do($stmt);
@@ -54,8 +52,8 @@ my $stmt = qq(create TABLE meal (
 	id INTEGER PRIMARY KEY,
 	uid INTEGER,
 	name TEXT,
+	calories INTEGER,
 	date TEXT,
-	time INTEGER,
 	FOREIGN KEY(uid) REFERENCES user(id)
 ););
 my $rv = $dbh->do($stmt);
