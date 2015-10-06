@@ -4,6 +4,7 @@ use CGI qw/:all/;
 use CGI::Carp qw(fatalsToBrowser warningsToBrowser);
 use Data::Dumper;  
 use List::Util qw/min max/;
+use Date::Calc qw/check_date/;
 use WWW::Machanize;
 warningsToBrowser(1);
 
@@ -23,7 +24,7 @@ if (defined param('register')) {
 	}
 } elsif (defined param('username') && defined param('password') ) {
 	if (check_login()) {
-		if (defined param('login')) {
+		if (defined param('login') || defined param('date')) {
 			print diet_screen();
 		}
 	} else {
@@ -66,7 +67,7 @@ sub login_screen(){
 	<p><center><small><marquee></marquee></center></p></body>
 	<form action="doyouevenfit.cgi" method="post">
 	<input type="hidden" name="page" value="">
-	<input type="text" name="username" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="Username" onfocus="javascript:if(this.value=='Username')this.value='';"><br>
+	<input type="text" name="username" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="username" onfocus="javascript:if(this.value=='username')this.value='';"><br>
 	<input type="password" name="password" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="********" onfocus="javascript:if(this.value=='********')this.value='';"><br>
 	<p>&nbsp</p>
 	<input type="submit" name="login" value="LOG IN" class="button" style="height:45px;"><br>
@@ -114,7 +115,7 @@ sub wrong_login() {
 	<center><small><font color="white">Your login details seem to be incorrect.</font></center></body>
 	<form action="doyouevenfit.cgi" method="post">
 	<input type="hidden" name="page" value="">
-	<input type="text" name="username" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="Username" onfocus="javascript:if(this.value=='Username')this.value='';"><br>
+	<input type="text" name="username" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="username" onfocus="javascript:if(this.value=='username')this.value='';"><br>
 	<input type="password" name="password" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="Password" onfocus="javascript:if(this.value=='Password')this.value='';"><br>
 	<p>&nbsp</p>
 	<input type="submit" name="login" value="LOG IN" class="button" style="height:45px;"><br>
@@ -549,31 +550,110 @@ sub registered(){
 }
 
 sub diet_screen() {
-	$output = qq(
+	$day = `date +%d`;
+	chomp($day);
+	$month = `date +%m`;
+	chomp($month);
+	$year = `date +%Y`;
+	chomp($year);
+	$date = "$day/$month/$year";
+	$output .= qq(
 	<div class="header-bottom" id="tour">
 	<div class="wrap">
-	<h1>);
-	$day = `date +%d`;
-	$month = `date +%m`;
-	$year = `date +%Y`;
-	$date = "$day/$month/$year";
-	$date =~ s/^0//;
-	$date =~ s/\/0/\//g;
-	$output .= $date;
-	$output .= qq(</h1>  
-	<pre>
-	</pre>
-	<h2><font color="red" size="2">&nbsp</font></h2>		
-	<p><center><small><marquee></marquee></center></p></body>
 	<form action="doyouevenfit.cgi" method="post">
 	<input type="hidden" name="page" value="">
-	<p>&nbsp</p>
-	<input type="submit" name="add_meal" value="+ ADD MEAL" class="button" style="height:45px;"><br>
-	</form>
+	<input type="text" name="date" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;width:300px;font-family:AmbleRegular;"value=");
+	if (defined param('date')) {
+		$output .= param('date');
+	} else {
+		$output .= $date;
+	}
+	$output .= qq(" onfocus="javascript:if(this.value=='')this.value='';"><br>);
+	if (defined param('date') && !valid_date()) {
+		$output .= qq(<text style="color:white";> * invalid date (DD/MM/YYYY)<p></p>);
+	}
+	$output .= qq(<p>&nbsp</p>
+	<p>&nbsp</p>);
+	if (!defined param('date') || (defined param('date') && valid_date())) {
+		$output .= qq(<h1>);
+		$output .= getCalories();
+		$output .= qq(</h1> <p>&nbsp</p>
+		<pre> </pre>
+		<p>&nbsp</p>);
+		$output .= qq(<input type="submit" name="add_meal" value="+ ADD MEAL" class="button" style="height:45px;"><br>);
+	}
+	$output .= hidden('username');
+	$output .= hidden('password');
+	$output .= qq(</form>
 	</div>
 	</div>
 	);
 	return $output;
+}
+
+sub getCalories() {
+	$username = param('username');
+	if (defined param('date')) {
+		$date = param('date');
+	}
+	$driver = "SQLite"; 
+	$database = "project.db"; 
+	$dsn = "DBI:$driver:dbname=$database";
+	$userid = ""; $dbpassword = "";  
+	$dbh = DBI->connect($dsn, $userid, $dbpassword, { RaiseError => 1 }) or die $DBI::errstr; 
+	$stmt = qq(select id from user where username = '$username'); 
+	$sth = $dbh->prepare($stmt);
+	$rv = $sth->execute() or die $DBI::errstr; 
+	if ($rv < 0) {
+		print $DBI::errstr;
+	}
+	@row = $sth->fetchrow_array();
+	$uid = $row[0];
+	$stmt = qq(select current from calories where uid = '$uid' and date = '$date'); 
+	$sth = $dbh->prepare($stmt);
+	$rv = $sth->execute() or die $DBI::errstr; 
+	if ($rv < 0) {
+		print $DBI::errstr;
+	}
+	@row = $sth->fetchrow_array();
+	$currentCal = $row[0];
+	if ($currentCal eq "") {
+		$currentCal = 0;
+		$stmt = qq(select gender, height, weight, age, exercise, goal from user where username = '$username'); 
+		$sth = $dbh->prepare($stmt);
+		$rv = $sth->execute() or die $DBI::errstr; 
+		if ($rv < 0) {
+			print $DBI::errstr;
+		}
+		@row = $sth->fetchrow_array();
+		$goalCal = calorie_calculator(@row);
+		$stmt = qq(insert into calories values('$uid','$currentCal','$goalCal','$date'));
+		$rv = $dbh->do($stmt) or die $DBI::errstr;
+	} else {
+		$stmt = qq(select goal from calories where uid = '$uid' and date = '$date'); 
+		$sth = $dbh->prepare($stmt);
+		$rv = $sth->execute() or die $DBI::errstr; 
+		if ($rv < 0) {
+			print $DBI::errstr;
+		}
+		@row = $sth->fetchrow_array();
+		$goalCal = $row[0];
+	}
+	$counter = "$currentCal of $goalCal calories";
+	return $counter;
+}
+
+sub valid_date() {
+	my $date = param('date');
+	if ($date eq "") {
+		return 0;
+	}
+	if ($date =~ /^(\d{2})\/(\d{2})\/(\d{4})$/) {
+		return check_date($3,$2,$1);
+	} else {
+		return 0;
+	}
+	return 1;
 }
 
 sub calorie_calculator() {
@@ -598,7 +678,7 @@ sub calorie_calculator() {
 		$multiplier = 1.9;
 	}	
 
-	$calories = BMR*$multiplier;
+	$calories = $BMR*$multiplier;
 
 	if ($goal eq 'Extreme Weight Loss') {
 		$calories *= 0.6;
@@ -614,17 +694,7 @@ sub calorie_calculator() {
 		$calories *= 1.4;
 	}
 
-	return $calories;
-}
-
-sub page_footer() {
-	return qq(
-	<div class="footer">
-	<p class="copy" style="color:#f2f5f2;font-family:AmbleRegular;">Copyright &copy; 2015. All rights reserved.</p>
-	</div>
-	</div>
-	</body>
-	)
+	return int($calories+0.5);
 }
 
 sub extractInfo () {
@@ -733,4 +803,14 @@ sub nutriInfo(){
 	}
 
 	return %nutritionalInfo;
+}
+
+sub page_footer() {
+	return qq(
+	<div class="footer">
+	<p class="copy" style="color:#f2f5f2;font-family:AmbleRegular;">Copyright &copy; 2015. All rights reserved.</p>
+	</div>
+	</div>
+	</body>
+	)
 }
