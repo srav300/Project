@@ -1,4 +1,4 @@
-cs4920_project
+# CLICK EDIT TO VIEW READABLE FORMAT
 
 
 FOR LINUX (go to this link for windows or mac http://www.tutorialspoint.com/sqlite/sqlite_installation.htm)
@@ -6,11 +6,11 @@ FOR LINUX (go to this link for windows or mac http://www.tutorialspoint.com/sqli
 To install SQLite3
 Go to this page http://www.sqlite.org/download.html and download sqlite-autoconf-3081101
 
-tar xvfz sqlite-autoconf-3081101.tar.gz
-cd sqlite-autoconf-3081101
-./configure
-make
-sudo make install
+$ tar xvfz sqlite-autoconf-3081101.tar.gz
+$ cd sqlite-autoconf-3081101
+$ ./configure
+$ make
+$ sudo make install
 
 FOR LINUX  (go to this link for windows or mac http://www.tutorialspoint.com/sqlite/sqlite_perl.htm)
 
@@ -61,7 +61,7 @@ sudo chown www-data:www-data /usr/lib/cgi-bin/project.db
 URL TO VIEW IN BROWSER
 http://localhost/cgi-bin/index.cgi
 
-NEED TO INSTALL THESE MODULES
+NEED TO INSTALL THESE MODULES (HOW TO INSTALL IN READMEs)
 http://search.cpan.org/~stbey/Carp-Clan-6.04/lib/Carp/Clan.pod
 http://search.cpan.org/~stbey/Date-Calc-6.4/lib/Date/Calc.pod
 
