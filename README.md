@@ -6,11 +6,11 @@ FOR LINUX (go to this link for windows or mac http://www.tutorialspoint.com/sqli
 To install SQLite3
 Go to this page http://www.sqlite.org/download.html and download sqlite-autoconf-3081101
 
-$ tar xvfz sqlite-autoconf-3081101.tar.gz
-$ cd sqlite-autoconf-3081101
-$ ./configure
-$ make
-$ sudo make install
+tar xvfz sqlite-autoconf-3081101.tar.gz
+cd sqlite-autoconf-3081101
+./configure
+make
+sudo make install
 
 FOR LINUX  (go to this link for windows or mac http://www.tutorialspoint.com/sqlite/sqlite_perl.htm)
 
