@@ -5,7 +5,7 @@ use CGI::Carp qw(fatalsToBrowser warningsToBrowser);
 use Data::Dumper;  
 use List::Util qw/min max/;
 use Date::Calc qw/check_date/;
-use WWW::Machanize;
+use WWW::Mechanize;
 warningsToBrowser(1);
 
 use DBI;
@@ -24,7 +24,14 @@ if (defined param('register')) {
 	}
 } elsif (defined param('username') && defined param('password') ) {
 	if (check_login()) {
-		if (defined param('login') || defined param('date')) {
+		if (defined param('add_meal')) {
+			print add_meal();
+		} elsif (defined param('create_meal')) {
+			insert_meal();
+			print diet_screen();
+		} elsif (defined param('login')) {
+			print diet_screen();
+		} elsif (defined param('date')) {
 			print diet_screen();
 		}
 	} else {
@@ -47,7 +54,7 @@ sub page_css {
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 	);
-	if (defined param('register') || (defined param('create_account') && !check_register())) {
+	if (defined param('add_meal') || defined param('register') || (defined param('create_account') && !check_register())) {
 		$css .= qq(<body background="/images/wood.jpg">);
 	} else {
 		$css .= qq(<body background="/images/banner.jpg">);
@@ -561,17 +568,17 @@ sub diet_screen() {
 	<div class="header-bottom" id="tour">
 	<div class="wrap">
 	<form action="doyouevenfit.cgi" method="post">
-	<input type="hidden" name="page" value="">
-	<input type="text" name="date" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;width:300px;font-family:AmbleRegular;"value=");
-	if (defined param('date')) {
-		$output .= param('date');
-	} else {
-		$output .= $date;
-	}
-	$output .= qq(" onfocus="javascript:if(this.value=='')this.value='';"><br>);
+	<input type="hidden" name="page" value="">);
 	if (defined param('date') && !valid_date()) {
 		$output .= qq(<text style="color:white";> * invalid date (DD/MM/YYYY)<p></p>);
 	}
+	$output .= qq(<input type="text" name="date" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;width:200px;font-family:AmbleRegular;"value=");
+	if (defined param('date')) {
+		$date = param('date');
+	}
+	$output .= $date;
+	$output .= qq(" onfocus="javascript:if(this.value=='')this.value='';"><br>);
+	$output .= qq(<input type="submit" name="change_date" value="" class="button" style="height:0px;width;0px;"><br>);
 	$output .= qq(<p>&nbsp</p>
 	<p>&nbsp</p>);
 	if (!defined param('date') || (defined param('date') && valid_date())) {
@@ -580,6 +587,30 @@ sub diet_screen() {
 		$output .= qq(</h1> <p>&nbsp</p>
 		<pre> </pre>
 		<p>&nbsp</p>);
+		my $username = param('username');
+		$driver = "SQLite"; 
+		$database = "project.db"; 
+		$dsn = "DBI:$driver:dbname=$database";
+		$userid = ""; $dbpassword = "";  
+		$dbh = DBI->connect($dsn, $userid, $dbpassword, { RaiseError => 1 }) or die $DBI::errstr; 
+		$stmt = qq(select id from user where username = '$username'); 
+		$sth = $dbh->prepare($stmt);
+		$rv = $sth->execute() or die $DBI::errstr; 
+		if ($rv < 0) {
+			print $DBI::errstr;
+		}
+		@row = $sth->fetchrow_array();
+		my $uid = $row[0]; 
+		$stmt = qq(select name, calories from meal where uid = '$uid' and date = '$date'); 
+		$sth = $dbh->prepare($stmt);
+		$rv = $sth->execute() or die $DBI::errstr; 
+		if ($rv < 0) {
+			print $DBI::errstr;
+		}
+		while (my @row = $sth->fetchrow_array()) {
+			$output .= "<h3>$row[0] ($row[1] calories)</h3> <pre> </pre>"
+		}
+		$output .= qq(<pre> </pre>);
 		$output .= qq(<input type="submit" name="add_meal" value="+ ADD MEAL" class="button" style="height:45px;"><br>);
 	}
 	$output .= hidden('username');
@@ -656,6 +687,48 @@ sub valid_date() {
 	return 1;
 }
 
+sub add_meal() {
+	my $output = qq(
+	<div class="header-bottom" id="tour">
+	<div class="wrap">
+	<h1>Create a meal</h1>  
+	<h2><font color="red" size="2">&nbsp</font></h2>		
+	<p><center><small><marquee></marquee></center></p></body>
+	<form action="doyouevenfit.cgi" method="post">
+	<pre> </pre>
+	<p><center><h3 style="color:white;">Meal Name</h3></center></p></body>
+	<input type="text" name="meal_name" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>
+	<pre> </pre> <pre> </pre>
+	<input type="submit" name="create_meal" value="CREATE MEAL" class="button" style="height:45px;width:350px;"><br>
+	<p>&nbsp</p>);
+	$output .= hidden('username');
+	$output .= hidden('password');
+	$output .= hidden('date');
+	$output.= qq(</form>);
+	return $output;
+}
+
+sub insert_meal() {
+	my $username = param('username');
+	my $date = param('date');
+	my $meal_name = param('meal_name');
+	$driver = "SQLite"; 
+	$database = "project.db"; 
+	$dsn = "DBI:$driver:dbname=$database";
+	$userid = ""; $dbpassword = "";  
+	$dbh = DBI->connect($dsn, $userid, $dbpassword, { RaiseError => 1 }) or die $DBI::errstr; 
+	$stmt = qq(select id from user where username = '$username'); 
+	$sth = $dbh->prepare($stmt);
+	$rv = $sth->execute() or die $DBI::errstr; 
+	if ($rv < 0) {
+		print $DBI::errstr;
+	}
+	@row = $sth->fetchrow_array();
+	$uid = $row[0];
+	$stmt = qq(insert into meal values(null,'$uid','$meal_name',0,'$date'));
+	$rv = $dbh->do($stmt) or die $DBI::errstr;
+}
+
 sub calorie_calculator() {
 	my ($gender, $height, $weight, $age, $exercise, $goal) = @_;	
 	if ($gender eq 'Male') {
@@ -703,7 +776,7 @@ sub extractInfo () {
 	#the results will add the food to the DB
 	
 	
-	my %info = nutriInfo(#param(Search), param(amount of food));
+	my %info = nutriInfo(param(Search), param(amount of food));
 	my @infoNeeded = ("Energy", "Water", "Protein", "Total lipid", "Carbohydrate, by difference", "Fiber, total dietary", "Sugars, total", 			"Calcium", "Iron", "Magnesium", "Phosphorus", "Potassium", "Zinc", "Vitamin C", "Thiamin", "Riboflavin", "Niacin", "Vitamin B-6", 			"Folate", 	"Vitamin E", "Vitamin K");	
 	my @keys = keys %info;
 
