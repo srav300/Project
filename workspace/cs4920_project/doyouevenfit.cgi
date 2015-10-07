@@ -24,9 +24,9 @@ if (defined param('register')) {
 	}
 } elsif (defined param('username') && defined param('password') ) {
 	if (check_login()) {
-		if (defined param('add_meal')) {
-			print add_meal();
-		} elsif (defined param('create_meal')) {
+		if (defined param('meal')) {
+			print add_food();
+		} elsif (defined param('add_meal') && param('meal_name') ne "") {
 			insert_meal();
 			print diet_screen();
 		} elsif (defined param('login')) {
@@ -54,7 +54,7 @@ sub page_css {
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 	);
-	if (defined param('add_meal') || defined param('register') || (defined param('create_account') && !check_register())) {
+	if (defined param('meal') || defined param('register') || (defined param('create_account') && !check_register())) {
 		$css .= qq(<body background="/images/wood.jpg">);
 	} else {
 		$css .= qq(<body background="/images/banner.jpg">);
@@ -601,17 +601,23 @@ sub diet_screen() {
 		}
 		@row = $sth->fetchrow_array();
 		my $uid = $row[0]; 
-		$stmt = qq(select name, calories from meal where uid = '$uid' and date = '$date'); 
+		$stmt = qq(select id, name, calories from meal where uid = '$uid' and date = '$date'); 
 		$sth = $dbh->prepare($stmt);
 		$rv = $sth->execute() or die $DBI::errstr; 
 		if ($rv < 0) {
 			print $DBI::errstr;
 		}
 		while (my @row = $sth->fetchrow_array()) {
-			$output .= "<h3>$row[0] ($row[1] calories)</h3> <pre> </pre>"
+			$output .= qq(<input type="submit" name="meal" value="$row[1] ($row[2] calories)" class="button" style="height:45px;width:600px;"><br> <pre> </pre>);
 		}
 		$output .= qq(<pre> </pre>);
-		$output .= qq(<input type="submit" name="add_meal" value="+ ADD MEAL" class="button" style="height:45px;"><br>);
+		if (defined param('new_meal')) {
+			$output .= 	qq(<input type="text" name="meal_name" minLength="1" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;width:300px;font-family:AmbleRegular;"value="New Meal" onfocus="javascript:if(this.value=='New Meal')this.value='';"><br>
+			<pre> </pre>
+			<input type="submit" name="add_meal" value="+ ADD MEAL" class="button" style="height:45px;width:200px;"><br>);
+		} else {
+			$output .= qq(<input type="submit" name="new_meal" value="NEW MEAL" class="button" style="height:45px;"><br>);
+		}
 	}
 	$output .= hidden('username');
 	$output .= hidden('password');
@@ -619,6 +625,25 @@ sub diet_screen() {
 	</div>
 	</div>
 	);
+	return $output;
+}
+
+sub add_food() {
+	$meal_header = param('meal');
+	#$meal_header =~ s/ \((\d+) calories\)$/<p>($1 calories)<\/p>/;
+	my $output = qq(
+	<div class="header-bottom" id="tour">
+	<div class="wrap">
+	<h3><text style="color:white";>$meal_header</h3>  
+	<form action="doyouevenfit.cgi" method="post">
+	<pre> </pre> <pre> </pre>
+	<input type="submit" name="add_food" value="+ ADD FOOD" class="button" style="height:45px;width:350px;"><br>
+	<p>&nbsp</p>);
+	$output .= hidden('username');
+	$output .= hidden('password');
+	$output .= hidden('date');
+	$output .= hidden('meal');
+	$output.= qq(</form>);
 	return $output;
 }
 
@@ -685,27 +710,6 @@ sub valid_date() {
 		return 0;
 	}
 	return 1;
-}
-
-sub add_meal() {
-	my $output = qq(
-	<div class="header-bottom" id="tour">
-	<div class="wrap">
-	<h1>Create a meal</h1>  
-	<h2><font color="red" size="2">&nbsp</font></h2>		
-	<p><center><small><marquee></marquee></center></p></body>
-	<form action="doyouevenfit.cgi" method="post">
-	<pre> </pre>
-	<p><center><h3 style="color:white;">Meal Name</h3></center></p></body>
-	<input type="text" name="meal_name" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>
-	<pre> </pre> <pre> </pre>
-	<input type="submit" name="create_meal" value="CREATE MEAL" class="button" style="height:45px;width:350px;"><br>
-	<p>&nbsp</p>);
-	$output .= hidden('username');
-	$output .= hidden('password');
-	$output .= hidden('date');
-	$output.= qq(</form>);
-	return $output;
 }
 
 sub insert_meal() {
