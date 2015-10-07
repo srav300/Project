@@ -25,7 +25,7 @@ if (defined param('register')) {
 } elsif (defined param('username') && defined param('password') ) {
 	if (check_login()) {
 		if (defined param('meal')) {
-			print add_food();
+			print show_meal();
 		} elsif (defined param('add_meal') && param('meal_name') ne "") {
 			insert_meal();
 			print diet_screen();
@@ -628,7 +628,7 @@ sub diet_screen() {
 	return $output;
 }
 
-sub add_food() {
+sub show_meal() {
 	$meal_header = param('meal');
 	#$meal_header =~ s/ \((\d+) calories\)$/<p>($1 calories)<\/p>/;
 	my $output = qq(
