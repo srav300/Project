@@ -24,7 +24,14 @@ if (defined param('register')) {
 	}
 } elsif (defined param('username') && defined param('password') ) {
 	if (check_login()) {
-		if (defined param('manual_entry')) {
+		if (defined param('add_to_meal')) {
+			if (check_food()) {
+				add_food_man();
+				print show_meal();
+			} else {
+				print food_help();
+			}
+		} elsif (defined param('manual_entry')) {
 			print manual_entry();
 		} elsif (defined param('add_food')) {
 			print food_page();
@@ -675,7 +682,251 @@ sub food_page() {
 }
 
 sub manual_entry() {
-	
+	my $output = qq(
+	<div class="header-bottom" id="tour">
+	<div class="wrap">
+	<h1>Fill in the nutritional information</h1>  
+	<h2><font color="red" size="2">&nbsp</font></h2>		
+	<p><center><small><marquee></marquee></center></p></body>
+	<form action="doyouevenfit.cgi" method="post">
+	<pre> </pre>
+	<p><center><h3 style="color:white;">Name</h3></center></p></body>
+	<input type="text" name="name" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>
+	<pre> </pre> <pre> </pre>
+	<center><h3 style="color:white;">Serving Size (g)</h3></center></body>
+	<input type="text" name="serving" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>
+	<pre> </pre> <pre> </pre>
+	<center><h3 style="color:white;">Calories per 100g</h3></center></body>
+	<input type="text" name="calories" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>
+	<pre> </pre> <pre> </pre>
+	<center><h3 style="color:white;">Protein (g) per 100g</h3></center></body>
+	<input type="text" name="protein" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>
+	<pre> </pre> <pre> </pre>
+	<center><h3 style="color:white;">Carbohydrates (g) per 100g</h3></center></body>
+	<input type="text" name="carbs" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>
+	<pre> </pre> <pre> </pre>
+	<center><h3 style="color:white;">Fat (g) per 100g</h3></center></body>
+	<input type="text" name="fat" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>
+	<pre> </pre> <pre> </pre>
+	<center><h3 style="color:white;">Fibre (g) per 100g (optional)</h3></center></body>
+	<input type="text" name="fibre" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>
+	<pre> </pre> <pre> </pre>
+	<center><h3 style="color:white;">Sugars (g) per 100g (optional)</h3></center></body>
+	<input type="text" name="sugars" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>
+	<pre> </pre> <pre> </pre>
+	<center><h3 style="color:white;">Monounsaturated fat (g) per 100g (optional)</h3></center></body>
+	<input type="text" name="mono" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>
+	<pre> </pre> <pre> </pre>
+	<center><h3 style="color:white;">Polyunsaturated fat (g) per 100g (optional)</h3></center></body>
+	<input type="text" name="poly" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>
+	<pre> </pre> <pre> </pre>
+	<center><h3 style="color:white;">Saturated fat (g) per 100g (optional)</h3></center></body>
+	<input type="text" name="sat" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>
+	<pre> </pre> <pre> </pre>
+	<center><h3 style="color:white;">Trans fat (g) per 100g (optional)</h3></center></body>
+	<input type="text" name="trans" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>
+	<pre> </pre> <pre> </pre>
+	<center><h3 style="color:white;">Cholesterol (mg) per 100g (optional)</h3></center></body>
+	<input type="text" name="cholesterol" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>
+	<pre> </pre> <pre> </pre>
+	<input type="submit" name="add_to_meal" value="ADD TO MEAL" class="button" style="height:45px;width:350px;"><br>
+	<p>&nbsp</p>);
+	$output .= hidden('username');
+	$output .= hidden('password');
+	$output .= hidden('date');
+	$output .= hidden('meal');
+	$output .= qq(</form>);
+	return $output;
+}
+
+sub check_food() {
+	my $name = param('name');
+	my $serving = param('serving');
+	my $calories = param('calories');
+	my $protein = param('protein');
+	my $carbs = param('carbs');
+	my $fat = param('fat');
+	my $fibre = param('fibre');
+	my $sugars = param('sugars');
+	my $mono = param('mono');
+	my $poly = param('poly');
+	my $sat = param('sat');
+	my $trans = param('trans');
+	my $cholesterol = param('cholesterol');
+	if ($name eq "") {
+		return 0;
+	}
+	if ($serving eq "") {
+		return 0;
+	} elsif ($serving !~ /^\d+$/) {
+		return 0;
+	}
+	if ($calories eq "") {
+		return 0;
+	} elsif ($calories !~ /^\d+$/) {
+		return 0;
+	}
+	if ($protein eq "") {
+		return 0;
+	} elsif ($protein !~ /^\d+$/) {
+		return 0;
+	}
+	if ($carbs eq "") {
+		return 0;
+	} elsif ($carbs !~ /^\d+$/) {
+		return 0;
+	}
+	if ($fat eq "") {
+		return 0;
+	} elsif ($fat !~ /^\d+$/) {
+		return 0;
+	}
+	if ($fibre !~ /^\d*$/) {
+		return 0;
+	}
+	if ($sugars !~ /^\d*$/) {
+		return 0;
+	}
+	if ($mono !~ /^\d*$/) {
+		return 0;
+	}
+	if ($poly !~ /^\d*$/) {
+		return 0;
+	}
+	if ($sat !~ /^\d*$/) {
+		return 0;
+	}
+	if ($trans !~ /^\d*$/) {
+		return 0;
+	}
+	if ($cholesterol !~ /^\d*$/) {
+		return 0;
+	}
+	return 1;
+}
+
+sub food_help() {
+	my $name = param('name');
+	my $serving = param('serving');
+	my $calories = param('calories');
+	my $protein = param('protein');
+	my $carbs = param('carbs');
+	my $fat = param('fat');
+	my $fibre = param('fibre');
+	my $sugars = param('sugars');
+	my $mono = param('mono');
+	my $poly = param('poly');
+	my $sat = param('sat');
+	my $trans = param('trans');
+	my $cholesterol = param('cholesterol');
+	my $help = qq(
+	<div class="header-bottom" id="tour">
+	<div class="wrap">
+	<h1>Fill in the nutritional information</h1>  
+	<h2><font color="red" size="2">&nbsp</font></h2>		
+	<p><center><small><marquee></marquee></center></p></body>
+	<form action="doyouevenfit.cgi" method="post">
+	<pre> </pre>
+	<p><center><h3 style="color:white;">Name</h3></center></p></body>
+	<input type="text" name="name" value="$name" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>);
+	if ($name eq "") {
+		$help .= qq(<text style="color:white";> * a name must be entered<p></p>);
+	}
+	$help .= qq(<pre> </pre> <pre> </pre>
+	<center><h3 style="color:white;">Serving Size (g)</h3></center></body>
+	<input type="text" name="serving" value="$serving" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>);
+	if ($serving eq "") {
+		$help .= qq(<text style="color:white";> * a serving must be entered<p></p>);
+	} elsif ($serving !~ /^\d+$/) {
+		$help .= qq(<text style="color:white";> * serving must consist of numeric characters only<p></p>);
+	}
+	$help .= qq(<pre> </pre> <pre> </pre>
+	<center><h3 style="color:white;">Calories per 100g</h3></center></body>
+	<input type="text" name="calories" value="$calories" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>);
+	if ($calories eq "") {
+		$help .= qq(<text style="color:white";> * calories must be entered<p></p>);
+	} elsif ($calories !~ /^\d+$/) {
+		$help .= qq(<text style="color:white";> * calories must consist of numeric characters only<p></p>);
+	}
+	$help .= qq(<pre> </pre> <pre> </pre>
+	<center><h3 style="color:white;">Protein (g) per 100g</h3></center></body>
+	<input type="text" name="protein" value="$protein" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>);
+	if ($protein eq "") {
+		$help .= qq(<text style="color:white";> * protein must be entered<p></p>);
+	} elsif ($protein !~ /^\d+$/) {
+		$help .= qq(<text style="color:white";> * protein must consist of numeric characters only<p></p>);
+	}
+	$help .= qq(<pre> </pre> <pre> </pre>
+	<center><h3 style="color:white;">Carbohydrates (g) per 100g</h3></center></body>
+	<input type="text" name="carbs" value="$carbs" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>);
+	if ($carbs eq "") {
+		$help .= qq(<text style="color:white";> * carbohydrates must be entered<p></p>);
+	} elsif ($carbs !~ /^\d+$/) {
+		$help .= qq(<text style="color:white";> * carbohydrates must consist of numeric characters only<p></p>);
+	}
+	$help .= qq(<pre> </pre> <pre> </pre>
+	<center><h3 style="color:white;">Fat (g) per 100g</h3></center></body>
+	<input type="text" name="fat" value="$fat" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>);
+	if ($fat eq "") {
+		$help .= qq(<text style="color:white";> * fat must be entered<p></p>);
+	} elsif ($fat !~ /^\d+$/) {
+		$help .= qq(<text style="color:white";> * fat must consist of numeric characters only<p></p>);
+	}
+	$help .= qq(<pre> </pre> <pre> </pre>
+	<center><h3 style="color:white;">Fibre (g) per 100g (optional)</h3></center></body>
+	<input type="text" name="fibre" value="$fibre" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>);
+	if ($fibre !~ /^\d*$/) {
+		$help .= qq(<text style="color:white";> * fibre must consist of numeric characters only<p></p>);
+	}
+	$help .= qq(<pre> </pre> <pre> </pre>
+	<center><h3 style="color:white;">Sugars (g) per 100g (optional)</h3></center></body>
+	<input type="text" name="sugars" value="$sugars" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>);
+	if ($sugars !~ /^\d*$/) {
+		$help .= qq(<text style="color:white";> * sugars must consist of numeric characters only<p></p>);
+	}
+	$help .= qq(<pre> </pre> <pre> </pre>
+	<center><h3 style="color:white;">Monounsaturated fat (g) per 100g (optional)</h3></center></body>
+	<input type="text" name="mono" value="$mono" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>);
+	if ($mono !~ /^\d*$/) {
+		$help .= qq(<text style="color:white";> * monounsaturated fat must consist of numeric characters only<p></p>);
+	}
+	$help .= qq(<pre> </pre> <pre> </pre>
+	<center><h3 style="color:white;">Polyunsaturated fat (g) per 100g (optional)</h3></center></body>
+	<input type="text" name="poly" value="$poly" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>);
+	if ($poly !~ /^\d*$/) {
+		$help .= qq(<text style="color:white";> * polyunsaturated fat must consist of numeric characters only<p></p>);
+	}
+	$help .= qq(<pre> </pre> <pre> </pre>
+	<center><h3 style="color:white;">Saturated fat (g) per 100g (optional)</h3></center></body>
+	<input type="text" name="sat" value="$sat" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>);
+	if ($sat !~ /^\d*$/) {
+		$help .= qq(<text style="color:white";> * saturated fat must consist of numeric characters only<p></p>);
+	}
+	$help .= qq(<pre> </pre> <pre> </pre>
+	<center><h3 style="color:white;">Trans fat (g) per 100g (optional)</h3></center></body>
+	<input type="text" name="trans" value="$trans" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>);
+	if ($trans !~ /^\d*$/) {
+		$help .= qq(<text style="color:white";> * trans fat must consist of numeric characters only<p></p>);
+	}
+	$help .= qq(<pre> </pre> <pre> </pre>
+	<center><h3 style="color:white;">Cholesterol (mg) per 100g (optional)</h3></center></body>
+	<input type="text" name="cholesterol" value="$cholesterol" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>);
+	if ($cholesterol !~ /^\d*$/) {
+		$help .= qq(<text style="color:white";> * cholesterol must consist of numeric characters only<p></p>);
+	}
+	$help .= qq(<pre> </pre> <pre> </pre>
+	<input type="submit" name="add_to_meal" value="ADD TO MEAL" class="button" style="height:45px;width:350px;"><br>
+	<p>&nbsp</p>);
+	$help .= hidden('username');
+	$help .= hidden('password');
+	$help .= hidden('date');
+	$help .= hidden('meal');
+	$help .= qq(</form>);
+	return $help;
+}
+
+sub add_food_man() {
+	return 0;
 }
 
 sub getCalories() {
