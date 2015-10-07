@@ -24,7 +24,11 @@ if (defined param('register')) {
 	}
 } elsif (defined param('username') && defined param('password') ) {
 	if (check_login()) {
-		if (defined param('meal')) {
+		if (defined param('manual_entry')) {
+			print manual_entry();
+		} elsif (defined param('add_food')) {
+			print food_page();
+		} elsif (defined param('meal')) {
 			print show_meal();
 		} elsif (defined param('add_meal') && param('meal_name') ne "") {
 			insert_meal();
@@ -612,7 +616,7 @@ sub diet_screen() {
 		}
 		$output .= qq(<pre> </pre>);
 		if (defined param('new_meal')) {
-			$output .= 	qq(<input type="text" name="meal_name" minLength="1" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;width:300px;font-family:AmbleRegular;"value="New Meal" onfocus="javascript:if(this.value=='New Meal')this.value='';"><br>
+			$output .= 	qq(<input type="text" name="meal_name" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;width:300px;font-family:AmbleRegular;"value="New Meal" onfocus="javascript:if(this.value=='New Meal')this.value='';"><br>
 			<pre> </pre>
 			<input type="submit" name="add_meal" value="+ ADD MEAL" class="button" style="height:45px;width:200px;"><br>);
 		} else {
@@ -645,6 +649,33 @@ sub show_meal() {
 	$output .= hidden('meal');
 	$output.= qq(</form>);
 	return $output;
+}
+
+sub food_page() {
+	my $meal_name = param('meal');
+	$meal_name =~ s/ \((\d+) calories\)$//;
+	my $output = qq(
+	<div class="header-bottom" id="tour">
+	<div class="wrap">
+	<h3><text style="color:white";>Adding food to $meal_name</h3>  
+	<form action="doyouevenfit.cgi" method="post">
+	<pre> </pre> <pre> </pre>
+	<input type="text" name="search_term" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;width:300px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>
+	<pre> </pre>
+	<input type="submit" name="search_food" value="SEARCH FOOD" class="button" style="height:45px;width:350px;"><br>
+	<pre> </pre> <pre> </pre>
+	<input type="submit" name="manual_entry" value="MANUAL ENTRY" class="button" style="height:45px;width:350px;"><br>
+	<p>&nbsp</p>);
+	$output .= hidden('username');
+	$output .= hidden('password');
+	$output .= hidden('date');
+	$output .= hidden('meal');
+	$output.= qq(</form>);
+	return $output;	
+}
+
+sub manual_entry() {
+	
 }
 
 sub getCalories() {
