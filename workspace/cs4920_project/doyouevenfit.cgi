@@ -1057,38 +1057,57 @@ sub calorie_calculator() {
 }
 
 sub extractInfo () {
-	#if the search bar param is checked then this function is called.
-	#the search bar is search of Food and amount in grams 
-	#the results will add the food to the DB
-	
-	
-	my %info = nutriInfo(param(Search), param(amount of food));
-	my @infoNeeded = ("Energy", "Water", "Protein", "Total lipid", "Carbohydrate, by difference", "Fiber, total dietary", "Sugars, total", 			"Calcium", "Iron", "Magnesium", "Phosphorus", "Potassium", "Zinc", "Vitamin C", "Thiamin", "Riboflavin", "Niacin", "Vitamin B-6", 			"Folate", 	"Vitamin E", "Vitamin K");	
+	if(defined param('food_search2')){
+		my $userSearch = param('food_search2');
+	} else {
+		my $userSearch = param('food_search');    
+	}
+	my %info = nutriInfo($userSearch);
 	my @keys = keys %info;
+	my $key_size = @keys;
 
-	my %diff;
+	if(defined $info{$userSearch}){
+		my $out = qq(<center><h3 style="color:black;">$userSearch Added to Meal</h3></center></body>
+		      <center><h4 style="color:black;">Add Amount in grams(default amount is 100g)</h4></center></body>
+		      <input type="text" name="food_amount" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>
+		      <input type="Enter Amount" name="food_amount" value="Search" class="button" style="height:45px;"><br>
+		        <pre> </pre> <pre> </pre>);   
+	        	
+		my $driver = "SQLite"; 
+		my $database = "project.db"; 
+		my $dsn = "DBI:$driver:dbname=$database";
+		my $userid = ""; my $dbpassword = "";  
+		my $dbh = DBI->connect($dsn, $userid, $dbpassword, { RaiseError => 1 }) or die $DBI::errstr; 
+		my $stmt = qq(insert into food values(null,'$keys2[0]','$infoNeeded[0]', '$infoNeeded[1]', '$infoNeeded[2]', '$infoNeeded[3]', '$infoNeeded[4]', '$infoNeeded[5]', '$infoNeeded[6]')); 
+		my $rv = $dbh->do($stmt) or die $DBI::errstr; 
+		
+		#Still gotta figure out how to add them
+		$stmt = qq(insert into minarels values(null,'$keys2[0]','$infoNeeded[0]', '$infoNeeded[1]', '$infoNeeded[2]', '$infoNeeded[3]', '$infoNeeded[4]', '$infoNeeded[5]', '$infoNeeded[6]')); 
+		$rv = $dbh->do($stmt) or die $DBI::errstr; 
+		
+		$stmt = qq(insert into vitamins values(null,'$keys2[0]','$infoNeeded[0]', '$infoNeeded[1]', '$infoNeeded[2]', '$infoNeeded[3]', '$infoNeeded[4]', '$infoNeeded[5]', '$infoNeeded[6]')); 
+		$rv = $dbh->do($stmt) or die $DBI::errstr; 	
 
-	@diff{ @keys } = undef;
-	delete @diff{ @infoNeeded };
-
-	my @keys2 = keys %diff;
-	
-	my $driver = "SQLite"; 
-	my $database = "project.db"; 
-	my $dsn = "DBI:$driver:dbname=$database";
-	my $userid = ""; my $dbpassword = "";  
-	my $dbh = DBI->connect($dsn, $userid, $dbpassword, { RaiseError => 1 }) or die $DBI::errstr; 
-	my $stmt = qq(insert into food values(null,'$keys2[0]','$infoNeeded[0]', '$infoNeeded[1]', '$infoNeeded[2]', '$infoNeeded[3]', '$infoNeeded[4]', '$infoNeeded[5]', '$infoNeeded[6]')); 
-	my $rv = $dbh->do($stmt) or die $DBI::errstr; 
-	
-	#Still gotta figure out how to add them
-	$stmt = qq(insert into minarels values(null,'$keys2[0]','$infoNeeded[0]', '$infoNeeded[1]', '$infoNeeded[2]', '$infoNeeded[3]', '$infoNeeded[4]', '$infoNeeded[5]', '$infoNeeded[6]')); 
-	$rv = $dbh->do($stmt) or die $DBI::errstr; 
-	
-	$stmt = qq(insert into vitamins values(null,'$keys2[0]','$infoNeeded[0]', '$infoNeeded[1]', '$infoNeeded[2]', '$infoNeeded[3]', '$infoNeeded[4]', '$infoNeeded[5]', '$infoNeeded[6]')); 
-	$rv = $dbh->do($stmt) or die $DBI::errstr; 
-
-	$dbh->disconnect();
+		$dbh->disconnect();
+		return $out;
+	} else {
+		my $height = 30*$key_size;
+	   	if($height gt "210"){
+	      	$height = 210;
+		}
+		$height .= "px";
+	   
+		my $out = qq(<center><h2 style="color:black;">Suggestions</h2></center></body>
+	      	<select name="food_search2" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:$height;width:500px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>
+		 );
+		foreach $key (@keys){
+		      $out .= qq(<option>$key
+	     		);
+		}
+		$out .= qq(</select>
+		<pre> </pre> <pre> </pre>);
+      		return $out;    
+	}
 
 }
 
@@ -1123,16 +1142,22 @@ sub nutriInfo(){
 	#my $userSelection = "BURGER KING, WHOPPER, with cheese";
 	my @foods = keys %food_urls;
 	my $userSelection = $foods[0];
+	my $food_size = @foods;
+	if (exists $food_urls{$search}){
+		$userSelection = $search;
+	} elsif($food_size > 1){
+		return %food_urls;	
+	}
 	my $user_url = $food_urls{$userSelection};
 	$mech->get("http\:\/\/ndb\.nal\.usda\.gov$user_url");
 	
 	$content = $mech->content;
 
-	my $oneServing;
-	$content =~ m/item\n.*?<br\/>(.*)/;
-	$oneServing = $1;
-	$oneServing =~ s/g//;
-	print "One Serving $oneServing\n";
+	my $oneServing = 100;
+	#$content =~ m/item\n.*?<br\/>(.*)/;
+	#$oneServing = $1;
+	#$oneServing =~ s/g//;
+	#print "One Serving $oneServing\n";
 
 	my $userServing = $oneServing;
 
@@ -1143,26 +1168,27 @@ sub nutriInfo(){
 	print "User Serving $userServing\n";
 	my %nutritionalInfo;
 	$nutritionalInfo{$userSelection} = $oneServing;
-	my @infoNeeded = ("Energy", "Water", "Protein", "Total lipid", "Carbohydrate, by difference", "Fiber, total dietary", "Sugars, total", 			"Calcium", "Iron", "Magnesium", "Phosphorus", "Potassium", "Zinc", "Vitamin C", "Thiamin", "Riboflavin", "Niacin", "Vitamin B-6", 			"Folate", 	"Vitamin E", "Vitamin K");
+	my @infoNeeded = ("Energy", "Water", "Protein", "Total lipid", "Carbohydrate, by difference", "Fiber, total dietary", "Sugars, total", 			"Calcium", "Iron", "Magnesium", "Phosphorus", "Potassium", "Zinc", "Vitamin C", "Thiamin", "Riboflavin", "Niacin", "Vitamin B-6", 			"Folate", 	"Vitamin E", "Vitamin K", "total saturated", "total monounsaturated", "total polyunsaturated", "trans", "Cholestrol");
 	#my @values;
 	
 	my $serving;
 
 	foreach my $info (@infoNeeded){
 		#@values = ();
-		#$content =~ m/$info.*\n.*\n.*\n.*?<\/td>.*\n.*?<td.*?<\/td>\n.*?<td.*?>(.*?)<\/td>/;
+		if($content =~ m/$info.*\n.*\n.*\n.*?<\/td>.*\n.*?<td.*?<\/td>\n.*?<td.*?>(.*?)<\/td>/){;
 		#push @values, $1;
-		if($content =~ m/$info.*\n.*\n.*\n.*?<\/td>.*\n.*?<td.*?<\/td>\n.*?<td.*?>.*?<\/td>\n.*\n.*\n.*\n.*<td.*?>(.*?)<\/td>/){
+		#if($content =~ m/$info.*\n.*\n.*\n.*?<\/td>.*\n.*?<td.*?<\/td>\n.*?<td.*?>.*?<\/td>\n.*\n.*\n.*\n.*<td.*?>(.*?)<\/td>/){
 		#push @values, $1;
 		#$nutritionalInfo{$info} = \@values;		
 			$serving = $1;
 			$nutritionalInfo{$info} = ($userServing*$serving)/$oneServing;
-			#print "$nutritionalInfo{$info}\n";
+			print "$info : $nutritionalInfo{$info}\n";
 		}
 	}
 
 	return %nutritionalInfo;
 }
+
 
 sub page_footer() {
 	return qq(
