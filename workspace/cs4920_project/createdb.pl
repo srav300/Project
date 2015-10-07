@@ -66,16 +66,16 @@ if($rv < 0){
 my $stmt = qq(create TABLE food (
 	id INTEGER PRIMARY KEY,
 	name TEXT,
-	energy TEXT,
+	calories TEXT,
 	protein TEXT,
+	carbs TEXT,
 	fat TEXT,
+	fibre TEXT,
+	sugars TEXT,
 	monounsatfat TEXT,
 	polyunsatfat TEXT,
 	satfat TEXT,
 	transfat TEXT,
-	carbs TEXT,
-	fibre TEXT,
-	sugars TEXT,
 	cholesterol TEXT
 ););
 my $rv = $dbh->do($stmt);
