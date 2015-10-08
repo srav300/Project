@@ -131,6 +131,7 @@ if($rv < 0){
 my $stmt = qq(create TABLE meal_contains (
 	mid INTEGER,
 	fid INTEGER,
+	serving INTEGER,
 	FOREIGN KEY(mid) REFERENCES meal(id),
 	FOREIGN KEY(fid) REFERENCES food(id)
 ););
