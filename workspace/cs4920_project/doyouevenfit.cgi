@@ -24,7 +24,18 @@ if (defined param('register')) {
 	}
 } elsif (defined param('username') && defined param('password') ) {
 	if (check_login()) {
-		if (defined param('add_to_meal')) {
+		if (defined param('add_food_search')) {
+			if (defined param('food_selected')) {
+				nutriInfo();
+				print show_meal();
+			} else {
+				print food_page();
+			}
+		} elsif (defined param('search_food')) {
+			print food_page();
+		} elsif (defined param('back_diet')) {
+			print diet_screen();
+		} elsif (defined param('add_to_meal')) {
 			if (check_food()) {
 				add_food_man();
 				print show_meal();
@@ -65,7 +76,7 @@ sub page_css {
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 	);
-	if (defined param('meal') || defined param('register') || (defined param('create_account') && !check_register())) {
+	if ((defined param('meal') && !defined param('back_diet'))|| defined param('register') || (defined param('create_account') && !check_register())) {
 		$css .= qq(<body background="/images/wood.jpg">);
 	} else {
 		$css .= qq(<body background="/images/banner.jpg">);
@@ -640,15 +651,73 @@ sub diet_screen() {
 }
 
 sub show_meal() {
-	$meal_header = param('meal');
-	#$meal_header =~ s/ \((\d+) calories\)$/<p>($1 calories)<\/p>/;
+	my $username = param('username');
+	my $date = param('date');
+	my $meal = param('meal');
+	$meal =~ s/ \(\d+ calories\)$//;
+	$driver = "SQLite"; 
+	$database = "project.db"; 
+	$dsn = "DBI:$driver:dbname=$database";
+	$userid = ""; $dbpassword = "";  
+	$dbh = DBI->connect($dsn, $userid, $dbpassword, { RaiseError => 1 }) or die $DBI::errstr; 
+	$stmt = qq(select id from user where username = '$username'); 
+	$sth = $dbh->prepare($stmt);
+	$rv = $sth->execute() or die $DBI::errstr; 
+	if ($rv < 0) {
+		print $DBI::errstr;
+	}
+	@row = $sth->fetchrow_array();
+	my $uid = $row[0];
+	$stmt = qq(select id, calories from meal where uid = '$uid' and name = '$meal' and date = '$date'); 
+	$sth = $dbh->prepare($stmt);
+	$rv = $sth->execute() or die $DBI::errstr; 
+	if ($rv < 0) {
+		print $DBI::errstr;
+	}
+	@row = $sth->fetchrow_array();
+	my $mid = $row[0];
+	my $calories = $row[1];
 	my $output = qq(
 	<div class="header-bottom" id="tour">
 	<div class="wrap">
-	<h3><text style="color:white";>$meal_header</h3>  
+	<h3><text style="color:white";>$meal ($calories calories)</h3>  
 	<form action="doyouevenfit.cgi" method="post">
-	<pre> </pre> <pre> </pre>
+	<pre> </pre>);
+	$stmt = qq(select fid, serving from meal_contains where mid = '$mid'); 
+	$sth = $dbh->prepare($stmt);
+	$rv = $sth->execute() or die $DBI::errstr; 
+	if ($rv < 0) {
+		print $DBI::errstr;
+	}
+	$i = 0;
+	my @fid;
+	my @serving;
+	while (my @row = $sth->fetchrow_array()) {
+		$fid[$i] = $row[0];
+		$serving[$i] = $row[1];
+		$i++;
+	}
+	$j = 0;
+	while ($j < $i) {
+		$stmt = qq(select name, calories, protein, carbs, fat from food where id = '$fid[$j]'); 
+		$sth = $dbh->prepare($stmt);
+		$rv = $sth->execute() or die $DBI::errstr; 
+		if ($rv < 0) {
+			print $DBI::errstr;
+		}
+		my @info = $sth->fetchrow_array();
+		my $name = $info[0];
+		my $calories = int(($info[1] * $serving[$j] / 100) + 0.5);
+		my $protein = $info[2] * $serving[$j] / 100;
+		my $carbs = $info[3] * $serving[$j] / 100;
+		my $fat = $info[4] * $serving[$j] / 100;
+		$output .= qq(<text style="color:white";>$serving[$j] g of $name ($calories calories, $protein g of protein, $carbs g of carbs, $fat g of fat)<p></p>);
+		$j++;
+	}
+	$output .= qq(<pre> </pre> <pre> </pre>
 	<input type="submit" name="add_food" value="+ ADD FOOD" class="button" style="height:45px;width:350px;"><br>
+	<pre> </pre> <pre> </pre>
+	<input type="submit" name="back_diet" value="BACK" class="button" style="height:45px;width:350px;"><br>
 	<p>&nbsp</p>);
 	$output .= hidden('username');
 	$output .= hidden('password');
@@ -660,18 +729,23 @@ sub show_meal() {
 
 sub food_page() {
 	my $meal_name = param('meal');
-	$meal_name =~ s/ \((\d+) calories\)$//;
+	my $search_term = param('search_term');
+	$meal_name =~ s/ \(\d+ calories\)$//;
 	my $output = qq(
 	<div class="header-bottom" id="tour">
 	<div class="wrap">
 	<h3><text style="color:white";>Adding food to $meal_name</h3>  
 	<form action="doyouevenfit.cgi" method="post">
 	<pre> </pre> <pre> </pre>
-	<input type="text" name="search_term" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;width:300px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>
+	<input type="text" name="search_term" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;width:300px;font-family:AmbleRegular;"value="$search_term" onfocus="javascript:if(this.value=='')this.value='';"><br>
 	<pre> </pre>
 	<input type="submit" name="search_food" value="SEARCH FOOD" class="button" style="height:45px;width:350px;"><br>
-	<pre> </pre> <pre> </pre>
-	<input type="submit" name="manual_entry" value="MANUAL ENTRY" class="button" style="height:45px;width:350px;"><br>
+	<pre> </pre> <pre> </pre>);
+	if(defined param('search_term')){
+		$output .= extract_info();
+	}
+
+	$output .= qq(<input type="submit" name="manual_entry" value="MANUAL ENTRY" class="button" style="height:45px;width:350px;"><br>
 	<p>&nbsp</p>);
 	$output .= hidden('username');
 	$output .= hidden('password');
@@ -685,7 +759,7 @@ sub manual_entry() {
 	my $output = qq(
 	<div class="header-bottom" id="tour">
 	<div class="wrap">
-	<h1>Fill in the nutritional information</h1>  
+	<h1>Enter nutritional information</h1>  
 	<h2><font color="red" size="2">&nbsp</font></h2>		
 	<p><center><small><marquee></marquee></center></p></body>
 	<form action="doyouevenfit.cgi" method="post">
@@ -707,29 +781,29 @@ sub manual_entry() {
 	<pre> </pre> <pre> </pre>
 	<center><h3 style="color:white;">Fat (g) per 100g</h3></center></body>
 	<input type="text" name="fat" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>
-	<pre> </pre> <pre> </pre>
-	<center><h3 style="color:white;">Fibre (g) per 100g (optional)</h3></center></body>
-	<input type="text" name="fibre" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>
-	<pre> </pre> <pre> </pre>
-	<center><h3 style="color:white;">Sugars (g) per 100g (optional)</h3></center></body>
-	<input type="text" name="sugars" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>
-	<pre> </pre> <pre> </pre>
-	<center><h3 style="color:white;">Monounsaturated fat (g) per 100g (optional)</h3></center></body>
-	<input type="text" name="mono" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>
-	<pre> </pre> <pre> </pre>
-	<center><h3 style="color:white;">Polyunsaturated fat (g) per 100g (optional)</h3></center></body>
-	<input type="text" name="poly" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>
-	<pre> </pre> <pre> </pre>
-	<center><h3 style="color:white;">Saturated fat (g) per 100g (optional)</h3></center></body>
-	<input type="text" name="sat" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>
-	<pre> </pre> <pre> </pre>
-	<center><h3 style="color:white;">Trans fat (g) per 100g (optional)</h3></center></body>
-	<input type="text" name="trans" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>
-	<pre> </pre> <pre> </pre>
-	<center><h3 style="color:white;">Cholesterol (mg) per 100g (optional)</h3></center></body>
-	<input type="text" name="cholesterol" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>
-	<pre> </pre> <pre> </pre>
-	<input type="submit" name="add_to_meal" value="ADD TO MEAL" class="button" style="height:45px;width:350px;"><br>
+	<pre> </pre> <pre> </pre>);
+	#<center><h3 style="color:white;">Fibre (g) per 100g (optional)</h3></center></body>
+	#<input type="text" name="fibre" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>
+	#<pre> </pre> <pre> </pre>
+	#<center><h3 style="color:white;">Sugars (g) per 100g (optional)</h3></center></body>
+	#<input type="text" name="sugars" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>
+	#<pre> </pre> <pre> </pre>
+	#<center><h3 style="color:white;">Monounsaturated fat (g) per 100g (optional)</h3></center></body>
+	#<input type="text" name="mono" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>
+	#<pre> </pre> <pre> </pre>
+	#<center><h3 style="color:white;">Polyunsaturated fat (g) per 100g (optional)</h3></center></body>
+	#<input type="text" name="poly" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>
+	#<pre> </pre> <pre> </pre>
+	#<center><h3 style="color:white;">Saturated fat (g) per 100g (optional)</h3></center></body>
+	#<input type="text" name="sat" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>
+	#<pre> </pre> <pre> </pre>
+	#<center><h3 style="color:white;">Trans fat (g) per 100g (optional)</h3></center></body>
+	#<input type="text" name="trans" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>
+	#<pre> </pre> <pre> </pre>
+	#<center><h3 style="color:white;">Cholesterol (mg) per 100g (optional)</h3></center></body>
+	#<input type="text" name="cholesterol" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>
+	#<pre> </pre> <pre> </pre>
+	$output .= qq(<input type="submit" name="add_to_meal" value="ADD TO MEAL" class="button" style="height:45px;width:350px;"><br>
 	<p>&nbsp</p>);
 	$output .= hidden('username');
 	$output .= hidden('password');
@@ -746,62 +820,62 @@ sub check_food() {
 	my $protein = param('protein');
 	my $carbs = param('carbs');
 	my $fat = param('fat');
-	my $fibre = param('fibre');
-	my $sugars = param('sugars');
-	my $mono = param('mono');
-	my $poly = param('poly');
-	my $sat = param('sat');
-	my $trans = param('trans');
-	my $cholesterol = param('cholesterol');
+	#my $fibre = param('fibre');
+	#my $sugars = param('sugars');
+	#my $mono = param('mono');
+	#my $poly = param('poly');
+	#my $sat = param('sat');
+	#my $trans = param('trans');
+	#my $cholesterol = param('cholesterol');
 	if ($name eq "") {
 		return 0;
 	}
 	if ($serving eq "") {
 		return 0;
-	} elsif ($serving !~ /^\d+$/) {
+	} elsif ($serving !~ /^\d+(\.\d)?$/) {
 		return 0;
 	}
 	if ($calories eq "") {
 		return 0;
-	} elsif ($calories !~ /^\d+$/) {
+	} elsif ($calories !~ /^\d+(\.\d)?$/) {
 		return 0;
 	}
 	if ($protein eq "") {
 		return 0;
-	} elsif ($protein !~ /^\d+$/) {
+	} elsif ($protein !~ /^\d+(\.\d)?$/) {
 		return 0;
 	}
 	if ($carbs eq "") {
 		return 0;
-	} elsif ($carbs !~ /^\d+$/) {
+	} elsif ($carbs !~ /^\d+(\.\d)?$/) {
 		return 0;
 	}
 	if ($fat eq "") {
 		return 0;
-	} elsif ($fat !~ /^\d+$/) {
+	} elsif ($fat !~ /^\d+(\.\d)?$/) {
 		return 0;
 	}
-	if ($fibre !~ /^\d*$/) {
-		return 0;
-	}
-	if ($sugars !~ /^\d*$/) {
-		return 0;
-	}
-	if ($mono !~ /^\d*$/) {
-		return 0;
-	}
-	if ($poly !~ /^\d*$/) {
-		return 0;
-	}
-	if ($sat !~ /^\d*$/) {
-		return 0;
-	}
-	if ($trans !~ /^\d*$/) {
-		return 0;
-	}
-	if ($cholesterol !~ /^\d*$/) {
-		return 0;
-	}
+	#if ($fibre !~ /^\d*$/) {
+	#	return 0;
+	#}
+	#if ($sugars !~ /^\d*$/) {
+	#	return 0;
+	#}
+	#if ($mono !~ /^\d*$/) {
+	#	return 0;
+	#}
+	#if ($poly !~ /^\d*$/) {
+	#	return 0;
+	#}
+	#if ($sat !~ /^\d*$/) {
+	#	return 0;
+	#}
+	#if ($trans !~ /^\d*$/) {
+	#	return 0;
+	#}
+	#if ($cholesterol !~ /^\d*$/) {
+	#	return 0;
+	#}
 	return 1;
 }
 
@@ -812,17 +886,17 @@ sub food_help() {
 	my $protein = param('protein');
 	my $carbs = param('carbs');
 	my $fat = param('fat');
-	my $fibre = param('fibre');
-	my $sugars = param('sugars');
-	my $mono = param('mono');
-	my $poly = param('poly');
-	my $sat = param('sat');
-	my $trans = param('trans');
-	my $cholesterol = param('cholesterol');
+	#my $fibre = param('fibre');
+	#my $sugars = param('sugars');
+	#my $mono = param('mono');
+	#my $poly = param('poly');
+	#my $sat = param('sat');
+	#my $trans = param('trans');
+	#my $cholesterol = param('cholesterol');
 	my $help = qq(
 	<div class="header-bottom" id="tour">
 	<div class="wrap">
-	<h1>Fill in the nutritional information</h1>  
+	<h1>Enter nutritional information</h1>  
 	<h2><font color="red" size="2">&nbsp</font></h2>		
 	<p><center><small><marquee></marquee></center></p></body>
 	<form action="doyouevenfit.cgi" method="post">
@@ -837,7 +911,7 @@ sub food_help() {
 	<input type="text" name="serving" value="$serving" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>);
 	if ($serving eq "") {
 		$help .= qq(<text style="color:white";> * a serving must be entered<p></p>);
-	} elsif ($serving !~ /^\d+$/) {
+	} elsif ($serving !~ /^\d+(\.\d)?$/) {
 		$help .= qq(<text style="color:white";> * serving must consist of numeric characters only<p></p>);
 	}
 	$help .= qq(<pre> </pre> <pre> </pre>
@@ -845,7 +919,7 @@ sub food_help() {
 	<input type="text" name="calories" value="$calories" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>);
 	if ($calories eq "") {
 		$help .= qq(<text style="color:white";> * calories must be entered<p></p>);
-	} elsif ($calories !~ /^\d+$/) {
+	} elsif ($calories !~ /^\d+(\.\d)?$/) {
 		$help .= qq(<text style="color:white";> * calories must consist of numeric characters only<p></p>);
 	}
 	$help .= qq(<pre> </pre> <pre> </pre>
@@ -853,7 +927,7 @@ sub food_help() {
 	<input type="text" name="protein" value="$protein" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>);
 	if ($protein eq "") {
 		$help .= qq(<text style="color:white";> * protein must be entered<p></p>);
-	} elsif ($protein !~ /^\d+$/) {
+	} elsif ($protein !~ /^\d+(\.\d)?$/) {
 		$help .= qq(<text style="color:white";> * protein must consist of numeric characters only<p></p>);
 	}
 	$help .= qq(<pre> </pre> <pre> </pre>
@@ -861,7 +935,7 @@ sub food_help() {
 	<input type="text" name="carbs" value="$carbs" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>);
 	if ($carbs eq "") {
 		$help .= qq(<text style="color:white";> * carbohydrates must be entered<p></p>);
-	} elsif ($carbs !~ /^\d+$/) {
+	} elsif ($carbs !~ /^\d+(\.\d)?$/) {
 		$help .= qq(<text style="color:white";> * carbohydrates must consist of numeric characters only<p></p>);
 	}
 	$help .= qq(<pre> </pre> <pre> </pre>
@@ -869,53 +943,53 @@ sub food_help() {
 	<input type="text" name="fat" value="$fat" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>);
 	if ($fat eq "") {
 		$help .= qq(<text style="color:white";> * fat must be entered<p></p>);
-	} elsif ($fat !~ /^\d+$/) {
+	} elsif ($fat !~ /^\d+(\.\d)?$/) {
 		$help .= qq(<text style="color:white";> * fat must consist of numeric characters only<p></p>);
 	}
-	$help .= qq(<pre> </pre> <pre> </pre>
-	<center><h3 style="color:white;">Fibre (g) per 100g (optional)</h3></center></body>
-	<input type="text" name="fibre" value="$fibre" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>);
-	if ($fibre !~ /^\d*$/) {
-		$help .= qq(<text style="color:white";> * fibre must consist of numeric characters only<p></p>);
-	}
-	$help .= qq(<pre> </pre> <pre> </pre>
-	<center><h3 style="color:white;">Sugars (g) per 100g (optional)</h3></center></body>
-	<input type="text" name="sugars" value="$sugars" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>);
-	if ($sugars !~ /^\d*$/) {
-		$help .= qq(<text style="color:white";> * sugars must consist of numeric characters only<p></p>);
-	}
-	$help .= qq(<pre> </pre> <pre> </pre>
-	<center><h3 style="color:white;">Monounsaturated fat (g) per 100g (optional)</h3></center></body>
-	<input type="text" name="mono" value="$mono" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>);
-	if ($mono !~ /^\d*$/) {
-		$help .= qq(<text style="color:white";> * monounsaturated fat must consist of numeric characters only<p></p>);
-	}
-	$help .= qq(<pre> </pre> <pre> </pre>
-	<center><h3 style="color:white;">Polyunsaturated fat (g) per 100g (optional)</h3></center></body>
-	<input type="text" name="poly" value="$poly" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>);
-	if ($poly !~ /^\d*$/) {
-		$help .= qq(<text style="color:white";> * polyunsaturated fat must consist of numeric characters only<p></p>);
-	}
-	$help .= qq(<pre> </pre> <pre> </pre>
-	<center><h3 style="color:white;">Saturated fat (g) per 100g (optional)</h3></center></body>
-	<input type="text" name="sat" value="$sat" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>);
-	if ($sat !~ /^\d*$/) {
-		$help .= qq(<text style="color:white";> * saturated fat must consist of numeric characters only<p></p>);
-	}
-	$help .= qq(<pre> </pre> <pre> </pre>
-	<center><h3 style="color:white;">Trans fat (g) per 100g (optional)</h3></center></body>
-	<input type="text" name="trans" value="$trans" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>);
-	if ($trans !~ /^\d*$/) {
-		$help .= qq(<text style="color:white";> * trans fat must consist of numeric characters only<p></p>);
-	}
-	$help .= qq(<pre> </pre> <pre> </pre>
-	<center><h3 style="color:white;">Cholesterol (mg) per 100g (optional)</h3></center></body>
-	<input type="text" name="cholesterol" value="$cholesterol" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>);
-	if ($cholesterol !~ /^\d*$/) {
-		$help .= qq(<text style="color:white";> * cholesterol must consist of numeric characters only<p></p>);
-	}
-	$help .= qq(<pre> </pre> <pre> </pre>
-	<input type="submit" name="add_to_meal" value="ADD TO MEAL" class="button" style="height:45px;width:350px;"><br>
+	$help .= qq(<pre> </pre> <pre> </pre>);
+	#<center><h3 style="color:white;">Fibre (g) per 100g (optional)</h3></center></body>
+	#<input type="text" name="fibre" value="$fibre" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>);
+	#if ($fibre !~ /^\d*$/) {
+	#	$help .= qq(<text style="color:white";> * fibre must consist of numeric characters only<p></p>);
+	#}
+	#$help .= qq(<pre> </pre> <pre> </pre>
+	#<center><h3 style="color:white;">Sugars (g) per 100g (optional)</h3></center></body>
+	#<input type="text" name="sugars" value="$sugars" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>);
+	#if ($sugars !~ /^\d*$/) {
+	#	$help .= qq(<text style="color:white";> * sugars must consist of numeric characters only<p></p>);
+	#}
+	#$help .= qq(<pre> </pre> <pre> </pre>
+	#<center><h3 style="color:white;">Monounsaturated fat (g) per 100g (optional)</h3></center></body>
+	#<input type="text" name="mono" value="$mono" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>);
+	#if ($mono !~ /^\d*$/) {
+	#	$help .= qq(<text style="color:white";> * monounsaturated fat must consist of numeric characters only<p></p>);
+	#}
+	#$help .= qq(<pre> </pre> <pre> </pre>
+	#<center><h3 style="color:white;">Polyunsaturated fat (g) per 100g (optional)</h3></center></body>
+	#<input type="text" name="poly" value="$poly" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>);
+	#if ($poly !~ /^\d*$/) {
+	#	$help .= qq(<text style="color:white";> * polyunsaturated fat must consist of numeric characters only<p></p>);
+	#}
+	#$help .= qq(<pre> </pre> <pre> </pre>
+	#<center><h3 style="color:white;">Saturated fat (g) per 100g (optional)</h3></center></body>
+	#<input type="text" name="sat" value="$sat" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>);
+	#if ($sat !~ /^\d*$/) {
+	#	$help .= qq(<text style="color:white";> * saturated fat must consist of numeric characters only<p></p>);
+	#}
+	#$help .= qq(<pre> </pre> <pre> </pre>
+	#<center><h3 style="color:white;">Trans fat (g) per 100g (optional)</h3></center></body>
+	#<input type="text" name="trans" value="$trans" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>);
+	#if ($trans !~ /^\d*$/) {
+	#	$help .= qq(<text style="color:white";> * trans fat must consist of numeric characters only<p></p>);
+	#}
+	#$help .= qq(<pre> </pre> <pre> </pre>
+	#<center><h3 style="color:white;">Cholesterol (mg) per 100g (optional)</h3></center></body>
+	#<input type="text" name="cholesterol" value="$cholesterol" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>);
+	#if ($cholesterol !~ /^\d*$/) {
+	#	$help .= qq(<text style="color:white";> * cholesterol must consist of numeric characters only<p></p>);
+	#}
+	#$help .= qq(<pre> </pre> <pre> </pre>
+	$help .= qq(<input type="submit" name="add_to_meal" value="ADD TO MEAL" class="button" style="height:45px;width:350px;"><br>
 	<p>&nbsp</p>);
 	$help .= hidden('username');
 	$help .= hidden('password');
@@ -926,7 +1000,74 @@ sub food_help() {
 }
 
 sub add_food_man() {
-	return 0;
+	my $name = param('name');
+	my $serving = param('serving');
+	my $calories = param('calories');
+	my $protein = param('protein');
+	my $carbs = param('carbs');
+	my $fat = param('fat');
+	my $fibre = param('fibre');
+	my $sugars = param('sugars');
+	my $mono = param('mono');
+	my $poly = param('poly');
+	my $sat = param('sat');
+	my $trans = param('trans');
+	my $cholesterol = param('cholesterol');
+	my $meal = param('meal');
+	my $date = param('date');
+	$meal =~ s/ \((\d+) calories\)$//;
+	$driver = "SQLite"; 
+	$database = "project.db"; 
+	$dsn = "DBI:$driver:dbname=$database";
+	$userid = ""; $dbpassword = "";  
+	$dbh = DBI->connect($dsn, $userid, $dbpassword, { RaiseError => 1 }) or die $DBI::errstr; 
+	$stmt = qq(insert into food(id,name,calories,protein,carbs,fat,fibre,sugars,monounsatfat,polyunsatfat,satfat,transfat,cholesterol) values(null,'$name','$calories',$protein,'$carbs','$fat','$fibre','$sugars','$mono','$poly','$sat','$trans','$cholesterol'));
+	$rv = $dbh->do($stmt) or die $DBI::errstr;
+	$stmt = qq(select id from user where username = '$username'); 
+	$sth = $dbh->prepare($stmt);
+	$rv = $sth->execute() or die $DBI::errstr; 
+	if ($rv < 0) {
+		print $DBI::errstr;
+	}
+	@row = $sth->fetchrow_array();
+	my $uid = $row[0];
+	$stmt = qq(select id, calories from meal where uid = '$uid' and name = '$meal' and date = '$date'); 
+	$sth = $dbh->prepare($stmt);
+	$rv = $sth->execute() or die $DBI::errstr; 
+	if ($rv < 0) {
+		print $DBI::errstr;
+	}
+	@row = $sth->fetchrow_array();
+	my $mid = $row[0];
+	my $updated = int(($row[1] + $calories * $serving / 100) + 0.5); 
+	$stmt = qq(select id from food where name = '$name' and calories = '$calories' and protein = '$protein' and carbs = '$carbs' and fat = '$fat'); 
+	$sth = $dbh->prepare($stmt);
+	$rv = $sth->execute() or die $DBI::errstr; 
+	if ($rv < 0) {
+		print $DBI::errstr;
+	}
+	@row = $sth->fetchrow_array();
+	$fid = $row[0];
+	$stmt = qq(insert into meal_contains(mid,fid,serving) values('$mid','$fid','$serving'));
+	$rv = $dbh->do($stmt) or die $DBI::errstr;
+	$stmt = qq(update meal set calories = $updated where id = '$mid');
+	$rv = $dbh->do($stmt) or die $DBI::errstr;
+	if ($rv < 0) {
+		print $DBI::errstr;
+	}
+	$stmt = qq(select current from calories where uid = '$uid' and date = '$date'); 
+	$sth = $dbh->prepare($stmt);
+	$rv = $sth->execute() or die $DBI::errstr; 
+	if ($rv < 0) {
+		print $DBI::errstr;
+	}
+	@row = $sth->fetchrow_array();
+	$updated = int(($row[0] + $calories * $serving / 100) + 0.5);
+	$stmt = qq(update calories set current = $updated where uid = '$uid' and date = '$date');
+	$rv = $dbh->do($stmt) or die $DBI::errstr;
+	if ($rv < 0) {
+		print $DBI::errstr;
+	}
 }
 
 sub getCalories() {
@@ -1056,68 +1197,66 @@ sub calorie_calculator() {
 	return int($calories+0.5);
 }
 
-sub extractInfo () {
-	if(defined param('food_search2')){
-		my $userSearch = param('food_search2');
-	} else {
-		my $userSearch = param('food_search');    
+sub extract_info () {
+	my $userSearch = param('search_term');    
+	#my %info = nutriInfo($userSearch);
+	my $mech = WWW::Mechanize->new;
+	
+	#print "$search\n";
+	$mech->get('http://ndb.nal.usda.gov/ndb/foods');
+	$mech->submit_form(
+			form_name => 'quickform', 
+			fields => {'qlookup' => $userSearch,},);
+
+	my $content = $mech->content;
+	
+	my @matches = ($content =~ m/<a href=.*?Click to view reports for this food\">\D+[0-9]*\D*?<\/a>/gi);
+	my %food_urls;
+	my $food;
+	my $url;
+	my $match;
+	foreach $match (@matches){
+		$match =~ m/Click to view reports for this food\">(\D+[0-9]*\D*?)<\/a>/;
+		$food = $1;
+		$match =~ m/<a href=\"(.*?)\"/;
+		$url = $1;	
+		$food_urls{$food} = $url;
+		#print "$food ($url)\n";
 	}
-	my %info = nutriInfo($userSearch);
-	my @keys = keys %info;
-	my $key_size = @keys;
-
-	if(defined $info{$userSearch}){
-		my $out = qq(<center><h3 style="color:black;">$userSearch Added to Meal</h3></center></body>
-		      <center><h4 style="color:black;">Add Amount in grams(default amount is 100g)</h4></center></body>
-		      <input type="text" name="food_amount" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>
-		      <input type="Enter Amount" name="food_amount" value="Search" class="button" style="height:45px;"><br>
-		        <pre> </pre> <pre> </pre>);   
-	        	
-		my $driver = "SQLite"; 
-		my $database = "project.db"; 
-		my $dsn = "DBI:$driver:dbname=$database";
-		my $userid = ""; my $dbpassword = "";  
-		my $dbh = DBI->connect($dsn, $userid, $dbpassword, { RaiseError => 1 }) or die $DBI::errstr; 
-		my $stmt = qq(insert into food values(null,'$keys2[0]','$infoNeeded[0]', '$infoNeeded[1]', '$infoNeeded[2]', '$infoNeeded[3]', '$infoNeeded[4]', '$infoNeeded[5]', '$infoNeeded[6]')); 
-		my $rv = $dbh->do($stmt) or die $DBI::errstr; 
-		
-		#Still gotta figure out how to add them
-		$stmt = qq(insert into minarels values(null,'$keys2[0]','$infoNeeded[0]', '$infoNeeded[1]', '$infoNeeded[2]', '$infoNeeded[3]', '$infoNeeded[4]', '$infoNeeded[5]', '$infoNeeded[6]')); 
-		$rv = $dbh->do($stmt) or die $DBI::errstr; 
-		
-		$stmt = qq(insert into vitamins values(null,'$keys2[0]','$infoNeeded[0]', '$infoNeeded[1]', '$infoNeeded[2]', '$infoNeeded[3]', '$infoNeeded[4]', '$infoNeeded[5]', '$infoNeeded[6]')); 
-		$rv = $dbh->do($stmt) or die $DBI::errstr; 	
-
-		$dbh->disconnect();
-		return $out;
-	} else {
-		my $height = 30*$key_size;
-	   	if($height gt "210"){
-	      	$height = 210;
-		}
-		$height .= "px";
-	   
-		my $out = qq(<center><h2 style="color:black;">Suggestions</h2></center></body>
-	      	<select name="food_search2" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:$height;width:500px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>
+	
+	my @foods = keys %food_urls;
+	my $key_size = @foods;
+	my $height = 30*$key_size;
+	if($height > 210){
+	     	$height = 210;
+	}
+	$height .= "px";
+   
+	my $out = qq(<center><h2 style="color:white;">Suggestions</h2></center></body>
+	      	<select name="food_selected" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:$height;width:500px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>
 		 );
-		foreach $key (@keys){
-		      $out .= qq(<option>$key
-	     		);
-		}
-		$out .= qq(</select>
-		<pre> </pre> <pre> </pre>);
-      		return $out;    
+	foreach $food (@foods){
+	      $out .= qq(<option>$food
+     		);
 	}
-
+	$out .= qq(</select>
+	<pre> </pre>
+	<center><h2 style="color:white;">Serving Size (g)</h2></center></body>
+	<input type="text" name="serving" value="" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>
+	<pre> </pre>
+	<input type="submit" name="add_food_search" value="ADD TO MEAL
+" class="button" style="height:45px;width:350px;"><br>
+	<pre> </pre> <pre> </pre>);
+ 	return $out;    
 }
 
 sub nutriInfo(){
 	my $mech = WWW::Mechanize->new;
-	
-	my @input = @_;
-	print "@input\n";
-	my $search = $input[0];
-	#print "$search\n";
+	my $search = param('food_selected');
+	my $serving = 0;
+	if(defined param('serving') && param('serving') ne ""){
+		$serving = param('serving');	
+	} 
 	$mech->get('http://ndb.nal.usda.gov/ndb/foods');
 	$mech->submit_form(
 			form_name => 'quickform', 
@@ -1136,59 +1275,95 @@ sub nutriInfo(){
 		$match =~ m/<a href=\"(.*?)\"/;
 		$url = $1;	
 		$food_urls{$food} = $url;
-		#print "$food ($url)\n";
 	}
 	
-	#my $userSelection = "BURGER KING, WHOPPER, with cheese";
 	my @foods = keys %food_urls;
-	my $userSelection = $foods[0];
-	my $food_size = @foods;
-	if (exists $food_urls{$search}){
-		$userSelection = $search;
-	} elsif($food_size > 1){
-		return %food_urls;	
-	}
-	my $user_url = $food_urls{$userSelection};
+
+	my $user_url = $food_urls{$search};
 	$mech->get("http\:\/\/ndb\.nal\.usda\.gov$user_url");
 	
 	$content = $mech->content;
-
-	my $oneServing = 100;
-	#$content =~ m/item\n.*?<br\/>(.*)/;
-	#$oneServing = $1;
-	#$oneServing =~ s/g//;
-	#print "One Serving $oneServing\n";
-
-	my $userServing = $oneServing;
-
-	if($input[1]=~ m/\d/){
-		$userServing = $input[1];
+	if($serving eq 0){
+		my $oneServing = 100;
+		$content =~ m/item\n.*?<br\/>(.*)/;
+		#$content =~ m/.*?<br\/>(\n+?)g/;
+		$oneServing = $1;
+		$oneServing =~ s/g//;
+		$serving = $oneServing;
 	}
 
-	print "User Serving $userServing\n";
 	my %nutritionalInfo;
-	$nutritionalInfo{$userSelection} = $oneServing;
 	my @infoNeeded = ("Energy", "Water", "Protein", "Total lipid", "Carbohydrate, by difference", "Fiber, total dietary", "Sugars, total", 			"Calcium", "Iron", "Magnesium", "Phosphorus", "Potassium", "Zinc", "Vitamin C", "Thiamin", "Riboflavin", "Niacin", "Vitamin B-6", 			"Folate", 	"Vitamin E", "Vitamin K", "total saturated", "total monounsaturated", "total polyunsaturated", "trans", "Cholestrol");
-	#my @values;
 	
-	my $serving;
-
 	foreach my $info (@infoNeeded){
-		#@values = ();
-		if($content =~ m/$info.*\n.*\n.*\n.*?<\/td>.*\n.*?<td.*?<\/td>\n.*?<td.*?>(.*?)<\/td>/){;
-		#push @values, $1;
-		#if($content =~ m/$info.*\n.*\n.*\n.*?<\/td>.*\n.*?<td.*?<\/td>\n.*?<td.*?>.*?<\/td>\n.*\n.*\n.*\n.*<td.*?>(.*?)<\/td>/){
-		#push @values, $1;
-		#$nutritionalInfo{$info} = \@values;		
-			$serving = $1;
-			$nutritionalInfo{$info} = ($userServing*$serving)/$oneServing;
-			print "$info : $nutritionalInfo{$info}\n";
+		if($content =~ m/$info.*\n.*\n.*\n.*?<\/td>.*\n.*?<td.*?<\/td>\n.*?<td.*?>(.*?)<\/td>/){;	
+			$nutritionalInfo{$info} = $1;
 		}
 	}
 
-	return %nutritionalInfo;
+	#add to db
+	my $name = $search;
+	my $username = param('username');
+	my $calories = int(($nutritionalInfo{$infoNeeded[0]}/4.186)+0.5);
+	my $protein = $nutritionalInfo{$infoNeeded[2]};
+	my $carbs = $nutritionalInfo{$infoNeeded[4]};
+	my $fat = $nutritionalInfo{$infoNeeded[3]};
+	my $meal = param('meal');
+	my $date = param('date');
+	$meal =~ s/ \((\d+) calories\)$//;
+	$driver = "SQLite"; 
+	$database = "project.db"; 
+	$dsn = "DBI:$driver:dbname=$database";
+	$userid = ""; $dbpassword = "";  
+	$dbh = DBI->connect($dsn, $userid, $dbpassword, { RaiseError => 1 }) or die $DBI::errstr; 
+	$stmt = qq(insert into food(id,name,calories,protein,carbs,fat,fibre,sugars,monounsatfat,polyunsatfat,satfat,transfat,cholesterol) values(null,'$name','$calories','$protein','$carbs','$fat','$fibre','$sugars','$mono','$poly','$sat','$trans','$cholesterol'));
+	$rv = $dbh->do($stmt) or die $DBI::errstr;
+	$stmt = qq(select id from user where username = '$username'); 
+	$sth = $dbh->prepare($stmt);
+	$rv = $sth->execute() or die $DBI::errstr; 
+	if ($rv < 0) {
+		print $DBI::errstr;
+	}
+	@row = $sth->fetchrow_array();
+	my $uid = $row[0];
+	$stmt = qq(select id, calories from meal where uid = '$uid' and name = '$meal' and date = '$date'); 
+	$sth = $dbh->prepare($stmt);
+	$rv = $sth->execute() or die $DBI::errstr; 
+	if ($rv < 0) {
+		print $DBI::errstr;
+	}
+	@row = $sth->fetchrow_array();
+	my $mid = $row[0];
+	my $updated = int(($row[1] + $calories * $serving / 100) + 0.5); 
+	$stmt = qq(select id from food where name = '$name' and calories = '$calories' and protein = '$protein' and carbs = '$carbs' and fat = '$fat'); 
+	$sth = $dbh->prepare($stmt);
+	$rv = $sth->execute() or die $DBI::errstr; 
+	if ($rv < 0) {
+		print $DBI::errstr;
+	}
+	@row = $sth->fetchrow_array();
+	$fid = $row[0];
+	$stmt = qq(insert into meal_contains(mid,fid,serving) values('$mid','$fid','$serving'));
+	$rv = $dbh->do($stmt) or die $DBI::errstr;
+	$stmt = qq(update meal set calories = $updated where id = '$mid');
+	$rv = $dbh->do($stmt) or die $DBI::errstr;
+	if ($rv < 0) {
+		print $DBI::errstr;
+	}
+	$stmt = qq(select current from calories where uid = '$uid' and date = '$date'); 
+	$sth = $dbh->prepare($stmt);
+	$rv = $sth->execute() or die $DBI::errstr; 
+	if ($rv < 0) {
+		print $DBI::errstr;
+	}
+	@row = $sth->fetchrow_array();
+	$updated = int(($row[0] + $calories * $serving / 100) + 0.5);
+	$stmt = qq(update calories set current = $updated where uid = '$uid' and date = '$date');
+	$rv = $dbh->do($stmt) or die $DBI::errstr;
+	if ($rv < 0) {
+		print $DBI::errstr;
+	}
 }
-
 
 sub page_footer() {
 	return qq(
