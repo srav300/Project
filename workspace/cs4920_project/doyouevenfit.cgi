@@ -10,6 +10,8 @@ warningsToBrowser(1);
 
 use DBI;
 
+$bg = "banner";
+
 print page_header();
 print page_css();
 
@@ -76,14 +78,14 @@ sub page_header {
 
 sub page_css {
 	$css = qq(
-	<link href="/css/style.css" rel="stylesheet" type="text/css" media="all" />
+	<link href="css/style.css" rel="stylesheet" type="text/css" media="all" />
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 	);
-	if ((defined param('meal') && !defined param('back_diet'))|| defined param('register') || (defined param('create_account') && !check_register())) {
-		$css .= qq(<body background="/images/wood.jpg">);
+	if ((defined param('meal') && !defined param('back_diet'))|| defined param('register') || (defined param('create_account') && !check_register()) || ($bg = "wood")) {
+		$css .= qq(<body background="images/wood.jpg">);
 	} else {
-		$css .= qq(<body background="/images/banner.jpg">);
+		$css .= qq(<body background="images/banner.jpg">);
 	}	
 	$css .= qq(<body link="white">);
 	return $css;
