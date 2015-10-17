@@ -18,7 +18,7 @@ if (defined param('register')) {
 } elsif (defined param('create_account')) {
 	if (check_register()) {
 		create_account();
-		print registered();
+		print login_screen();
 	} else {
 		print register_help();
 	}
@@ -26,8 +26,12 @@ if (defined param('register')) {
 	if (check_login()) {
 		if (defined param('add_food_search')) {
 			if (defined param('food_selected')) {
-				nutriInfo();
-				print show_meal();
+				if (check_serving()) {
+					insert_food();
+					print show_meal();
+				} else {
+					print food_page();
+				}
 			} else {
 				print food_page();
 			}
@@ -57,7 +61,7 @@ if (defined param('register')) {
 			print diet_screen();
 		}
 	} else {
-		print wrong_login();	
+		print login_screen();	
 	}
 } else {
 	print login_screen();
@@ -86,15 +90,21 @@ sub page_css {
 }
 
 sub login_screen(){
-	return qq(
+	my $html = qq(
 	<div class="header-bottom" id="tour">
 	<div class="wrap">
 	<h1><span>D</span>o<span>Y</span>ou<span>E</span>ven<span>F</span>it</h1>  
 	<pre>
 	</pre>
-	<h2><font color="red" size="2">&nbsp</font></h2>		
-	<p><center><small><marquee></marquee></center></p></body>
-	<form action="doyouevenfit.cgi" method="post">
+	<h2><font color="red" size="2">&nbsp</font></h2>);
+	if (!check_login()) {		
+		$html .= qq(<center><small><font color="white">Your login details seem to be incorrect.</font></center></body>);
+	} elsif (defined param('create_account') && check_register()) {
+		$html .= qq(<p><center><font color="white"><small>Registration successful. You can now proceed to log in.</font></center></p></body>);
+	} else {
+		$html .= qq(<p><center><small><marquee></marquee></center></p></body>);
+	}
+	$html .= qq(<form action="doyouevenfit.cgi" method="post">
 	<input type="hidden" name="page" value="">
 	<input type="text" name="username" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="username" onfocus="javascript:if(this.value=='username')this.value='';"><br>
 	<input type="password" name="password" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="********" onfocus="javascript:if(this.value=='********')this.value='';"><br>
@@ -107,7 +117,8 @@ sub login_screen(){
 	</form>
 	</div>
 	</div>
-	)
+	);
+	return $html;
 }
 
 sub check_login() {
@@ -133,29 +144,6 @@ sub check_login() {
 		return 1;
 	}
 	return 0;
-}
-
-sub wrong_login() {
-	return qq(
-	<div class="header-bottom" id="tour">
-	<div class="wrap">
-	<h1><span>D</span>o<span>Y</span>ou<span>E</span>ven<span>F</span>it</h1>  
-	<h2><font color="red" size="2">&nbsp</font></h2>		
-	<center><small><font color="white">Your login details seem to be incorrect.</font></center></body>
-	<form action="doyouevenfit.cgi" method="post">
-	<input type="hidden" name="page" value="">
-	<input type="text" name="username" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="username" onfocus="javascript:if(this.value=='username')this.value='';"><br>
-	<input type="password" name="password" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="Password" onfocus="javascript:if(this.value=='Password')this.value='';"><br>
-	<p>&nbsp</p>
-	<input type="submit" name="login" value="LOG IN" class="button" style="height:45px;"><br>
-	<pre>
-	</pre>
-	<input type="submit" name="register" value="REGISTER" class="button" style="height:45px;"><br>
-	<p>&nbsp</p>
-	</form>
-	</div>
-	</div>
-	);
 }
 
 sub register_screen() {
@@ -357,9 +345,7 @@ sub register_help() {
 	<form action="doyouevenfit.cgi" method="post">
 	<pre> </pre>
 	<p><center><h3 style="color:white;">Username</h3></center></p></body>
-	<input type="text" name="new_username" value=");
-	$help .= param('new_username');
-	$help .= qq("size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>);
+	<input type="text" name="new_username" value="$new_username"size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>);
 	if ($new_username eq "") {
 		$help .= qq(<text style="color:white";> * a username must be entered<p></p>);
 	} elsif (length($new_username) < 6) {
@@ -386,9 +372,7 @@ sub register_help() {
 	}
 	$help .= qq(<pre> </pre> <pre> </pre>
 		<p><center><h3 style="color:white;">Password</h3></center></p></body>
-		<input type="password" name="password1" value=");
-	$help .= param('password1');
-	$help .= qq("size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>);
+		<input type="password" name="password1" value="$password1"size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>);
 	if ($password1 eq "") {
 		$help .= qq(<text style="color:white";> * a password must be entered<p></p>);
 	} elsif (length($password1) < 6) {
@@ -396,17 +380,13 @@ sub register_help() {
 	}
 	$help .= qq(<pre> </pre> <pre> </pre>
 		<center><h3 style="color:white;">Re-enter Password</h3></center></body>
-		<input type="password" name="password2" value=");
-	$help .= param('password2');
-	$help .= qq("size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>);
+		<input type="password" name="password2" value="$password2"size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>);
 	if ($password1 ne $password2) {
 		$help .= qq(<text style="color:white";> * passwords do not match<p></p>);
 	}
 	$help .= qq(<pre> </pre> <pre> </pre>
 		<center><h3 style="color:white;">First Name</h3></center></body>
-		<input type="text" name="fname" value=");
-	$help .= param('fname');
-	$help .= qq("size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>);
+		<input type="text" name="fname" value="$fname"size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>);
 	if ($fname eq "") {
 		$help .= qq(<text style="color:white";> * a first name must be entered<p></p>);
 	} elsif ($fname !~ /^[a-zA-Z-]*\n*$/) {
@@ -414,9 +394,7 @@ sub register_help() {
 	}
 	$help .= qq(<pre> </pre> <pre> </pre>
 		<center><h3 style="color:white;">Last Name</h3></center></body>
-		<input type="text" name="lname" value=");
-	$help .= param('lname');
-	$help .= qq("size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>);
+		<input type="text" name="lname" value="$lname"size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>);
 	if ($lname eq "") {
 		$help .= qq(<text style="color:white";> * a last name must be entered<p></p>);
 	} elsif ($lname !~ /^[a-zA-Z-]*\n*$/) {
@@ -424,9 +402,7 @@ sub register_help() {
 	}
 	$help .= qq(<pre> </pre> <pre> </pre>
 		<center><h3 style="color:white;">Email</h3></center></body>
-		<input type="text" name="email" value=");
-	$help .= param('email');
-	$help .= qq("size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>);
+		<input type="text" name="email" value="$email"size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>);
 	if ($email eq "") {
 		$help .= qq(<text style="color:white";> * an email must be entered<p></p>);
 	} elsif ($email !~ /^\w+\@\w+(\.\w+)+$/) {
@@ -451,9 +427,7 @@ sub register_help() {
 	}
 	$help .= qq(<pre> </pre> <pre> </pre>
 		<center><h3 style="color:white;">Height (cm)</h3></center></body>
-		<input type="text" name="height" value=");
-	$help .= param('height');
-	$help .= qq("size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>);
+		<input type="text" name="height" value="$height"size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>);
 	if ($height eq "") {
 		$help .= qq(<text style="color:white";> * a height must be entered<p></p>);
 	} elsif ($height !~ /^\d+$/) {
@@ -461,9 +435,7 @@ sub register_help() {
 	}
 	$help .= qq(<pre> </pre> <pre> </pre>
 		<center><h3 style="color:white;">Weight (kg)</h3></center></body>
-		<input type="text" name="weight" value=");
-	$help .= param('weight');
-	$help .= qq("size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>);
+		<input type="text" name="weight" value="$weight"size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>);
 	if ($weight eq "") {
 		$help .= qq(<text style="color:white";> * a weight must be entered<p></p>);
 	} elsif ($weight !~ /^\d+$/) {
@@ -471,9 +443,7 @@ sub register_help() {
 	}
 	$help .= qq(<pre> </pre> <pre> </pre>
 		<center><h3 style="color:white;">Age</h3></center></body>
-		<input type="text" name="age" value=");
-	$help .= param('age');
-	$help .= qq("size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>);
+		<input type="text" name="age" value="$age"size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>);
 	if ($age eq "") {
 		$help .= qq(<text style="color:white";> * an age must be entered<p></p>);
 	} elsif ($age !~ /^\d+$/) {
@@ -553,30 +523,6 @@ sub register_help() {
 	return $help;
 }
 
-sub registered(){
-	return qq(
-    	<div class="header-bottom" id="tour">
-    	<div class="wrap">
-    	<h1><span>D</span>o<span>Y</span>ou<span>E</span>ven<span>F</span>it</h1>
-        <pre>
-	</pre>
-	<h2><font color="white" size="2">&nbsp</font></h2>		
-	<p><center><font color="white"><small>Registration successful. You can now proceed to log in.</font></center></p></body>
-	<form action="doyouevenfit.cgi" method="post">
-	<input type="hidden" name="page" value="">
-	<input type="text" name="username" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="Username" onfocus="javascript:if(this.value=='Username')this.value='';"><br>
-	<input type="password" name="password" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="********" onfocus="javascript:if(this.value=='********')this.value='';"><br>
-	<p>&nbsp</p>
-	<input type="submit" name="login" value="LOG IN" class="button" style="height:45px;"><br>
-	<pre>
-	</pre>
-	<input type="submit" name="register" value="REGISTER" class="button" style="height:45px;"><br>
-	<p>&nbsp</p>
-	</form>
-	</div>
-	</div>
-	);
-}
 
 sub diet_screen() {
 	$day = `date +%d`;
@@ -586,6 +532,9 @@ sub diet_screen() {
 	$year = `date +%Y`;
 	chomp($year);
 	$date = "$day/$month/$year";
+	if (defined param('date')) {
+		$date = param('date');
+	}
 	$output .= qq(
 	<div class="header-bottom" id="tour">
 	<div class="wrap">
@@ -594,12 +543,7 @@ sub diet_screen() {
 	if (defined param('date') && !valid_date()) {
 		$output .= qq(<text style="color:white";> * invalid date (DD/MM/YYYY)<p></p>);
 	}
-	$output .= qq(<input type="text" name="date" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;width:200px;font-family:AmbleRegular;"value=");
-	if (defined param('date')) {
-		$date = param('date');
-	}
-	$output .= $date;
-	$output .= qq(" onfocus="javascript:if(this.value=='')this.value='';"><br>);
+	$output .= qq(<input type="text" name="date" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;width:200px;font-family:AmbleRegular;"value="$date" onfocus="javascript:if(this.value=='')this.value='';"><br>);
 	$output .= qq(<input type="submit" name="change_date" value="" class="button" style="height:0px;width;0px;"><br>);
 	$output .= qq(<p>&nbsp</p>
 	<p>&nbsp</p>);
@@ -730,6 +674,7 @@ sub show_meal() {
 sub food_page() {
 	my $meal_name = param('meal');
 	my $search_term = param('search_term');
+	my $serving = param('serving');	
 	$meal_name =~ s/ \(\d+ calories\)$//;
 	my $output = qq(
 	<div class="header-bottom" id="tour">
@@ -744,8 +689,13 @@ sub food_page() {
 	if(defined param('search_term')){
 		$output .= extract_info();
 	}
-
-	$output .= qq(<input type="submit" name="manual_entry" value="MANUAL ENTRY" class="button" style="height:45px;width:350px;"><br>
+	if (defined param('add_food_search') && $serving eq "") {
+		$output .= qq(<text style="color:white";> * a serving size must be entered for this food item<p></p>);
+	} elsif (defined param('add_food_search') && $serving !~ /\d+/) {
+		$output .= qq(<text style="color:white";> * a serving size must consist of numeric characters only<p></p>);
+	}
+	$output .= qq(<pre> </pre> <pre> </pre>
+<input type="submit" name="manual_entry" value="MANUAL ENTRY" class="button" style="height:45px;width:350px;"><br>
 	<p>&nbsp</p>);
 	$output .= hidden('username');
 	$output .= hidden('password');
@@ -1198,8 +1148,9 @@ sub calorie_calculator() {
 }
 
 sub extract_info () {
-	my $userSearch = param('search_term');    
-	#my %info = nutriInfo($userSearch);
+	my $userSearch = param('search_term');
+		    
+	#my %info = insert_food($userSearch);
 	my $mech = WWW::Mechanize->new;
 	
 	#print "$search\n";
@@ -1231,12 +1182,35 @@ sub extract_info () {
 	     	$height = 210;
 	}
 	$height .= "px";
-   
-	my $out = qq(<center><h2 style="color:white;">Suggestions</h2></center></body>
+   	my $out = qq(<center><h2 style="color:white;">Suggestions</h2></center></body>
 	      	<select name="food_selected" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:$height;width:500px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>
 		 );
+	$driver = "SQLite"; 
+	$database = "project.db"; 
+	$dsn = "DBI:$driver:dbname=$database";
+	$userid = ""; $dbpassword = "";  
+	$dbh = DBI->connect($dsn, $userid, $dbpassword, { RaiseError => 1 }) or die $DBI::errstr; 
+	$stmt = qq(select name from food where name like '%$userSearch%'); 
+	$sth = $dbh->prepare($stmt);
+	$rv = $sth->execute() or die $DBI::errstr; 
+	if ($rv < 0) {
+		print $DBI::errstr;
+	}
+	my $selected = param('food_selected');
+	while (my @row = $sth->fetchrow_array()) {
+		$out .= qq(<option);
+		if ($row[0] eq $selected) {
+			$out .= " selected";
+		}
+		$out .= qq(>$row[0]
+		);
+	}
 	foreach $food (@foods){
-	      $out .= qq(<option>$food
+		$out .= qq(<option);
+		if ($food eq $selected) {
+			$out .= " selected";
+		}
+		$out .= qq(>$food
      		);
 	}
 	$out .= qq(</select>
@@ -1246,122 +1220,190 @@ sub extract_info () {
 	<pre> </pre>
 	<input type="submit" name="add_food_search" value="ADD TO MEAL
 " class="button" style="height:45px;width:350px;"><br>
-	<pre> </pre> <pre> </pre>);
+	);
  	return $out;    
 }
 
-sub nutriInfo(){
-	my $mech = WWW::Mechanize->new;
+sub check_serving() {
+	my $serving = param('serving');
+	if ($serving eq "") {
+		return 0;
+	} elsif ($serving !~ /\d+/) {
+		return 0;
+	}
+	return 1;
+}
+
+sub insert_food(){
 	my $search = param('food_selected');
-	my $serving = 0;
-	if(defined param('serving') && param('serving') ne ""){
-		$serving = param('serving');	
-	} 
-	$mech->get('http://ndb.nal.usda.gov/ndb/foods');
-	$mech->submit_form(
-			form_name => 'quickform', 
-			fields => {'qlookup' => $search,},);
-
-	my $content = $mech->content;
-	
-	my @matches = ($content =~ m/<a href=.*?Click to view reports for this food\">\D+[0-9]*\D*?<\/a>/gi);
-	my %food_urls;
-	my $food;
-	my $url;
-	my $match;
-	foreach $match (@matches){
-		$match =~ m/Click to view reports for this food\">(\D+[0-9]*\D*?)<\/a>/;
-		$food = $1;
-		$match =~ m/<a href=\"(.*?)\"/;
-		$url = $1;	
-		$food_urls{$food} = $url;
-	}
-	
-	my @foods = keys %food_urls;
-
-	my $user_url = $food_urls{$search};
-	$mech->get("http\:\/\/ndb\.nal\.usda\.gov$user_url");
-	
-	$content = $mech->content;
-	if($serving eq 0){
-		my $oneServing = 100;
-		$content =~ m/item\n.*?<br\/>(.*)/;
-		#$content =~ m/.*?<br\/>(\n+?)g/;
-		$oneServing = $1;
-		$oneServing =~ s/g//;
-		$serving = $oneServing;
-	}
-
-	my %nutritionalInfo;
-	my @infoNeeded = ("Energy", "Water", "Protein", "Total lipid", "Carbohydrate, by difference", "Fiber, total dietary", "Sugars, total", 			"Calcium", "Iron", "Magnesium", "Phosphorus", "Potassium", "Zinc", "Vitamin C", "Thiamin", "Riboflavin", "Niacin", "Vitamin B-6", 			"Folate", 	"Vitamin E", "Vitamin K", "total saturated", "total monounsaturated", "total polyunsaturated", "trans", "Cholestrol");
-	
-	foreach my $info (@infoNeeded){
-		if($content =~ m/$info.*\n.*\n.*\n.*?<\/td>.*\n.*?<td.*?<\/td>\n.*?<td.*?>(.*?)<\/td>/){;	
-			$nutritionalInfo{$info} = $1;
-		}
-	}
-
-	#add to db
-	my $name = $search;
-	my $username = param('username');
-	my $calories = int(($nutritionalInfo{$infoNeeded[0]}/4.186)+0.5);
-	my $protein = $nutritionalInfo{$infoNeeded[2]};
-	my $carbs = $nutritionalInfo{$infoNeeded[4]};
-	my $fat = $nutritionalInfo{$infoNeeded[3]};
-	my $meal = param('meal');
-	my $date = param('date');
-	$meal =~ s/ \((\d+) calories\)$//;
 	$driver = "SQLite"; 
 	$database = "project.db"; 
 	$dsn = "DBI:$driver:dbname=$database";
 	$userid = ""; $dbpassword = "";  
 	$dbh = DBI->connect($dsn, $userid, $dbpassword, { RaiseError => 1 }) or die $DBI::errstr; 
-	$stmt = qq(insert into food(id,name,calories,protein,carbs,fat,fibre,sugars,monounsatfat,polyunsatfat,satfat,transfat,cholesterol) values(null,'$name','$calories','$protein','$carbs','$fat','$fibre','$sugars','$mono','$poly','$sat','$trans','$cholesterol'));
-	$rv = $dbh->do($stmt) or die $DBI::errstr;
-	$stmt = qq(select id from user where username = '$username'); 
+	$stmt = qq(select id, name, calories from food where name = '$search'); 
 	$sth = $dbh->prepare($stmt);
 	$rv = $sth->execute() or die $DBI::errstr; 
 	if ($rv < 0) {
 		print $DBI::errstr;
 	}
-	@row = $sth->fetchrow_array();
-	my $uid = $row[0];
-	$stmt = qq(select id, calories from meal where uid = '$uid' and name = '$meal' and date = '$date'); 
-	$sth = $dbh->prepare($stmt);
-	$rv = $sth->execute() or die $DBI::errstr; 
-	if ($rv < 0) {
-		print $DBI::errstr;
-	}
-	@row = $sth->fetchrow_array();
-	my $mid = $row[0];
-	my $updated = int(($row[1] + $calories * $serving / 100) + 0.5); 
-	$stmt = qq(select id from food where name = '$name' and calories = '$calories' and protein = '$protein' and carbs = '$carbs' and fat = '$fat'); 
-	$sth = $dbh->prepare($stmt);
-	$rv = $sth->execute() or die $DBI::errstr; 
-	if ($rv < 0) {
-		print $DBI::errstr;
-	}
-	@row = $sth->fetchrow_array();
-	$fid = $row[0];
-	$stmt = qq(insert into meal_contains(mid,fid,serving) values('$mid','$fid','$serving'));
-	$rv = $dbh->do($stmt) or die $DBI::errstr;
-	$stmt = qq(update meal set calories = $updated where id = '$mid');
-	$rv = $dbh->do($stmt) or die $DBI::errstr;
-	if ($rv < 0) {
-		print $DBI::errstr;
-	}
-	$stmt = qq(select current from calories where uid = '$uid' and date = '$date'); 
-	$sth = $dbh->prepare($stmt);
-	$rv = $sth->execute() or die $DBI::errstr; 
-	if ($rv < 0) {
-		print $DBI::errstr;
-	}
-	@row = $sth->fetchrow_array();
-	$updated = int(($row[0] + $calories * $serving / 100) + 0.5);
-	$stmt = qq(update calories set current = $updated where uid = '$uid' and date = '$date');
-	$rv = $dbh->do($stmt) or die $DBI::errstr;
-	if ($rv < 0) {
-		print $DBI::errstr;
+	my @row = $sth->fetchrow_array();
+	my $fid = $row[0];
+	my $name = $row[1];
+	my $calories = $row[2];
+	if ($fid ne "") {
+		my $username = param('username');
+		my $meal = param('meal');
+		my $date = param('date');
+		$meal =~ s/ \((\d+) calories\)$//;
+		my $serving = param('serving');
+$stmt = qq(select id from user where username = '$username'); 
+		$sth = $dbh->prepare($stmt);
+		$rv = $sth->execute() or die $DBI::errstr; 
+		if ($rv < 0) {
+			print $DBI::errstr;
+		}
+		@row = $sth->fetchrow_array();
+		my $uid = $row[0];
+		$stmt = qq(select id, calories from meal where uid = '$uid' and name = '$meal' and date = '$date'); 
+		$sth = $dbh->prepare($stmt);
+		$rv = $sth->execute() or die $DBI::errstr; 
+		if ($rv < 0) {
+			print $DBI::errstr;
+		}
+		@row = $sth->fetchrow_array();
+		my $mid = $row[0];
+		my $updated = int(($row[1] + $calories * $serving / 100) + 0.5); 
+		$stmt = qq(insert into meal_contains(mid,fid,serving) values('$mid','$fid','$serving'));
+		$rv = $dbh->do($stmt) or die $DBI::errstr;
+		$stmt = qq(update meal set calories = $updated where id = '$mid');
+		$rv = $dbh->do($stmt) or die $DBI::errstr;
+		if ($rv < 0) {
+			print $DBI::errstr;
+		}
+		$stmt = qq(select current from calories where uid = '$uid' and date = '$date'); 
+		$sth = $dbh->prepare($stmt);
+		$rv = $sth->execute() or die $DBI::errstr; 
+		if ($rv < 0) {
+			print $DBI::errstr;
+		}
+		@row = $sth->fetchrow_array();
+		$updated = int(($row[0] + $calories * $serving / 100) + 0.5);
+		$stmt = qq(update calories set current = $updated where uid = '$uid' and date = '$date');
+		$rv = $dbh->do($stmt) or die $DBI::errstr;
+		if ($rv < 0) {
+			print $DBI::errstr;
+		}
+	} else {
+		my $mech = WWW::Mechanize->new;
+		my $serving = param('serving');
+		$mech->get('http://ndb.nal.usda.gov/ndb/foods');
+		$mech->submit_form(
+				form_name => 'quickform', 
+				fields => {'qlookup' => $search,},);
+
+		my $content = $mech->content;
+	
+		my @matches = ($content =~ m/<a href=.*?Click to view reports for this food\">\D+[0-9]*\D*?<\/a>/gi);
+		my %food_urls;
+		my $food;
+		my $url;
+		my $match;
+		foreach $match (@matches){
+			$match =~ m/Click to view reports for this food\">(\D+[0-9]*\D*?)<\/a>/;
+			$food = $1;
+			$match =~ m/<a href=\"(.*?)\"/;
+			$url = $1;	
+			$food_urls{$food} = $url;
+		}
+	
+		my @foods = keys %food_urls;
+
+		my $user_url = $food_urls{$search};
+		$mech->get("http\:\/\/ndb\.nal\.usda\.gov$user_url");
+	
+		$content = $mech->content;
+		#if($serving eq 0){
+		#	my $oneServing = 100;
+		#	$content =~ m/item\n.*?<br\/>(.*)/;
+			#$content =~ m/.*?<br\/>(\n+?)g/;
+		#	$oneServing = $1;
+		#	$oneServing =~ s/g//;
+		#	$serving = $oneServing;
+		#}
+
+		my %nutritionalInfo;
+		my @infoNeeded = ("Energy", "Water", "Protein", "Total lipid", "Carbohydrate, by difference", "Fiber, total dietary", "Sugars, total", 			"Calcium", "Iron", "Magnesium", "Phosphorus", "Potassium", "Zinc", "Vitamin C", "Thiamin", "Riboflavin", "Niacin", "Vitamin B-6", 			"Folate", 	"Vitamin E", "Vitamin K", "total saturated", "total monounsaturated", "total polyunsaturated", "trans", "Cholestrol");
+	
+		foreach my $info (@infoNeeded){
+			if($content =~ m/$info.*\n.*\n.*\n.*?<\/td>.*\n.*?<td.*?<\/td>\n.*?<td.*?>(.*?)<\/td>/){;	
+				$nutritionalInfo{$info} = $1;
+			}
+		}
+
+		#add to db
+		my $search = param('food_selected');
+		my $name = $search;
+		my $username = param('username');
+		my $calories = int(($nutritionalInfo{$infoNeeded[0]}/4.186)+0.5);
+		my $protein = $nutritionalInfo{$infoNeeded[2]};
+		my $carbs = $nutritionalInfo{$infoNeeded[4]};
+		my $fat = $nutritionalInfo{$infoNeeded[3]};
+		my $meal = param('meal');
+		my $date = param('date');
+		$meal =~ s/ \((\d+) calories\)$//;
+		$driver = "SQLite"; 
+		$database = "project.db"; 
+		$dsn = "DBI:$driver:dbname=$database";
+		$userid = ""; $dbpassword = "";  
+		$dbh = DBI->connect($dsn, $userid, $dbpassword, { RaiseError => 1 }) or die $DBI::errstr; 
+		$stmt = qq(insert into food(id,name,calories,protein,carbs,fat,fibre,sugars,monounsatfat,polyunsatfat,satfat,transfat,cholesterol) values(null,'$name','$calories','$protein','$carbs','$fat','$fibre','$sugars','$mono','$poly','$sat','$trans','$cholesterol'));
+		$rv = $dbh->do($stmt) or die $DBI::errstr;
+		$stmt = qq(select id from user where username = '$username'); 
+		$sth = $dbh->prepare($stmt);
+		$rv = $sth->execute() or die $DBI::errstr; 
+		if ($rv < 0) {
+			print $DBI::errstr;
+		}
+		@row = $sth->fetchrow_array();
+		my $uid = $row[0];
+		$stmt = qq(select id, calories from meal where uid = '$uid' and name = '$meal' and date = '$date'); 
+		$sth = $dbh->prepare($stmt);
+		$rv = $sth->execute() or die $DBI::errstr; 
+		if ($rv < 0) {
+			print $DBI::errstr;
+		}
+		@row = $sth->fetchrow_array();
+		my $mid = $row[0];
+		my $updated = int(($row[1] + $calories * $serving / 100) + 0.5); 
+		$stmt = qq(select id from food where name = '$name' and calories = '$calories' and protein = '$protein' and carbs = '$carbs' and fat = '$fat'); 
+		$sth = $dbh->prepare($stmt);
+		$rv = $sth->execute() or die $DBI::errstr; 
+		if ($rv < 0) {
+			print $DBI::errstr;
+		}
+		@row = $sth->fetchrow_array();
+		$fid = $row[0];
+		$stmt = qq(insert into meal_contains(mid,fid,serving) values('$mid','$fid','$serving'));
+		$rv = $dbh->do($stmt) or die $DBI::errstr;
+		$stmt = qq(update meal set calories = $updated where id = '$mid');
+		$rv = $dbh->do($stmt) or die $DBI::errstr;
+		if ($rv < 0) {
+			print $DBI::errstr;
+		}
+		$stmt = qq(select current from calories where uid = '$uid' and date = '$date'); 
+		$sth = $dbh->prepare($stmt);
+		$rv = $sth->execute() or die $DBI::errstr; 
+		if ($rv < 0) {
+			print $DBI::errstr;
+		}
+		@row = $sth->fetchrow_array();
+		$updated = int(($row[0] + $calories * $serving / 100) + 0.5);
+		$stmt = qq(update calories set current = $updated where uid = '$uid' and date = '$date');
+		$rv = $dbh->do($stmt) or die $DBI::errstr;
+		if ($rv < 0) {
+			print $DBI::errstr;
+		}
 	}
 }
 
