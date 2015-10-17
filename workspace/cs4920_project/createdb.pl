@@ -156,4 +156,62 @@ if($rv < 0){
    print "Table created successfully\n";
 }
 
+my $stmt = qq(create TABLE routine (
+	id INTEGER PRIMARY KEY,
+	uid INTEGER,
+	name TEXT,
+	FOREIGN KEY(uid) REFERENCES user(id)
+););
+my $rv = $dbh->do($stmt);
+if($rv < 0){
+   print $DBI::errstr;
+} else {
+   print "Table created successfully\n";
+}
+
+my $stmt = qq(create TABLE exercise (
+	id INTEGER PRIMARY KEY,
+	name TEXT,
+	muscle TEXT,
+););
+my $rv = $dbh->do($stmt);
+if($rv < 0){
+   print $DBI::errstr;
+} else {
+   print "Table created successfully\n";
+}
+
+my $stmt = qq(create TABLE routine_contains (
+	rid INTEGER,
+	eid INTEGER,
+	weight INTEGER,
+	reps INTEGER,
+	sets INTEGER,
+	duration INTEGER,
+	measurement TEXT,
+	FOREIGN KEY(rid) REFERENCES routine(id),
+	FOREIGN KEY(eid) REFERENCES exercise(id)
+););
+my $rv = $dbh->do($stmt);
+if($rv < 0){
+   print $DBI::errstr;
+} else {
+   print "Table created successfully\n";
+}
+
+my $stmt = qq(create TABLE day_routines (
+	uid INTEGER,
+	rid INTEGER,
+	date TEXT,
+	timestamp INTEGER,
+	FOREIGN KEY(uid) REFERENCES user(id),
+	FOREIGN KEY(rid) REFERENCES routine(id)
+););
+my $rv = $dbh->do($stmt);
+if($rv < 0){
+   print $DBI::errstr;
+} else {
+   print "Table created successfully\n";
+}
+
 $dbh->disconnect();
