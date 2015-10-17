@@ -97,7 +97,7 @@ sub login_screen(){
 	<pre>
 	</pre>
 	<h2><font color="red" size="2">&nbsp</font></h2>);
-	if (!check_login()) {		
+	if (defined param('username') && defined param('password') && !check_login()) {		
 		$html .= qq(<center><small><font color="white">Your login details seem to be incorrect.</font></center></body>);
 	} elsif (defined param('create_account') && check_register()) {
 		$html .= qq(<p><center><font color="white"><small>Registration successful. You can now proceed to log in.</font></center></p></body>);
