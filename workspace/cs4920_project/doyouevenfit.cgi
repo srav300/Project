@@ -139,8 +139,12 @@ sub check_login() {
 		print $DBI::errstr;
 	}
 	@row = $sth->fetchrow_array();
-	$password = $row[0];
-	if ($password_attempt eq $password) {
+        if (@row) {
+	        $password = $row[0];
+        } else {
+            $password = "++";
+        }	
+    if ($password_attempt eq $password) {
 		return 1;
 	}
 	return 0;
