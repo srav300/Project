@@ -37,8 +37,11 @@ sudo apt-get install apache2
 DOWNLOAD PROJECT ZIP ON GITHUB
 UNZIP AND THEN GO INTO PROJECT DIRECTORY
 
-CGI FILES SHOULD BE IN /usr/lib/cgi-bin
-sudo mv index.cgi /usr/lib/cgi-bin
+DOYOUEVENFIT.CGI AND CREATEDB.PL SHOULD BE IN /usr/lib/cgi-bin
+sudo mv doyouevenfit.cgi /usr/lib/cgi-bin
+
+RUN CREATEDB.PL TO CREATE DATABASE FILE PROJECT.DB
+sudo perl createdb.pl
 
 ACCOMPANYING FILES SHOULD BE IN /var/www/html
 sudo mv images /var/www/html
@@ -52,14 +55,11 @@ sudo chmod 755 *.cgi
 sudo a2enmod cgi
 sudo service apache2 restart
 
-DATABASE SHOULD BE IN /usr/lib/cgi-bin
-sudo mv project.db /usr/lib/cgi-bin
-
 CGI SCRIPT NEEDS PERMISSION TO WRITE TO DATABASE
 sudo chown www-data:www-data /usr/lib/cgi-bin/project.db
 
 URL TO VIEW IN BROWSER
-http://localhost/cgi-bin/index.cgi
+http://localhost/cgi-bin/doyouevenfit.cgi
 
 NEED TO INSTALL THESE MODULES (HOW TO INSTALL IN READMEs)
 http://search.cpan.org/~stbey/Carp-Clan-6.04/lib/Carp/Clan.pod
