@@ -67,8 +67,12 @@ if (defined param('register')) {
 		} elsif (defined param('add_meal') && param('meal_name') ne "") {
 			insert_meal();
 			print diet_screen();
-		} elsif (defined param('login')) {
+		} elsif (defined param('login') || defined param('home')) {
+			print home();
+		} elsif (defined param('diet')) {
 			print diet_screen();
+		} elsif (defined param('exercise')) {
+			print exercise_screen();
 		} elsif (defined param('date')) {
 			print diet_screen();
 		}
@@ -131,6 +135,24 @@ sub login_screen(){
 	</div>
 	);
 	return $html;
+}
+
+sub home() {
+	my $html = qq(<div class="header-bottom" id="tour">
+	<div class="wrap">
+	<pre> </pre>
+	<form action="doyouevenfit.cgi" method="post">
+	<input type="hidden" name="page" value="">
+	<pre> </pre>
+	<input type="submit" name="diet" value="DIET" class="button" style="height:45px;"><br>
+	<pre> </pre> <pre> </pre>
+	<input type="submit" name="exercise" value="EXERCISE" class="button" style="height:45px;"><br>
+	<p>&nbsp</p>);
+	$html .= hidden('username');
+	$html .= hidden('password');
+	$html .= qq(</form>
+	</div>
+	</div>);
 }
 
 sub check_login() {
@@ -601,6 +623,8 @@ sub diet_screen() {
 			$output .= qq(<input type="submit" name="new_meal" value="NEW MEAL" class="button" style="height:45px;"><br>);
 		}
 	}
+	$output .= qq(<pre> </pre> <pre> </pre>
+	<input type="submit" name="home" value="HOME" class="button" style="height:45px;"><br>);
 	$output .= hidden('username');
 	$output .= hidden('password');
 	$output .= qq(</form>
@@ -1343,6 +1367,10 @@ sub insert_meal() {
 	$uid = $row[0];
 	$stmt = qq(insert into meal values(null,'$uid','$meal_name',0,'$date'));
 	$rv = $dbh->do($stmt) or die $DBI::errstr;
+}
+
+sub exercise_screen() {
+
 }
 
 sub calorie_calculator() {
