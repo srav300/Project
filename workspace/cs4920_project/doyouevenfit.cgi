@@ -32,13 +32,13 @@ if (defined param('register')) {
 					insert_food();
 					print show_meal();
 				} else {
-					print food_page();
+					print add_food_screen();
 				}
 			} else {
-				print food_page();
+				print add_food_screen();
 			}
 		} elsif (defined param('search_food')) {
-			print food_page();
+			print add_food_screen();
 		} elsif (defined param('back_meal')){
 			print show_meal();
 		} elsif (defined param('delete_meal')) {
@@ -51,15 +51,15 @@ if (defined param('register')) {
 			print diet_screen();
 		} elsif (defined param('add_to_meal')) {
 			if (check_food()) {
-				add_food_man();
+				insert_food_man();
 				print show_meal();
 			} else {
 				print food_help();
 			}
-		} elsif (defined param('manual_entry')) {
-			print manual_entry();
+		} elsif (defined param('add_food_man')) {
+			print add_food_man();
 		} elsif (defined param('add_food')) {
-			print food_page();
+			print add_food_screen();
 		} elsif (defined param('food')) {
 			print show_food();
 		} elsif (defined param('meal')) {
@@ -113,9 +113,9 @@ sub login_screen(){
 	<pre>
 	</pre>
 	<h2><font color="red" size="2">&nbsp</font></h2>);
-	if (defined param('username') && defined param('password') && !check_login()) {		
+	if (defined param('username') && defined param('password') && !check_login()) {	# if user has failed to log in notify them	
 		$html .= qq(<center><small><font color="white">Your login details seem to be incorrect.</font></center></body>);
-	} elsif (defined param('create_account')) {
+	} elsif (defined param('create_account')) {	# if user has successfully created an account notify them
 		$html .= qq(<p><center><font color="white"><small>Registration successful. You can now proceed to log in.</font></center></p></body>);
 	} else {
 		$html .= qq(<p><center><small><marquee></marquee></center></p></body>);
@@ -155,7 +155,7 @@ sub home() {
 	</div>);
 }
 
-sub check_login() {
+sub check_login() {	# checks to see if username and password are correct
 	$username = param('username');
 	$password_attempt = param('password');
 	if ($username eq "" || $password_attempt eq "") {
@@ -252,7 +252,7 @@ sub register_screen() {
 	);
 }
 
-sub check_register() {
+sub check_register() {	# checks to see if details entered are correct and adhere to database types
 	my $new_username = param('new_username');
 	my $password1 = param('password1');
 	my $password2 = param('password2');
@@ -339,7 +339,7 @@ sub check_register() {
 	return 1;
 }
 
-sub create_account() {
+sub create_account() {	# inserts user and details into database
 	my $username = param('new_username');
 	my $password = param('password1');
 	my $fname = param('fname');
@@ -361,7 +361,7 @@ sub create_account() {
 	$dbh->disconnect();
 }
 
-sub register_help() {
+sub register_help() {	# notifies user of details entered incorrectly
 	my $new_username = param('new_username');
 	my $password1 = param('password1');
 	my $password2 = param('password2');
@@ -562,14 +562,14 @@ sub register_help() {
 }
 
 
-sub diet_screen() {
+sub diet_screen() {	# displays current calories out of goal calories and a list of meals for date selected
 	$day = `date +%d`;
 	chomp($day);
 	$month = `date +%m`;
 	chomp($month);
 	$year = `date +%Y`;
 	chomp($year);
-	$date = "$day/$month/$year";
+	$date = "$day/$month/$year";	# display current date if date is not already defined
 	if (defined param('date')) {
 		$date = param('date');
 	}
@@ -578,14 +578,14 @@ sub diet_screen() {
 	<div class="wrap">
 	<form action="doyouevenfit.cgi" method="post">
 	<input type="hidden" name="page" value="">);
-	if (defined param('date') && !valid_date()) {
+	if (defined param('date') && !valid_date()) {	# notify user if they have entered an invalid date
 		$output .= qq(<text style="color:white";> * invalid date (DD/MM/YYYY)<p></p>);
 	}
 	$output .= qq(<input type="text" name="date" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;width:200px;font-family:AmbleRegular;"value="$date" onfocus="javascript:if(this.value=='')this.value='';"><br>);
 	$output .= qq(<input type="submit" name="change_date" value="" class="button" style="height:0px;width;0px;"><br>);
 	$output .= qq(<p>&nbsp</p>
 	<p>&nbsp</p>);
-	if (!defined param('date') || (defined param('date') && valid_date())) {
+	if (!defined param('date') || (defined param('date') && valid_date())) {	# if valid date display calorie counter and meals
 		$output .= qq(<h1>);
 		$output .= getCalories();
 		$output .= qq(</h1> <p>&nbsp</p>
@@ -634,7 +634,7 @@ sub diet_screen() {
 	return $output;
 }
 
-sub show_meal() {
+sub show_meal() {	# displayed if user selects a meal from diet screen
 	my $username = param('username');
 	my $date = param('date');
 	my $meal = param('meal');
@@ -682,7 +682,7 @@ sub show_meal() {
 		$i++;
 	}
 	$j = 0;
-	while ($j < $i) {
+	while ($j < $i) {	# display all food linked to this meal
 		$stmt = qq(select name, calories, protein, carbs, fat from food where id = '$fid[$j]'); 
 		$sth = $dbh->prepare($stmt);
 		$rv = $sth->execute() or die $DBI::errstr; 
@@ -715,7 +715,7 @@ sub show_meal() {
 	return $output;
 }
 
-sub show_food() {
+sub show_food() {	# displayed if user selects food from show meal
 	my $username = param('username');
 	my $date = param('date');
 	my $meal = param('meal');
@@ -752,7 +752,7 @@ sub show_food() {
 	}
 	my $fid;
 	my $serving;
-	while (my @row = $sth->fetchrow_array()) {
+	while (my @row = $sth->fetchrow_array()) {	# making sure food with proper serving size is selected (accounting for duplicates)
 		$serving = $row[1];	
 		$stmt = qq(select calories from food where id = $row[0]);
 		$hts = $dbh->prepare($stmt);
@@ -804,7 +804,7 @@ sub show_food() {
 	return $output;
 }
 
-sub delete_meal() {
+sub delete_meal() {	# deletes meal and any relations from database and also updates daily calorie counter
 	my $username = param('username');
 	my $meal = param('meal');
 	my $date = param('date');
@@ -852,7 +852,7 @@ $stmt = qq(select id from user where username = '$username');
 	}
 }
 
-sub delete_food() {
+sub delete_food() {	# deletes table relating food to meal from database and updates meal calories and daily calorie counter
 	my $username = param('username');
 	my $date = param('date');
 	my $meal = param('meal');
@@ -931,7 +931,7 @@ sub delete_food() {
 	}
 }
 
-sub food_page() {
+sub add_food_screen() {	# page for user to search for food to add or proceed to add food manually
 	my $meal_name = param('meal');
 	my $search_term = param('search_term');
 	my $serving = param('serving');	
@@ -946,16 +946,16 @@ sub food_page() {
 	<pre> </pre>
 	<input type="submit" name="search_food" value="SEARCH FOOD" class="button" style="height:45px;width:350px;"><br>
 	<pre> </pre> <pre> </pre>);
-	if(defined param('search_term')){
-		$output .= extract_info();
+	if(defined param('search_term')){	# if a user has searched display the food suggestions
+		$output .= food_suggestions();
 	}
-	if (defined param('add_food_search') && $serving eq "") {
+	if (defined param('add_food_search') && $serving eq "") {	# if a user has attempted to add food without specifying a serving size notify them
 		$output .= qq(<text style="color:white";> * a serving size must be entered for this food item<p></p>);
-	} elsif (defined param('add_food_search') && $serving !~ /\d+/) {
+	} elsif (defined param('add_food_search') && $serving !~ /\d+/) {	# if entered incorrectly notify user that serving size must be a number
 		$output .= qq(<text style="color:white";> * a serving size must consist of numeric characters only<p></p>);
 	}
 	$output .= qq(<pre> </pre> <pre> </pre>
-	<input type="submit" name="manual_entry" value="MANUAL ENTRY" class="button" style="height:45px;width:350px;"><br>
+	<input type="submit" name="add_food_man" value="MANUAL ENTRY" class="button" style="height:45px;width:350px;"><br>
 	<pre> </pre> <pre> </pre>
 	<input type="submit" name="back_meal" value="BACK" class="button" style="height:45px;width:350px;"><br>
 	<p>&nbsp</p>
@@ -968,7 +968,7 @@ sub food_page() {
 	return $output;	
 }
 
-sub manual_entry() {
+sub add_food_man() {	# page for user to manual add food to meal
 	my $output = qq(
 	<div class="header-bottom" id="tour">
 	<div class="wrap">
@@ -1026,7 +1026,7 @@ sub manual_entry() {
 	return $output;
 }
 
-sub check_food() {
+sub check_food() {	# checks that food details manually entered are correct
 	my $name = param('name');
 	my $serving = param('serving');
 	my $calories = param('calories');
@@ -1092,7 +1092,7 @@ sub check_food() {
 	return 1;
 }
 
-sub food_help() {
+sub food_help() {	# notifies user of fields that are incorrect
 	my $name = param('name');
 	my $serving = param('serving');
 	my $calories = param('calories');
@@ -1212,7 +1212,7 @@ sub food_help() {
 	return $help;
 }
 
-sub add_food_man() {
+sub insert_food_man() {	# inserts manually entered food into the database
 	my $name = param('name');
 	my $serving = param('serving');
 	my $calories = param('calories');
@@ -1283,7 +1283,7 @@ sub add_food_man() {
 	}
 }
 
-sub getCalories() {
+sub getCalories() {	# returns the calorie counter as a string i.e. *current* of *goal* calories
 	$username = param('username');
 	if (defined param('date')) {
 		$date = param('date');
@@ -1335,7 +1335,7 @@ sub getCalories() {
 	return $counter;
 }
 
-sub valid_date() {
+sub valid_date() {	# checks if date entered is valid
 	my $date = param('date');
 	if ($date eq "") {
 		return 0;
@@ -1348,7 +1348,7 @@ sub valid_date() {
 	return 1;
 }
 
-sub insert_meal() {
+sub insert_meal() {	# inserts meal into the database
 	my $username = param('username');
 	my $date = param('date');
 	my $meal_name = param('meal_name');
@@ -1373,7 +1373,7 @@ sub exercise_screen() {
 
 }
 
-sub calorie_calculator() {
+sub calorie_calculator() {	# calculates calories of user based on personal details entered
 	my ($gender, $height, $weight, $age, $exercise, $goal) = @_;	
 	if ($gender eq 'Male') {
 		$var = 5;
@@ -1414,7 +1414,7 @@ sub calorie_calculator() {
 	return int($calories+0.5);
 }
 
-sub extract_info () {
+sub food_suggestions () {	# returns a scroll menu of foods containing the search query from the database and an external website
 	my $userSearch = param('search_term');
 		    
 	#my %info = insert_food($userSearch);
@@ -1466,7 +1466,7 @@ sub extract_info () {
 		print $DBI::errstr;
 	}
 	my $selected = param('food_selected');
-	while (my @row = $sth->fetchrow_array()) {
+	while (my @row = $sth->fetchrow_array()) {	# add foods from database to the scroll menu
 		$out .= qq(<option);
 		if ($row[0] eq $selected) {
 			$out .= " selected";
@@ -1474,7 +1474,7 @@ sub extract_info () {
 		$out .= qq(>$row[0]
 		);
 	}
-	foreach $food (@foods){
+	foreach $food (@foods){	# add foods from website to the scroll menu
 		$out .= qq(<option);
 		if ($food eq $selected) {
 			$out .= " selected";
@@ -1493,7 +1493,7 @@ sub extract_info () {
  	return $out;    
 }
 
-sub check_serving() {
+sub check_serving() {	# checks if a correct serving has been entered
 	my $serving = param('serving');
 	if ($serving eq "") {
 		return 0;
@@ -1503,7 +1503,7 @@ sub check_serving() {
 	return 1;
 }
 
-sub insert_food(){
+sub insert_food() {	# adds food from search to meal and updates meal calories and daily calorie counter, if not already in database insert into database
 	my $search = param('food_selected');
 	$driver = "SQLite"; 
 	$database = "project.db"; 
@@ -1520,7 +1520,7 @@ sub insert_food(){
 	my $fid = $row[0];
 	my $name = $row[1];
 	my $calories = $row[2];
-	if ($fid ne "") {
+	if ($fid ne "") {	# if already in database add to meal
 		my $username = param('username');
 		my $meal = param('meal');
 		my $date = param('date');
@@ -1542,7 +1542,7 @@ $stmt = qq(select id from user where username = '$username');
 		}
 		@row = $sth->fetchrow_array();
 		my $mid = $row[0];
-		my $updated = int(($row[1] + $calories * $serving / 100) + 0.5); 
+		my $updated = int(($row[1] + $calories * $serving / 100) + 0.5);	# update meal calories
 		$stmt = qq(insert into meal_contains(mid,fid,serving) values('$mid','$fid','$serving'));
 		$rv = $dbh->do($stmt) or die $DBI::errstr;
 		$stmt = qq(update meal set calories = $updated where id = '$mid');
@@ -1557,13 +1557,13 @@ $stmt = qq(select id from user where username = '$username');
 			print $DBI::errstr;
 		}
 		@row = $sth->fetchrow_array();
-		$updated = int(($row[0] + $calories * $serving / 100) + 0.5);
+		$updated = int(($row[0] + $calories * $serving / 100) + 0.5);	# update daily calorie counter
 		$stmt = qq(update calories set current = $updated where uid = '$uid' and date = '$date');
 		$rv = $dbh->do($stmt) or die $DBI::errstr;
 		if ($rv < 0) {
 			print $DBI::errstr;
 		}
-	} else {
+	} else {	# if not in database extract details from website and insert into database
 		my $mech = WWW::Mechanize->new;
 		my $serving = param('serving');
 		$mech->get('http://ndb.nal.usda.gov/ndb/foods');
