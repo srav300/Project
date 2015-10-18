@@ -39,21 +39,26 @@ UNZIP AND THEN GO INTO PROJECT DIRECTORY
 
 DOYOUEVENFIT.CGI AND CREATEDB.PL SHOULD BE IN /usr/lib/cgi-bin
 sudo mv doyouevenfit.cgi /usr/lib/cgi-bin
-
-RUN CREATEDB.PL TO CREATE DATABASE FILE PROJECT.DB
-sudo perl createdb.pl
+sudo mv createdb.pl /usr/lib/cgi-bin
 
 ACCOMPANYING FILES SHOULD BE IN /var/www/html
 sudo mv images /var/www/html
 sudo mv css /var/www/html
 sudo mv fonts /var/www/html
 sudo mv js /var/www/html
+
+GIVE PERMISSIONS
 cd /var/www/html
 sudo chmod 755 *
 cd /usr/lib/cgi-bin
-sudo chmod 755 *.cgi
+sudo chmod 755 *
+
+NEED THIS ADDITIONAL MODULE ENABLED FOR APACHE
 sudo a2enmod cgi
 sudo service apache2 restart
+
+RUN CREATEDB.PL TO CREATE DATABASE FILE PROJECT.DB
+sudo perl createdb.pl
 
 CGI SCRIPT NEEDS PERMISSION TO WRITE TO DATABASE
 sudo chown www-data:www-data /usr/lib/cgi-bin/project.db
@@ -65,6 +70,3 @@ NEED TO INSTALL THESE MODULES (HOW TO INSTALL IN READMEs)
 http://search.cpan.org/~stbey/Carp-Clan-6.04/lib/Carp/Clan.pod
 http://search.cpan.org/~stbey/Date-Calc-6.4/lib/Date/Calc.pod
 http://search.cpan.org/~ether/WWW-Mechanize-1.75/lib/WWW/Mechanize.pm
-
-
-//inserting null into an 'integer primary key' will autoincrement
