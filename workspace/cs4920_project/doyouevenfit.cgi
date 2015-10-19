@@ -285,10 +285,15 @@ sub check_register() {	# checks to see if details entered are correct and adhere
 		print $DBI::errstr;
 	}
 	@row = $sth->fetchrow_array();
-	$existing_username = $row[0];
-	if ($new_username eq $existing_username) {
+        if (@row) {
+	        $existing_username = $row[0];
+        } else {
+            $existing_username = "++";
+        }	
+    	if ($new_username eq $existing_username) {
 		return 0;
 	}
+
 	if ($password1 eq "") {
 		return 0;
         } elsif (length($password1) < 6) {
@@ -404,7 +409,15 @@ sub register_help() {	# notifies user of details entered incorrectly
 		print $DBI::errstr;
 	}
 	@row = $sth->fetchrow_array();
-	$existing_username = $row[0];
+        if (@row) {
+	        $existing_username = $row[0];
+        } else {
+            $existing_username = "++";
+        }	
+    	if ($new_username eq $existing_username) {
+		return 0;
+	}
+
 	if ($new_username eq $existing_username && $new_username ne "") {
 		$help .= qq(<text style="color:white";> * username already exists<p></p>);
 	}
