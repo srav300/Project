@@ -5,7 +5,7 @@ use CGI::Carp qw(fatalsToBrowser warningsToBrowser);
 use Data::Dumper;  
 use List::Util qw/min max/;
 use Date::Calc qw/check_date/;
-use WWW::Mechanize;
+#use WWW::Mechanize;
 warningsToBrowser(1);
 
 use DBI;
@@ -92,14 +92,14 @@ sub page_header {
 
 sub page_css {
 	$css = qq(
-	<link href="/css/style.css" rel="stylesheet" type="text/css" media="all" />
+	<link href="css/style.css" rel="stylesheet" type="text/css" media="all" />
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 	);
 	if ((defined param('meal') && !defined param('back_diet'))|| defined param('register') || (defined param('create_account') && !check_register()) || ($bg = "wood")) {
-		$css .= qq(<body background="/images/wood.jpg">);
+		$css .= qq(<body background="images/wood.jpg">);
 	} else {
-		$css .= qq(<body background="/images/banner.jpg">);
+		$css .= qq(<body background="images/banner.jpg">);
 	}	
 	$css .= qq(<body link="white">);
 	return $css;
@@ -114,11 +114,11 @@ sub login_screen(){
 	</pre>
 	<h2><font color="red" size="2">&nbsp</font></h2>);
 	if (defined param('username') && defined param('password') && !check_login()) {	# if user has failed to log in notify them	
-		$html .= qq(<center><small><font color="white">Your login details seem to be incorrect.</font></center></body>);
+		$html .= qq(<h2><font color="red" size="2">Your login details seem to be incorrect.</font></h2>	);
 	} elsif (defined param('create_account')) {	# if user has successfully created an account notify them
-		$html .= qq(<p><center><font color="white"><small>Registration successful. You can now proceed to log in.</font></center></p></body>);
+		$html .= qq(<h2><font color="white" size="2">Registration successful. You can now proceed to log in.</font></h2>	);
 	} else {
-		$html .= qq(<p><center><small><marquee></marquee></center></p></body>);
+		$html .= qq(<h2><font color="red" size="2">&nbsp;</font></h2>);
 	}
 	$html .= qq(<form action="doyouevenfit.cgi" method="post">
 	<input type="hidden" name="page" value="">
