@@ -115,6 +115,7 @@ sub banner {
 	<input type="hidden" name="page" value="">
 <input type="submit" name="logout" value="LOG OUT" class="button2" style="height:45px">
 </h1>
+<h2>&nbsp;</h2>
 </form><h1>DoYouEvenFit</h1>
 <h1>
 <form action="doyouevenfit.cgi" method="post">
