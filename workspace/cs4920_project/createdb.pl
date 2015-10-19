@@ -224,7 +224,11 @@ for my $alpha ('a'..'z') {
 	for my $curr (0..$size-1){
 		if($curr%2 ne 0){
 			my $name = $matches[$curr-1];
+			$name =~ s/^\s*//;
+			$name =~ s/\s*$//;
 			my $muscle = $matches[$curr];
+			$muscle =~ s/^\s*//;
+			$muscle =~ s/\s*$//;
 			$stmt = qq(insert into exercise (id, name, muscle) values (null, "$name", '$muscle'));					
 			my $rv = $dbh->do($stmt) or die $DBI::errstr;		
 		}	
