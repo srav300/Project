@@ -107,7 +107,7 @@ sub page_css {
     } if ($bg_handler eq 1) {
         $css .= qq(<body background="images/wood.jpg">);
     } if ($bg_handler eq 2) {
-        $css .= qq(<body background="images/blue.jpg">);
+        $css .= qq(<body background="images/green.jpg">);
     } if ($bg_handler eq 3) {
  		$css .= qq(<body background="images/banner.jpg">);
     }       
@@ -156,7 +156,8 @@ sub home() {
 	<input type="hidden" name="page" value="">
 	<pre> </pre>
 	<input type="submit" name="diet" value="DIET" class="button" style="height:45px;">&nbsp;
-	<input type="submit" name="exercise" value="EXERCISE" class="button" style="height:45px;"><br>
+	<input type="submit" name="exercise" value="EXERCISE" class="button" style="height:45px;">
+    <a href="logout.cgi" class="button" role="button" style="height:27px;">LOG OUT</a><br>
 	<p>&nbsp</p>);
 	$html .= hidden('username');
 	$html .= hidden('password');
