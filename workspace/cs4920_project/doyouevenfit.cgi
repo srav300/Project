@@ -11,13 +11,19 @@ warningsToBrowser(1);
 use DBI;
 
 $bg_handler = "2";
+$logout_handler = "0";
 
 print page_header();
 
-if (defined param('register')) {
+if (defined param('logout')) {
+    print logout();
+    $bg_handler = 2;
+}
+
+if (defined param('register') && $logout_handler ne "1") {
 	print register_screen();
     $bg_handler = 2;
-} elsif (defined param('create_account')) {
+} elsif (defined param('create_account') && $logout_handler ne "1") {
 	if (check_register()) {
 		create_account();
 		print login_screen();
@@ -26,14 +32,13 @@ if (defined param('register')) {
 		print register_help();
         $bg_handler = 3;
 	}
-} elsif (defined param('username') && defined param('password') ) {
+} elsif (defined param('username') && defined param('password') && $logout_handler ne "1") {
     $bg_handler = 2;
-    print banner();
 	if (check_login()) {
+        print banner();
 		if (defined param('add_food_search')) {
 			if (defined param('food_selected')) {
 				if (check_serving()) {
-					insert_food();
 					print show_meal();
 				} else {
 					print add_food_screen();
@@ -80,11 +85,11 @@ if (defined param('register')) {
 		} elsif (defined param('date')) {
 			print diet_screen();
 		}
-	} else {
+	} elsif($logout_handler ne "1") {
 		print login_screen();
         $bg_handler = "3"	
 	}
-} else {
+} elsif($logout_handler ne "1") {
 	print login_screen();
     $bg_handler = 3;
 }
@@ -104,10 +109,10 @@ sub banner {
 <h1>
 <form action="doyouevenfit.cgi" method="post">
 	<input type="hidden" name="page" value="">
-<input type="submit" name="home" value="HOME" class="button2" style="height:45px;">
 <input type="submit" name="diet" value="DIET" class="button2" style="height:45px;">
 <input type="submit" name="exercise" value="EXERCISE" class="button2" style="height:45px;">
 <input type="submit" name="update" value="UPDATE PROFILE" class="button2" style="height:45px">
+<input type="submit" name="logout" value="LOG OUT" class="button2" style="height:45px">
 );
 
     $css .= hidden('username');
@@ -117,6 +122,19 @@ sub banner {
 </div>
     );
 
+}
+
+sub logout {
+$logout_handler = "1";
+print <<EOF;
+<div class="header-banner" id="banner">
+<h1>&nbsp;</h1>
+<h1>&nbsp;</h1>
+<h1>&nbsp;</h1>
+<h1>You are now logged off.</h1>
+<META http-equiv="refresh" content="2;URL=index.html">
+<div>
+EOF
 }
 
 sub page_css {
@@ -663,8 +681,6 @@ sub diet_screen() {	# displays current calories out of goal calories and a list 
 			$output .= qq(<input type="submit" name="new_meal" value="NEW MEAL" class="button" style="height:45px;"><br>);
 		}
 	}
-	$output .= qq(<pre> </pre> <pre> </pre>
-	<input type="submit" name="home" value="HOME" class="button" style="height:45px;"><br>);
 	$output .= hidden('username');
 	$output .= hidden('password');
 	$output .= qq(</form>
