@@ -11,17 +11,16 @@ warningsToBrowser(1);
 use DBI;
 
 $bg_handler = "2";
-$logout_handler = "0";
 
 print page_header();
 
 if (defined param('logout')) {
     print login_screen();
     $bg_handler = 3;
-} elsif (defined param('register') && $logout_handler ne "1") {
+} elsif (defined param('register')) {
 	print register_screen();
     $bg_handler = 2;
-} elsif (defined param('create_account') && $logout_handler ne "1") {
+} elsif (defined param('create_account')) {
 	if (check_register()) {
 		create_account();
 		print login_screen();
@@ -30,12 +29,14 @@ if (defined param('logout')) {
 		print register_help();
         $bg_handler = 3;
 	}
-} elsif (defined param('username') && defined param('password') && $logout_handler ne "1") {
+} elsif (defined param('username') && defined param('password')) {
     $bg_handler = 2;
 	if (check_login()) {
         print banner();
-		if (defined param('cancel')) {
-			print home();
+		if (defined param('settings') || defined param('cancel')) {
+			print settings();
+		} elsif (defined param('change_password')) {
+			print change_password();		
 		} elsif (defined param('add_food_search')) {
 			if (defined param('food_selected')) {
 				if (check_serving()) {
@@ -56,7 +57,7 @@ if (defined param('logout')) {
 		} elsif (defined param('delete_food')) {
 			delete_food();
 			print show_meal();
-		} elsif (defined param('back_diet')) {
+		} elsif (defined param('diet') || defined param('back_diet')) {
 			print diet_screen();
 		} elsif (defined param('add_to_meal')) {
 			if (check_food()) {
@@ -78,11 +79,9 @@ if (defined param('logout')) {
 			print diet_screen();
 		} elsif (defined param('login') || defined param('home')) {
 			print home();
-		} elsif (defined param('diet')) {
-			print diet_screen();
 		} elsif (defined param('exercise')) {
 			print exercise_screen();
-		} elsif (defined param('date')) {
+		} elsif (defined param('diet_date')) {
 			print diet_screen();
 		} elsif (defined param('update_profile')) {
             print update_profile();
@@ -93,11 +92,11 @@ if (defined param('logout')) {
         } elsif (defined param('friend')) {
             print friend();
         }
-	} elsif($logout_handler ne "1") {
+	} else {
 		print login_screen();
         $bg_handler = "3"	
 	}
-} elsif($logout_handler ne "1") {
+} else {
 	print login_screen();
     $bg_handler = 3;
 }
@@ -113,21 +112,17 @@ sub banner {
     my $css = qq(
 	<div class="header-banner" id="banner">
 	<h1 align="right"><form action="doyouevenfit.cgi" method="post">
-		<input type="hidden" name="page" value="">
+	<input type="hidden" name="page" value="">
+	<input type="submit" name="settings" value="SETTINGS" class="button2" style="height:45px">
 	<input type="submit" name="logout" value="LOG OUT" class="button2" style="height:45px">
 	</h1>
-	<h2>&nbsp;</h2>
-	</form><h1>DoYouEvenFit</h1>
+	<h1>DoYouEvenFit</h1>
 	<h1>
-	<form action="doyouevenfit.cgi" method="post">
-		<input type="hidden" name="page" value="">
+	<input type="hidden" name="page" value="">
 	<input type="submit" name="diet" value="DIET" class="button2" style="height:45px;">
 	<input type="submit" name="exercise" value="EXERCISE" class="button2" style="height:45px;">
 	<input type="submit" name="friend" value="FRIENDS" class="button2" style="height:45px;">
-	<input type="submit" name="update" value="UPDATE PROFILE" class="button2" style="height:45px">
-
 	);
-
     $css .= hidden('username');
 	$css .= hidden('password');
 	$css .= qq(</form>   
@@ -137,7 +132,24 @@ sub banner {
 	return $css;
 }
 
-sub update{
+sub settings() {
+	my $html = qq(<div class="header-bottom" id="update">
+	<form action="doyouevenfit.cgi" method="post">
+	<input type="hidden" name="page" value="">
+	<input type="submit" name="update" value="UPDATE PERSONAL DETAILS" class="button2" style="height:45px;">
+	<pre> </pre> <pre> </pre>
+	<input type="submit" name="change_password" value="CHANGE PASSWORD" class="button2" style="height:45px;">
+	);
+    $html .= hidden('username');
+	$html .= hidden('password');
+	$html .= qq(</form>   
+	</h1>
+	</div>
+    );
+	return $html;
+}
+
+sub update() {
 $driver = "SQLite";
 	$database = "project.db";
 	$dsn = "DBI:$driver:dbname=$database";
@@ -155,15 +167,15 @@ $driver = "SQLite";
     $exercise = $row[10];
     $goal = $row[11];
 	my $output = qq(
-<div class="header-bottom" id="update">
-<form action="doyouevenfit.cgi" method="post">
-    <pre> </pre> <pre> </pre>
+	<div class="header-bottom" id="update">
+	<form action="doyouevenfit.cgi" method="post">
 	<center><h3 style="color:white;">Height (cm)</h3></center></body>
 	<input type="text" name="height" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="$height" onfocus="javascript:if(this.value=='')this.value='';"><br>
-	
+	<pre> </pre> <pre> </pre>
 	<center><h3 style="color:white">Weight (kg)</h3></center></body>
 	<input type="text" name="weight" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="$weight" onfocus="javascript:if(this.value=='')this.value='';"><br>
-	<center><h3 style="color:white;">What is your level of exercise?</h3></center></body>
+	<pre> </pre> <pre> </pre>
+	<center><h3 style="color:white;">What is your exercise level?</h3></center></body>
 
 	<select name="exercise" size=28  style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:116px;width:350px;font-family:AmbleRegular;"><br>
 
@@ -239,11 +251,15 @@ $driver = "SQLite";
 	);
 }
 
-sub update_profile{
+sub update_profile() {
 
 }
 
-sub friend{
+sub change_password() {
+
+}
+
+sub friend() {
     print <<EOF;
     <div class="header-banner" id="banner">
     <h1>TEST</h1>    
@@ -280,7 +296,7 @@ sub login_screen(){
 	</pre>
 	<h2><font color="red" size="2">&nbsp</font></h2>);
 	if (defined param('username') && defined param('password') && !check_login()) {	# if user has failed to log in notify them	
-		$html .= qq(<h2><font color="red" size="2">Your login details seem to be incorrect.</font></h2>	);
+		$html .= qq(<h2><font color="white" size="2">Your login details seem to be incorrect.</font></h2>	);
 	} elsif (defined param('create_account')) {	# if user has successfully created an account notify them
 		$html .= qq(<h2><font color="white" size="2">Registration successful. You can now proceed to log in.</font></h2>	);
 	} else {
@@ -322,7 +338,7 @@ sub home() {
     <div class="header-banner" id="tour">
 	<div class="wrap">
     <h1>&nbsp;</h1>
-    <h2>Welcome $row[0].</h2>
+    <h2>Welcome $row[0]!</h2>
 	<pre> </pre>
     </div>
     </div>
@@ -400,7 +416,7 @@ sub register_screen() {
 	<center><h3 style="color:white;">Age</h3></center></body>
 	<input type="text" name="age" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>
 	<pre> </pre> <pre> </pre>
-	<center><h3 style="color:white;">What is your level of exercise?</h3></center></body>
+	<center><h3 style="color:white;">What is your exercise level?</h3></center></body>
 	<select name="exercise" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:116px;width:350px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>
 	<option>Sedentary
 	<option>Lightly Active
@@ -675,7 +691,7 @@ sub register_help() {	# notifies user of details entered incorrectly
 		$help .= qq(<text style="color:white";> * age must consist of numeric characters only<p></p>);
 	}
 	$help .= qq(<pre> </pre> <pre> </pre>
-		<center><h3 style="color:white;">What is your level of exercise?</h3></center></body>
+		<center><h3 style="color:white;">What is your exercise level?</h3></center></body>
 		<select name="exercise" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:116px;width:350px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>
 		<option);
 	if ($exercise eq "Sedentary") {
@@ -757,22 +773,22 @@ sub diet_screen() {	# displays current calories out of goal calories and a list 
 	$year = `date +%Y`;
 	chomp($year);
 	$date = "$day/$month/$year";	# display current date if date is not already defined
-	if (defined param('date')) {
-		$date = param('date');
+	if (defined param('diet_date')) {
+		$date = param('diet_date');
 	}
 	$output .= qq(
 	<div class="header-bottom" id="tour">
 	<div class="wrap">
 	<form action="doyouevenfit.cgi" method="post">
 	<input type="hidden" name="page" value="">);
-	if (defined param('date') && !valid_date()) {	# notify user if they have entered an invalid date
+	if (defined param('diet_date') && !valid_date()) {	# notify user if they have entered an invalid date
 		$output .= qq(<text style="color:white";> * invalid date (DD/MM/YYYY)<p></p>);
 	}
 	$output .= qq(
 
 <div class="container">
     <div class="column-left"><h3 align="right"><font size="22" color="grey">&#8656;</font></h3></div>
-    <div class="column-center"><input type="text" name="date" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:22pt;height:40px;width:200px;font-family:AmbleRegular;"value="$date" onfocus="javascript:if(this.value=='')this.value='';"><br></div>
+    <div class="column-center"><input type="text" name="diet_date" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:22pt;height:40px;width:200px;font-family:AmbleRegular;"value="$date" onfocus="javascript:if(this.value=='')this.value='';"><br></div>
     <div class="column-right"><h3 align = "left"><font size="22" color="grey">&#8658;</font></h3></div>
 </div>
 
@@ -783,7 +799,7 @@ sub diet_screen() {	# displays current calories out of goal calories and a list 
 <input type="submit" name="change_date" value="" class="button_hide" style="height:0px;width;0px;"><br>);
 	$output .= qq(<p>&nbsp</p>
 	<p>&nbsp</p>);
-	if (!defined param('date') || (defined param('date') && valid_date())) {	# if valid date display calorie counter and meals
+	if (!defined param('diet_date') || (defined param('diet_date') && valid_date())) {	# if valid date display calorie counter and meals
 		$output .= qq(<h1>);
 		$output .= getCalories();
 		$output .= qq(</h1> <p>&nbsp</p>
@@ -832,7 +848,7 @@ sub diet_screen() {	# displays current calories out of goal calories and a list 
 
 sub show_meal() {	# displayed if user selects a meal from diet screen
 	my $username = param('username');
-	my $date = param('date');
+	my $date = param('diet_date');
 	my $meal = param('meal');
 	$meal =~ s/ \(\d+ calories\)$//;
 	$driver = "SQLite"; 
@@ -913,7 +929,7 @@ sub show_meal() {	# displayed if user selects a meal from diet screen
 
 sub show_food() {	# displayed if user selects food from show meal
 	my $username = param('username');
-	my $date = param('date');
+	my $date = param('diet_date');
 	my $meal = param('meal');
 	$meal =~ s/ \(\d+ calories\)$//;
 	my $food = param('food');
@@ -1003,7 +1019,7 @@ sub show_food() {	# displayed if user selects food from show meal
 sub delete_meal() {	# deletes meal and any relations from database and also updates daily calorie counter
 	my $username = param('username');
 	my $meal = param('meal');
-	my $date = param('date');
+	my $date = param('diet_date');
 	$meal =~ s/ \((\d+) calories\)$//;
 	my $serving = param('serving');
 $stmt = qq(select id from user where username = '$username'); 
@@ -1050,7 +1066,7 @@ $stmt = qq(select id from user where username = '$username');
 
 sub delete_food() {	# deletes table relating food to meal from database and updates meal calories and daily calorie counter
 	my $username = param('username');
-	my $date = param('date');
+	my $date = param('diet_date');
 	my $meal = param('meal');
 	$meal =~ s/ \(\d+ calories\)$//;
 	my $food = param('food');
@@ -1423,7 +1439,7 @@ sub insert_food_man() {	# inserts manually entered food into the database
 	my $trans = param('trans');
 	my $cholesterol = param('cholesterol');
 	my $meal = param('meal');
-	my $date = param('date');
+	my $date = param('diet_date');
 	$meal =~ s/ \((\d+) calories\)$//;
 	$driver = "SQLite"; 
 	$database = "project.db"; 
@@ -1481,8 +1497,8 @@ sub insert_food_man() {	# inserts manually entered food into the database
 
 sub getCalories() {	# returns the calorie counter as a string i.e. *current* of *goal* calories
 	$username = param('username');
-	if (defined param('date')) {
-		$date = param('date');
+	if (defined param('diet_date')) {
+		$date = param('diet_date');
 	}
 	$driver = "SQLite"; 
 	$database = "project.db"; 
@@ -1532,7 +1548,7 @@ sub getCalories() {	# returns the calorie counter as a string i.e. *current* of 
 }
 
 sub valid_date() {	# checks if date entered is valid
-	my $date = param('date');
+	my $date = param('diet_date');
 	if ($date eq "") {
 		return 0;
 	}
@@ -1546,7 +1562,7 @@ sub valid_date() {	# checks if date entered is valid
 
 sub insert_meal() {	# inserts meal into the database
 	my $username = param('username');
-	my $date = param('date');
+	my $date = param('diet_date');
 	my $meal_name = param('meal_name');
 	$driver = "SQLite"; 
 	$database = "project.db"; 
@@ -1719,7 +1735,7 @@ sub insert_food() {	# adds food from search to meal and updates meal calories an
 	if ($fid ne "") {	# if already in database add to meal
 		my $username = param('username');
 		my $meal = param('meal');
-		my $date = param('date');
+		my $date = param('diet_date');
 		$meal =~ s/ \((\d+) calories\)$//;
 		my $serving = param('serving');
 $stmt = qq(select id from user where username = '$username'); 
@@ -1815,7 +1831,7 @@ $stmt = qq(select id from user where username = '$username');
 		my $carbs = $nutritionalInfo{$infoNeeded[4]};
 		my $fat = $nutritionalInfo{$infoNeeded[3]};
 		my $meal = param('meal');
-		my $date = param('date');
+		my $date = param('diet_date');
 		$meal =~ s/ \((\d+) calories\)$//;
 		$driver = "SQLite"; 
 		$database = "project.db"; 
