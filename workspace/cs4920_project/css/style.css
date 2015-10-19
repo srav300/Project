@@ -132,7 +132,7 @@ color: #FFF;
 	font-size: 4em;
 	color: white;
 	font-family: 'AmbleRegular';
-    background: rgba(25,0,51,1);
+    background: rgba(25,0,51,0);
     line-height: 110%;
 }
 .header-banner h2{
@@ -202,6 +202,28 @@ color: #FFF;
    border: solid 1.5px rgba(255,255,255,0.7);
 }
 .button1:active {
+   background-color: rgba(255,255,255,0.8);
+}
+
+.button2 {
+   font-family: 'AmbleRegular';
+   background-color: rgba(0,0,0,0);
+   border: solid 1.5px rgba(255,255,255,1);
+   -webkit-border-radius: 0px;
+      -moz-border-radius: 0px;
+           border-radius: 0px;
+
+   height: 28px;
+   padding: 8px;
+   display: inline-block;
+   font-size: 30px;
+   color: rgba(255,255,255,1);
+}
+.button2:hover {
+   background-color: rgba(255,255,255,0.4);
+   border: solid 1.5px rgba(255,255,255,0.7);
+}
+.button2:active {
    background-color: rgba(255,255,255,0.8);
 }
 
