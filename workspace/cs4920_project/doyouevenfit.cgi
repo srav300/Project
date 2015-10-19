@@ -20,6 +20,7 @@ if (defined param('logout')) {
     $bg_handler = 2;
 }
 
+
 if (defined param('register') && $logout_handler ne "1") {
 	print register_screen();
     $bg_handler = 2;
@@ -84,7 +85,13 @@ if (defined param('register') && $logout_handler ne "1") {
 			print exercise_screen();
 		} elsif (defined param('date')) {
 			print diet_screen();
-		}
+		} elsif (defined param('update_profile')) {
+            print update_profile();
+        } elsif (defined param('cancel')) {
+            print cancel();
+        } elsif (defined param('update')) {
+            print update();
+        }
 	} elsif($logout_handler ne "1") {
 		print login_screen();
         $bg_handler = "3"	
@@ -135,6 +142,54 @@ print <<EOF;
 <META http-equiv="refresh" content="2;URL=index.html">
 <div>
 EOF
+}
+
+sub update{
+return qq(
+<div class="header-bottom" id="update">
+
+    <pre> </pre> <pre> </pre>
+	<center><h3 style="color:white;">Height (cm)</h3></center></body>
+	<input type="text" name="height" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>
+	
+	<center><h3 style="color:white">Weight (kg)</h3></center></body>
+	<input type="text" name="weight" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>
+	<center><h3 style="color:white;">What is your level of exercise?</h3></center></body>
+	<select name="exercise" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:116px;width:350px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>
+	<option>Sedentary
+	<option>Lightly Active
+	<option>Moderately Active
+	<option>Very Active
+	<option>Extremely Active
+	</select>
+	<pre> </pre> <pre> </pre>
+	<center><h3 style="color:white;">What is your goal?</h3></center></body>
+	<select name="goal" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:116px;width:350px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>
+	<option>Extreme Weight Loss
+	<option>Weight Loss
+	<option>Maintain Weight
+	<option>Weight Gain
+	<option>Extreme Weight Gain
+	</select>
+	<p>&nbsp</p>
+	<pre>
+	</pre>
+	<input type="submit" name="update_profile" value="Update" class="button" style="height:45px;width:220px;"><br>
+    <p>&nbsp</p>
+    <input type="submit" name="cancel" value="Cancel" class="button" style="height:45px;width:220px;"><br>
+	<p>&nbsp</p>
+	</form>
+</div>
+
+);
+}
+
+sub update_profile{
+
+}
+
+sub cancel{
+
 }
 
 sub page_css {
@@ -190,10 +245,25 @@ sub login_screen(){
 }
 
 sub home() {
+    $driver = "SQLite";
+	$database = "project.db";
+	$dsn = "DBI:$driver:dbname=$database";
+	$userid = ""; $dbpassword = "";
+	$dbh = DBI->connect($dsn, $userid, $dbpassword, { RaiseError => 1 }) or die $DBI::errstr;
+	$stmt = qq(select fname from user where username = '$username');
+	$sth = $dbh->prepare($stmt);
+	$rv = $sth->execute() or die $DBI::errstr;
+	if ($rv < 0) {
+		print $DBI::errstr;
+	}
+	@row = $sth->fetchrow_array();
+	 $existing_username = $row[0];
+
 	my $html = qq(
-    <div class="header-bottom" id="tour">
+    <div class="header-banner" id="tour">
 	<div class="wrap">
-    <h1>Welcome User.</h1>
+    <h1>&nbsp;</h1>
+    <h2>Welcome $row[0].</h2>
 	<pre> </pre>
     </div>
     </div>
@@ -639,8 +709,19 @@ sub diet_screen() {	# displays current calories out of goal calories and a list 
 	if (defined param('date') && !valid_date()) {	# notify user if they have entered an invalid date
 		$output .= qq(<text style="color:white";> * invalid date (DD/MM/YYYY)<p></p>);
 	}
-	$output .= qq(<input type="text" name="date" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;width:200px;font-family:AmbleRegular;"value="$date" onfocus="javascript:if(this.value=='')this.value='';"><br>);
-	$output .= qq(<input type="submit" name="change_date" value="" class="button" style="height:0px;width;0px;"><br>);
+	$output .= qq(
+
+<div class="container">
+    <div class="column-left"><h3 align="right"><font size="22" color="grey">&#8656;</font></h3></div>
+    <div class="column-center"><input type="text" name="date" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:22pt;height:40px;width:200px;font-family:AmbleRegular;"value="$date" onfocus="javascript:if(this.value=='')this.value='';"><br></div>
+    <div class="column-right"><h3 align = "left"><font size="22" color="grey">&#8658;</font></h3></div>
+</div>
+
+);
+
+
+	$output .= qq(
+<input type="submit" name="change_date" value="" class="button_hide" style="height:0px;width;0px;"><br>);
 	$output .= qq(<p>&nbsp</p>
 	<p>&nbsp</p>);
 	if (!defined param('date') || (defined param('date') && valid_date())) {	# if valid date display calorie counter and meals
