@@ -157,6 +157,9 @@ sub home() {
 	<pre> </pre>
 	<input type="submit" name="diet" value="DIET" class="button" style="height:45px;">&nbsp;
 	<input type="submit" name="exercise" value="EXERCISE" class="button" style="height:45px;">
+    <p>&nbsp</p>;
+    <input type="submit" name="update" value="UPDATE PROFILE" class="button" style="height:45px;width:350px;">
+    <p>&nbsp</p>;
     <a href="logout.cgi" class="button" role="button" style="height:27px;">LOG OUT</a><br>
 	<p>&nbsp</p>);
 	$html .= hidden('username');
