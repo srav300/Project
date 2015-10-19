@@ -10,21 +10,24 @@ warningsToBrowser(1);
 
 use DBI;
 
-$bg = "banner";
+$bg_handler = "2";
 
 print page_header();
-print page_css();
 
 if (defined param('register')) {
 	print register_screen();
+    $bg_handler = 3;
 } elsif (defined param('create_account')) {
 	if (check_register()) {
 		create_account();
 		print login_screen();
+        $bg_handler = 3;
 	} else {
 		print register_help();
+        $bg_handler = 3;
 	}
 } elsif (defined param('username') && defined param('password') ) {
+    $bg_handler = 2;
 	if (check_login()) {
 		if (defined param('add_food_search')) {
 			if (defined param('food_selected')) {
@@ -81,8 +84,9 @@ if (defined param('register')) {
 	}
 } else {
 	print login_screen();
+    $bg_handler = 3;
 }
-
+print page_css();
 print page_footer();
 
 sub page_header {
@@ -96,11 +100,16 @@ sub page_css {
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 	);
-	if ((defined param('meal') && !defined param('back_diet'))|| defined param('register') || (defined param('create_account') && !check_register()) || ($bg = "wood")) {
-		$css .= qq(<body background="images/wood.jpg">);
-	} else {
-		$css .= qq(<body background="images/banner.jpg">);
-	}	
+
+    if ($bg_handler eq 0) {
+        
+    } if ($bg_handler eq 1) {
+        $css .= qq(<body background="images/wood.jpg">);
+    } if ($bg_handler eq 2) {
+        $css .= qq(<body background="images/green.jpg">);
+    } if ($bg_handler eq 3) {
+ 		$css .= qq(<body background="images/banner.jpg">);
+    }       
 	$css .= qq(<body link="white">);
 	return $css;
 }
@@ -138,14 +147,14 @@ sub login_screen(){
 }
 
 sub home() {
-	my $html = qq(<div class="header-bottom" id="tour">
+	my $html = qq(
+    <div class="header-bottom" id="tour">
 	<div class="wrap">
 	<pre> </pre>
 	<form action="doyouevenfit.cgi" method="post">
 	<input type="hidden" name="page" value="">
 	<pre> </pre>
-	<input type="submit" name="diet" value="DIET" class="button" style="height:45px;"><br>
-	<pre> </pre> <pre> </pre>
+	<input type="submit" name="diet" value="DIET" class="button" style="height:45px;">&nbsp;&nbsp;&nbsp;&nbsp;
 	<input type="submit" name="exercise" value="EXERCISE" class="button" style="height:45px;"><br>
 	<p>&nbsp</p>);
 	$html .= hidden('username');
