@@ -28,6 +28,7 @@ if (defined param('register')) {
 	}
 } elsif (defined param('username') && defined param('password') ) {
     $bg_handler = 2;
+    print banner();
 	if (check_login()) {
 		if (defined param('add_food_search')) {
 			if (defined param('food_selected')) {
@@ -95,6 +96,29 @@ sub page_header {
 	start_html("-title"=>"DoYouEvenFit"),
 }
 
+sub banner {
+    $css .= qq(
+<div class="header-banner" id="banner">
+<h1>&nbsp;</h1>
+<h1>DoYouEvenFit</h1>
+<h1>
+<form action="doyouevenfit.cgi" method="post">
+	<input type="hidden" name="page" value="">
+<input type="submit" name="home" value="HOME" class="button" style="height:45px;">&nbsp;
+<input type="submit" name="diet" value="DIET" class="button" style="height:45px;">&nbsp;
+<input type="submit" name="exercise" value="EXERCISE" class="button" style="height:45px;">&nbsp;
+<input type="submit" name="update" value="UPDATE PROFILE" class="button" style="height:45px;width:350px;">&nbsp;
+);
+
+    $css .= hidden('username');
+	$css .= hidden('password');
+	$css .= qq(</form>   
+</h1>
+</div>
+    );
+
+}
+
 sub page_css {
 	$css = qq(
 	<link href="css/style.css" rel="stylesheet" type="text/css" media="all" />
@@ -151,22 +175,11 @@ sub home() {
 	my $html = qq(
     <div class="header-bottom" id="tour">
 	<div class="wrap">
+    <h1>Welcome User.</h1>
 	<pre> </pre>
-	<form action="doyouevenfit.cgi" method="post">
-	<input type="hidden" name="page" value="">
-	<pre> </pre>
-	<input type="submit" name="diet" value="DIET" class="button" style="height:45px;">&nbsp;
-	<input type="submit" name="exercise" value="EXERCISE" class="button" style="height:45px;">
-    <p>&nbsp</p>;
-    <input type="submit" name="update" value="UPDATE PROFILE" class="button" style="height:45px;width:350px;">
-    <p>&nbsp</p>;
-    <a href="logout.cgi" class="button" role="button" style="height:27px;">LOG OUT</a><br>
-	<p>&nbsp</p>);
-	$html .= hidden('username');
-	$html .= hidden('password');
-	$html .= qq(</form>
-	</div>
-	</div>);
+    </div>
+    </div>
+	)
 }
 
 sub check_login() {	# checks to see if username and password are correct
