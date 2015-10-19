@@ -18,10 +18,7 @@ print page_header();
 if (defined param('logout')) {
     print logout();
     $bg_handler = 2;
-}
-
-
-if (defined param('register') && $logout_handler ne "1") {
+} elsif (defined param('register') && $logout_handler ne "1") {
 	print register_screen();
     $bg_handler = 2;
 } elsif (defined param('create_account') && $logout_handler ne "1") {
@@ -37,7 +34,9 @@ if (defined param('register') && $logout_handler ne "1") {
     $bg_handler = 2;
 	if (check_login()) {
         print banner();
-		if (defined param('add_food_search')) {
+		if (defined param('cancel')) {
+			print home();
+		} elsif (defined param('add_food_search')) {
 			if (defined param('food_selected')) {
 				if (check_serving()) {
 					print show_meal();
@@ -109,30 +108,30 @@ sub page_header {
 }
 
 sub banner {
-    $css .= qq(
-<div class="header-banner" id="banner">
-<h1 align="right"><form action="doyouevenfit.cgi" method="post">
-	<input type="hidden" name="page" value="">
-<input type="submit" name="logout" value="LOG OUT" class="button2" style="height:45px">
-</h1>
-<h2>&nbsp;</h2>
-</form><h1>DoYouEvenFit</h1>
-<h1>
-<form action="doyouevenfit.cgi" method="post">
-	<input type="hidden" name="page" value="">
-<input type="submit" name="diet" value="DIET" class="button2" style="height:45px;">
-<input type="submit" name="exercise" value="EXERCISE" class="button2" style="height:45px;">
-<input type="submit" name="update" value="UPDATE PROFILE" class="button2" style="height:45px">
+    my $css = qq(
+	<div class="header-banner" id="banner">
+	<h1 align="right"><form action="doyouevenfit.cgi" method="post">
+		<input type="hidden" name="page" value="">
+	<input type="submit" name="logout" value="LOG OUT" class="button2" style="height:45px">
+	</h1>
+	<h2>&nbsp;</h2>
+	</form><h1>DoYouEvenFit</h1>
+	<h1>
+	<form action="doyouevenfit.cgi" method="post">
+		<input type="hidden" name="page" value="">
+	<input type="submit" name="diet" value="DIET" class="button2" style="height:45px;">
+	<input type="submit" name="exercise" value="EXERCISE" class="button2" style="height:45px;">
+	<input type="submit" name="update" value="UPDATE PROFILE" class="button2" style="height:45px">
 
-);
+	);
 
     $css .= hidden('username');
 	$css .= hidden('password');
 	$css .= qq(</form>   
-</h1>
-</div>
+	</h1>
+	</div>
     );
-
+	return $css;
 }
 
 sub logout {
@@ -165,9 +164,9 @@ $driver = "SQLite";
     $weight = $row[8];
     $exercise = $row[10];
     $goal = $row[11];
-return qq(
+	my $output = qq(
 <div class="header-bottom" id="update">
-
+<form action="doyouevenfit.cgi" method="post">
     <pre> </pre> <pre> </pre>
 	<center><h3 style="color:white;">Height (cm)</h3></center></body>
 	<input type="text" name="height" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="$height" onfocus="javascript:if(this.value=='')this.value='';"><br>
@@ -176,50 +175,87 @@ return qq(
 	<input type="text" name="weight" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="$weight" onfocus="javascript:if(this.value=='')this.value='';"><br>
 	<center><h3 style="color:white;">What is your level of exercise?</h3></center></body>
 
-	<select name="exercise" size=28  value = "$exercise" style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:116px;width:350px;font-family:AmbleRegular;"><br>
+	<select name="exercise" size=28  style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:116px;width:350px;font-family:AmbleRegular;"><br>
 
-    <option selected="$exercise">Sedentary</option>
-    <option selected="$exercise">Lightly Active</option>
-	<option selected="$exercise">Moderately Active</option>
-	<option selected="$exercise">Very Active</option>
-	<option selected="$exercise">Extremely Active</option>
+    <option);
+	if ($exercise eq "Sedentary") {
+		$output .= " selected";
+	}
+	$output .= qq(>Sedentary
+		<option);
+	if ($exercise eq "Lightly Active") {
+		$output .= " selected";
+	}
+	$output .= qq(>Lightly Active
+		<option);
+	if ($exercise eq "Moderately Active") {
+		$output .= " selected";
+	}
+	$output .= qq(>Moderately Active
+		<option);
+	if ($exercise eq "Very Active") {
+		$output .= " selected";
+	}
+	$output .= qq(>Very Active
+		<option);
+	if ($exercise eq "Extremely Active") {
+		$output .= " selected";
+	}
+ 	$output .= qq(>Extremely Active
 	</select>
 
 
 	<pre> </pre> <pre> </pre>
 	<center><h3 style="color:white;">What is your goal?</h3></center></body>
-	<select name="goal" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:116px;width:350px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>
-	<option selected="$goal">Extreme Weight Loss</option>
-	<option selected="$goal">Weight Loss</option>
-	<option selected="$goal">Maintain Weight</option>
-	<option selected="$goal">Weight Gain</option>
-	<option selected="$goal">Extreme Weight Gain</option>
-	</select>
+	<select name="goal" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:116px;width:350px;font-family:AmbleRegular;"><br>
 
+	<option );
+	if ($goal eq "Extreme Weight Loss") {
+		$output .= " selected";
+	}
+	$output .= qq(>Extreme Weight Loss
+		<option);
+	if ($goal eq "Weight Loss") {
+		$output .= " selected";
+	}
+	$output .= qq(>Weight Loss
+		<option);
+	if ($goal eq "Maintain Weight") {
+		$output .= " selected";
+	}
+	$output .= qq(>Maintain Weight
+		<option);
+	if ($goal eq "Weight Gain") {
+		$output .= " selected";
+	}
+	$output .= qq(>Weight Gain
+		<option);
+	if ($goal eq "Extreme Weight Gain") {
+		$output .= " selected";
+	}
+	$output .= qq(>Extreme Weight Gain
+	</select>
 	<p>&nbsp</p>
 	<pre>
 	</pre>
 	<input type="submit" name="update_profile" value="Update" class="button" style="height:45px;width:220px;"><br>
     <p>&nbsp</p>
     <input type="submit" name="cancel" value="Cancel" class="button" style="height:45px;width:220px;"><br>
-	<p>&nbsp</p>
-	</form>
-</div>
-
-);
+	<p>&nbsp</p>);
+	$output .= hidden('username');
+	$output .= hidden('password');
+	$output .= qq(</form>
+	</div>
+	);
 }
 
 sub update_profile{
 
 }
 
-sub cancel{
-
-}
-
 sub page_css {
 	$css = qq(
-	<link href="css/style.css" rel="stylesheet" type="text/css" media="all" />
+	<link href="/css/style.css" rel="stylesheet" type="text/css" media="all" />
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 	);
@@ -227,11 +263,11 @@ sub page_css {
     if ($bg_handler eq 0) {
         
     } if ($bg_handler eq 1) {
-        $css .= qq(<body background="images/wood.jpg">);
+        $css .= qq(<body background="/images/wood.jpg">);
     } if ($bg_handler eq 2) {
-        $css .= qq(<body background="images/green.jpg">);
+        $css .= qq(<body background="/images/wood.jpg">);
     } if ($bg_handler eq 3) {
- 		$css .= qq(<body background="images/banner.jpg">);
+ 		$css .= qq(<body background="/images/banner.jpg">);
     }       
 	$css .= qq(<body link="white">);
 	return $css;
