@@ -84,10 +84,10 @@ color: #FFF;
 	font-family: "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif, sans-serif;
 }
 .header-bottom{
-	padding-top: 10%;
-    padding-right: 25%;
+	padding-top: 5%;
+    padding-right: 15%;
     padding-bottom: 0%;
-    padding-left: 25%;
+    padding-left: 15%;
 	text-align: center;
 }
 .header-bottom h1{
@@ -109,17 +109,57 @@ color: #FFF;
 	font-family: 'AmbleRegular';
 	padding: 1% 0 4%;
 }
-.header-bottom h1 span{
+.header-banner h1 span{
 	font-family: "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif, sans-serif;		
 }
-.header-bottom h3{
+.header-banner h3{
 	font-size:2.5em;
 	color: #555;
 	font-family: 'AmbleRegular';
 }
-.header-bottom h3 span{
+.header-banner h3 span{
 	font-family: "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif, sans-serif;	
 }
+
+.header-banner {
+	padding-top: 0%;
+    padding-right: 0%;
+    padding-bottom: 0%;
+    padding-left: 0%;
+	text-align: center;
+}
+.header-banner h1{
+	font-size: 4em;
+	color: white;
+	font-family: 'AmbleRegular';
+    background: rgba(25,0,51,1);
+    line-height: 110%;
+}
+.header-banner h2{
+	font-size:1.6em;
+	color: #555;
+	font-family: 'AmbleRegular';
+	padding: 1% 0 4%;
+}
+.wrap h2{
+	font-size:1.3em;
+	color: #555;
+	font-family: 'AmbleRegular';
+	padding: 1% 0 4%;
+}
+.header-banner h1 span{
+	font-family: "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif, sans-serif;		
+}
+.header-banner h3{
+	font-size:2.5em;
+	color: #555;
+	font-family: 'AmbleRegular';
+}
+.header-banner h3 span{
+	font-family: "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif, sans-serif;	
+}
+
+
 
 .button {
    font-family: 'AmbleRegular';
