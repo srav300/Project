@@ -2,6 +2,7 @@
 
 use DBI;
 use strict;
+use WWW::Mechanize;
 
 my $driver   = "SQLite"; 
 my $database = "project.db";
@@ -172,7 +173,7 @@ if($rv < 0){
 my $stmt = qq(create TABLE exercise (
 	id INTEGER PRIMARY KEY,
 	name TEXT,
-	muscle TEXT,
+	muscle TEXT
 ););
 my $rv = $dbh->do($stmt);
 if($rv < 0){
@@ -215,19 +216,22 @@ if($rv < 0){
 }
 
 for my $alpha ('a'..'z') {
+	my $mech = WWW::Mechanize->new;
 	$mech->get("http:\/\/www\.bodybuilding\.com\/exercises\/list\/index\/selected\/$alpha");
-
 	my $content = $mech->content;
-
 	my @matches = ($content =~ m/<h3><a.*?>(.*?)<\/a>.*\n*.*?<p>.*?<span><a.*?>(.*?)<\/a>/g);
 	my $size = @matches;
 	for my $curr (0..$size-1){
 		if($curr%2 ne 0){
-			$stmt = qq(insert into exercise values(null, '$matches[$curr-1]', '$matches[$curr]'));					
-			$rv = $dbh->do($stmt) or die $DBI::errstr;		
+			my $name = $matches[$curr-1];
+			my $muscle = $matches[$curr];
+			$stmt = qq(insert into exercise (id, name, muscle) values (null, "$name", '$muscle'));					
+			my $rv = $dbh->do($stmt) or die $DBI::errstr;		
 		}	
 	}
 }
 
+$stmt = qq(insert into user values(null,'admin','istrator','admin','doyoueven', 'doyouevenfit.com', 'Male', 183, 85, 21, 'Moderately Active', 'Maintain Weight')); 
+my $rv = $dbh->do($stmt) or die $DBI::errstr; 
 
 $dbh->disconnect();
