@@ -145,32 +145,53 @@ EOF
 }
 
 sub update{
+$driver = "SQLite";
+	$database = "project.db";
+	$dsn = "DBI:$driver:dbname=$database";
+	$userid = ""; $dbpassword = "";
+	$dbh = DBI->connect($dsn, $userid, $dbpassword, { RaiseError => 1 }) or die $DBI::errstr;
+	$stmt = qq(select * from user where username = '$username');
+	$sth = $dbh->prepare($stmt);
+	$rv = $sth->execute() or die $DBI::errstr;
+	if ($rv < 0) {
+		print $DBI::errstr;
+	}
+	@row = $sth->fetchrow_array();
+	$height = $row[7];
+    $weight = $row[8];
+    $exercise = $row[10];
+    $goal = $row[11];
 return qq(
 <div class="header-bottom" id="update">
 
     <pre> </pre> <pre> </pre>
 	<center><h3 style="color:white;">Height (cm)</h3></center></body>
-	<input type="text" name="height" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>
+	<input type="text" name="height" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="$height" onfocus="javascript:if(this.value=='')this.value='';"><br>
 	
 	<center><h3 style="color:white">Weight (kg)</h3></center></body>
-	<input type="text" name="weight" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>
+	<input type="text" name="weight" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="$weight" onfocus="javascript:if(this.value=='')this.value='';"><br>
 	<center><h3 style="color:white;">What is your level of exercise?</h3></center></body>
-	<select name="exercise" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:116px;width:350px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>
-	<option>Sedentary
-	<option>Lightly Active
-	<option>Moderately Active
-	<option>Very Active
-	<option>Extremely Active
+
+	<select name="exercise" size=28  value = "$exercise" style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:116px;width:350px;font-family:AmbleRegular;"><br>
+
+    <option selected="$exercise">Sedentary</option>
+    <option selected="$exercise">Lightly Active</option>
+	<option selected="$exercise">Moderately Active</option>
+	<option selected="$exercise">Very Active</option>
+	<option selected="$exercise">Extremely Active</option>
 	</select>
+
+
 	<pre> </pre> <pre> </pre>
 	<center><h3 style="color:white;">What is your goal?</h3></center></body>
 	<select name="goal" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:116px;width:350px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>
-	<option>Extreme Weight Loss
-	<option>Weight Loss
-	<option>Maintain Weight
-	<option>Weight Gain
-	<option>Extreme Weight Gain
+	<option selected="$goal">Extreme Weight Loss</option>
+	<option selected="$goal">Weight Loss</option>
+	<option selected="$goal">Maintain Weight</option>
+	<option selected="$goal">Weight Gain</option>
+	<option selected="$goal">Extreme Weight Gain</option>
 	</select>
+
 	<p>&nbsp</p>
 	<pre>
 	</pre>
