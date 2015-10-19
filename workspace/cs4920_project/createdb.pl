@@ -214,4 +214,20 @@ if($rv < 0){
    print "Table created successfully\n";
 }
 
+for my $alpha ('a'..'z') {
+	$mech->get("http:\/\/www\.bodybuilding\.com\/exercises\/list\/index\/selected\/$alpha");
+
+	my $content = $mech->content;
+
+	my @matches = ($content =~ m/<h3><a.*?>(.*?)<\/a>.*\n*.*?<p>.*?<span><a.*?>(.*?)<\/a>/g);
+	my $size = @matches;
+	for my $curr (0..$size-1){
+		if($curr%2 ne 0){
+			$stmt = qq(insert into exercise values(null, '$matches[$curr-1]', '$matches[$curr]'));					
+			$rv = $dbh->do($stmt) or die $DBI::errstr;		
+		}	
+	}
+}
+
+
 $dbh->disconnect();
