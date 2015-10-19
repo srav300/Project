@@ -16,7 +16,7 @@ print page_header();
 
 if (defined param('register')) {
 	print register_screen();
-    $bg_handler = 3;
+    $bg_handler = 2;
 } elsif (defined param('create_account')) {
 	if (check_register()) {
 		create_account();
@@ -80,7 +80,8 @@ if (defined param('register')) {
 			print diet_screen();
 		}
 	} else {
-		print login_screen();	
+		print login_screen();
+        $bg_handler = "3"	
 	}
 } else {
 	print login_screen();
@@ -106,7 +107,7 @@ sub page_css {
     } if ($bg_handler eq 1) {
         $css .= qq(<body background="images/wood.jpg">);
     } if ($bg_handler eq 2) {
-        $css .= qq(<body background="images/green.jpg">);
+        $css .= qq(<body background="images/blue.jpg">);
     } if ($bg_handler eq 3) {
  		$css .= qq(<body background="images/banner.jpg">);
     }       
@@ -154,7 +155,7 @@ sub home() {
 	<form action="doyouevenfit.cgi" method="post">
 	<input type="hidden" name="page" value="">
 	<pre> </pre>
-	<input type="submit" name="diet" value="DIET" class="button" style="height:45px;">&nbsp;&nbsp;&nbsp;&nbsp;
+	<input type="submit" name="diet" value="DIET" class="button" style="height:45px;">&nbsp;
 	<input type="submit" name="exercise" value="EXERCISE" class="button" style="height:45px;"><br>
 	<p>&nbsp</p>);
 	$html .= hidden('username');
