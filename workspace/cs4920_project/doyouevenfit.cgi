@@ -104,10 +104,10 @@ sub banner {
 <h1>
 <form action="doyouevenfit.cgi" method="post">
 	<input type="hidden" name="page" value="">
-<input type="submit" name="home" value="HOME" class="button" style="height:45px;">&nbsp;
-<input type="submit" name="diet" value="DIET" class="button" style="height:45px;">&nbsp;
-<input type="submit" name="exercise" value="EXERCISE" class="button" style="height:45px;">&nbsp;
-<input type="submit" name="update" value="UPDATE PROFILE" class="button" style="height:45px;width:350px;">&nbsp;
+<input type="submit" name="home" value="HOME" class="button2" style="height:45px;">
+<input type="submit" name="diet" value="DIET" class="button2" style="height:45px;">
+<input type="submit" name="exercise" value="EXERCISE" class="button2" style="height:45px;">
+<input type="submit" name="update" value="UPDATE PROFILE" class="button2" style="height:45px">
 );
 
     $css .= hidden('username');
