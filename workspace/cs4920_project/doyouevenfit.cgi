@@ -111,15 +111,18 @@ sub page_header {
 sub banner {
     $css .= qq(
 <div class="header-banner" id="banner">
-<h1>&nbsp;</h1>
-<h1>DoYouEvenFit</h1>
+<h1 align="right"><form action="doyouevenfit.cgi" method="post">
+	<input type="hidden" name="page" value="">
+<input type="submit" name="logout" value="LOG OUT" class="button2" style="height:45px">
+</h1>
+</form><h1>DoYouEvenFit</h1>
 <h1>
 <form action="doyouevenfit.cgi" method="post">
 	<input type="hidden" name="page" value="">
 <input type="submit" name="diet" value="DIET" class="button2" style="height:45px;">
 <input type="submit" name="exercise" value="EXERCISE" class="button2" style="height:45px;">
 <input type="submit" name="update" value="UPDATE PROFILE" class="button2" style="height:45px">
-<input type="submit" name="logout" value="LOG OUT" class="button2" style="height:45px">
+
 );
 
     $css .= hidden('username');
