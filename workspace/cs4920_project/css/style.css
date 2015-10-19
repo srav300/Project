@@ -9,6 +9,12 @@ blockquote:before,blockquote:after,q:before,q:after{content:'';content:none;}
 table{border-collapse:collapse;border-spacing:0;}
 /* start editing from here */
 a{text-decoration:none;}
+
+.column-left{ float: left; width: 33%; }
+.column-right{ float: right; width: 33%; }
+.column-center{ display: inline-block; width: 33%; }
+
+
 .txt-rt{text-align:right;}/* text align right */
 .txt-lt{text-align:left;}/* text align left */
 .txt-center{text-align:center;}/* text align center */
@@ -109,15 +115,15 @@ color: #FFF;
 	font-family: 'AmbleRegular';
 	padding: 1% 0 4%;
 }
-.header-banner h1 span{
+.header-bottom h1 span{
 	font-family: "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif, sans-serif;		
 }
-.header-banner h3{
+.header-bottom h3{
 	font-size:2.5em;
 	color: #555;
 	font-family: 'AmbleRegular';
 }
-.header-banner h3 span{
+.header-bottom h3 span{
 	font-family: "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif, sans-serif;	
 }
 
@@ -129,21 +135,21 @@ color: #FFF;
 	text-align: center;
 }
 .header-banner h1{
-	font-size: 4em;
+	font-size: 5em;
 	color: white;
 	font-family: 'AmbleRegular';
     background: rgba(25,0,51,0);
     line-height: 110%;
 }
 .header-banner h2{
-	font-size:1.6em;
-	color: #555;
+	font-size: 3em;
+	color: white;
 	font-family: 'AmbleRegular';
 	padding: 1% 0 4%;
 }
 .wrap h2{
-	font-size:1.3em;
-	color: #555;
+	font-size: 3em;
+	color: white;
 	font-family: 'AmbleRegular';
 	padding: 1% 0 4%;
 }
@@ -226,6 +232,19 @@ color: #FFF;
 .button2:active {
    background-color: rgba(255,255,255,0.8);
 }
+
+.button_hide {
+   font-family: 'AmbleRegular';
+   background-color: rgba(0,0,0,0);
+   border: solid 0px rgba(255,255,255,0);
+   width: 182px;
+   height: 0px;
+   padding: 8px;
+   display: inline-block;
+   font-size: 30px;
+   color: rgba(255,255,255,1);
+}
+
 
 p.desc{
 	color:#555;
