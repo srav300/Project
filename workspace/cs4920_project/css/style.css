@@ -1162,3 +1162,19 @@ p.copy a:hover{
   filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#1777d9', endColorstr='#3998f5',GradientType=0 );
   border: 1px solid #076CCE;
 }
+
+.styled-select {
+   background: rgba(255,255,255,0.5);
+   text-align: center;
+   font-family: 'AmbleRegular';
+   font-size: 16pt;
+   border:1px;
+   solid: #ffffff;
+   border: 0;
+   border-radius: 0;
+/*   height: 100px;*/
+   width: 350px;
+   -webkit-appearance: none;
+   overflow: hidden;
+
+}
