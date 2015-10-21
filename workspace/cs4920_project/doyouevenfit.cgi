@@ -344,7 +344,7 @@ sub home() {
     <div class="header-banner" id="tour">
 	<div class="wrap">
     <h1>&nbsp;</h1>
-    <h2>Welcome $row[0]!</h2>
+    <h2>Welcome <b>$row[0]</b>!</h2>
 	<pre> </pre>
     </div>
     </div>
