@@ -118,6 +118,7 @@ sub banner {
 	<div class="header-banner" id="banner">
 	<h1 align="right"><form action="doyouevenfit.cgi" method="post">
 	<input type="hidden" name="page" value="">
+	<input type="submit" name="messages" value="MESSAGES" class="button_small">
 	<input type="submit" name="settings" value="SETTINGS" class="button_small">
 	<input type="submit" name="logout" value="LOG OUT" class="button_small">
 	<input type="submit" name="buffer" value="" class="button_hide";><br>
