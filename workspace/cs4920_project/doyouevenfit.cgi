@@ -861,20 +861,17 @@ sub diet_screen() {	# displays current calories out of goal calories and a list 
 		$html .= qq(<text style="color:white";> * invalid date (DD/MM/YYYY)<p></p>);
 	}
 	$html .= qq(
-
-<div class="container">
-    <div class="column-left"><h3 align="right"><font size="22" color="grey">&#8656;</font></h3></div>
-    <div class="column-center"><input type="text" name="diet_date" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:22pt;height:40px;width:200px;font-family:AmbleRegular;"value="$date" onfocus="javascript:if(this.value=='')this.value='';"><br></div>
-    <div class="column-right"><h3 align = "left"><font size="22" color="grey">&#8658;</font></h3></div>
-</div>
-
-);
-
-
-	$html .= qq(
-<input type="submit" name="change_date" value="" class="button_hide" style="height:0px;width;0px;"><br>);
+	<div class="container">
+	<div class="column-left"><h3 align="right"><font size="22" color="grey">&#8656;</font></h3></div>
+	<div class="column-center"><input type="text" name="diet_date" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:22pt;height:40px;width:200px;font-family:AmbleRegular;"value="$date" onfocus="javascript:if(this.value=='')this.value='';"><br></div>
+	<div class="column-right"><h3 align = "left"><font size="22" color="grey">&#8658;</font></h3></div>
+	</div>);
+	$html .= qq(<input type="submit" name="change_date" value="" class="button_hide" style="height:0px;width;0px;"><br>);
 	$html .= qq(<p>&nbsp</p>
 	<p>&nbsp</p>);
+	$html .= hidden('username');
+	$html .= hidden('password');
+	$html .= qq(</form>);
 	if (!defined param('diet_date') || (defined param('diet_date') && valid_date($date))) {	# if valid date display calorie counter and meals
 		$html .= qq(<h1>);
 		$html .= getCalories();
@@ -902,10 +899,17 @@ sub diet_screen() {	# displays current calories out of goal calories and a list 
 			print $DBI::errstr;
 		}
 		while (my @row = $sth->fetchrow_array()) {
-			$html .= qq(<input type="text" name="mid" value="$row[0]" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0);color:black;font-size:16pt;height:0px;width:0px;font-family:AmbleRegular;"><br>
-			<input type="submit" name="meal" value="$row[1] ($row[2] calories)" class="button" style="height:45px;width:600px;"><br> <pre> </pre>);
+			$html .= qq(<form action="doyouevenfit.cgi" method="post">
+			<input type="text" name="mid" value="$row[0]" size=28 style="text-align:center;border:0px;solid:#ffffff;background-color:rgba(255,255,255,0);color:black;font-size:16pt;height:0px;width:0px;font-family:AmbleRegular;"><br>
+			<input type="submit" name="meal" value="$row[1] ($row[2] calories)" class="button" style="height:45px;width:600px;"><br> <pre> </pre>
+			<input type="text" name="diet_date" value="$date" size=28 style="text-align:center;border:0px;solid:#ffffff;background-color:rgba(255,255,255,0);color:black;font-size:16pt;height:0px;width:0px;font-family:AmbleRegular;"><br>
+			);
+			$html .= hidden('username');
+			$html .= hidden('password');
+			$html .= qq(</form>);
 		}
 		$html .= qq(<pre> </pre>);
+		$html .= qq(<form action="doyouevenfit.cgi" method="post">);
 		if (defined param('new_meal')) {
 			$html .= 	qq(<input type="text" name="meal_name" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;width:300px;font-family:AmbleRegular;"value="New Meal" onfocus="javascript:if(this.value=='New Meal')this.value='';"><br>
 			<pre> </pre>
@@ -913,11 +917,12 @@ sub diet_screen() {	# displays current calories out of goal calories and a list 
 		} else {
 			$html .= qq(<input type="submit" name="new_meal" value="NEW MEAL" class="button" style="height:45px;"><br>);
 		}
+		$html .= qq(<input type="text" name="diet_date" value="$date" size=28 style="text-align:center;border:0px;solid:#ffffff;background-color:rgba(255,255,255,0);color:black;font-size:16pt;height:0px;width:0px;font-family:AmbleRegular;"><br>);
+		$html .= hidden('username');
+		$html .= hidden('password');
+		$html .= qq(</form>);
 	}
-	$html .= hidden('username');
-	$html .= hidden('password');
-	$html .= qq(</form>
-	</div>
+	$html .= qq(</div>
 	</div>
 	);
 	return $html;
