@@ -157,7 +157,7 @@ if($rv < 0){
    print "Table created successfully\n";
 }
 
-my $stmt = qq(create TABLE routine (
+my $stmt = qq(create TABLE workout (
 	id INTEGER PRIMARY KEY,
 	uid INTEGER,
 	name TEXT,
@@ -182,15 +182,13 @@ if($rv < 0){
    print "Table created successfully\n";
 }
 
-my $stmt = qq(create TABLE routine_contains (
-	rid INTEGER,
+my $stmt = qq(create TABLE workout_contains (
+	id INTEGER PRIMARY KEY,
+	wid INTEGER,
 	eid INTEGER,
-	weight INTEGER,
-	reps INTEGER,
-	sets INTEGER,
 	duration INTEGER,
-	measurement TEXT,
-	FOREIGN KEY(rid) REFERENCES routine(id),
+	units TEXT,
+	FOREIGN KEY(wid) REFERENCES workout(id),
 	FOREIGN KEY(eid) REFERENCES exercise(id)
 ););
 my $rv = $dbh->do($stmt);
@@ -200,13 +198,11 @@ if($rv < 0){
    print "Table created successfully\n";
 }
 
-my $stmt = qq(create TABLE day_routines (
-	uid INTEGER,
-	rid INTEGER,
-	date TEXT,
-	timestamp INTEGER,
-	FOREIGN KEY(uid) REFERENCES user(id),
-	FOREIGN KEY(rid) REFERENCES routine(id)
+my $stmt = qq(create TABLE sets (
+	wcid INTEGER,
+	reps INTEGER,
+	weight INTEGER,
+	FOREIGN KEY(wcid) REFERENCES workout_contains(id)
 ););
 my $rv = $dbh->do($stmt);
 if($rv < 0){
@@ -214,6 +210,25 @@ if($rv < 0){
 } else {
    print "Table created successfully\n";
 }
+
+
+my $stmt = qq(create TABLE day_workouts (
+	uid INTEGER,
+	wid INTEGER,
+	date TEXT,
+	timestamp INTEGER,
+	FOREIGN KEY(uid) REFERENCES user(id),
+	FOREIGN KEY(wid) REFERENCES workout(id)
+););
+my $rv = $dbh->do($stmt);
+if($rv < 0){
+   print $DBI::errstr;
+} else {
+   print "Table created successfully\n";
+}
+
+$stmt = qq(insert into user values(null,'Demonstrator','D','demo','demo', 'doyouevenfit.com', 'Male', 183, 85, 21, 'Moderately Active', 'Maintain Weight')); 
+my $rv = $dbh->do($stmt) or die $DBI::errstr; 
 
 for my $alpha ('a'..'z') {
 	my $mech = WWW::Mechanize->new;
@@ -235,7 +250,5 @@ for my $alpha ('a'..'z') {
 	}
 }
 
-$stmt = qq(insert into user values(null,'admin','istrator','admin','doyoueven', 'doyouevenfit.com', 'Male', 183, 85, 21, 'Moderately Active', 'Maintain Weight')); 
-my $rv = $dbh->do($stmt) or die $DBI::errstr; 
-
 $dbh->disconnect();
+
