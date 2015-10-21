@@ -177,14 +177,14 @@ $driver = "SQLite";
 	<div class="header-bottom" id="update">
 	<form action="doyouevenfit.cgi" method="post">
 	<center><h3 style="color:white;">Height (cm)</h3></center></body>
-	<input type="text" name="height" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="$height" onfocus="javascript:if(this.value=='')this.value='';"><br>
+	<input type="text" name="height" size=28 style="width:350px;text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="$height" onfocus="javascript:if(this.value=='')this.value='';"><br>
 	<pre> </pre> <pre> </pre>
 	<center><h3 style="color:white">Weight (kg)</h3></center></body>
-	<input type="text" name="weight" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="$weight" onfocus="javascript:if(this.value=='')this.value='';"><br>
+	<input type="text" name="weight" size=28 style="width:350px;text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="$weight" onfocus="javascript:if(this.value=='')this.value='';"><br>
 	<pre> </pre> <pre> </pre>
 	<center><h3 style="color:white;">What is your exercise level?</h3></center></body>
 
-	<select name="exercise" size=28  style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:116px;width:350px;font-family:AmbleRegular;"><br>
+	<select name="exercise" size=28 class="styled-select" style="height:132px;"><br>
 
     <option);
 	if ($exercise eq "Sedentary") {
@@ -216,7 +216,7 @@ $driver = "SQLite";
 
 	<pre> </pre> <pre> </pre>
 	<center><h3 style="color:white;">What is your goal?</h3></center></body>
-	<select name="goal" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:116px;width:350px;font-family:AmbleRegular;"><br>
+	<select name="goal" size=28 class="styled-select" style="height:132px;"><br>
 
 	<option );
 	if ($goal eq "Extreme Weight Loss") {
