@@ -11,7 +11,7 @@ warningsToBrowser(1);
 use DBI;
 
 $bg_handler = "2";
-
+$update_err = 0;
 print page_header();
 
 if (defined param('logout')) {
@@ -35,7 +35,15 @@ if (defined param('logout')) {
         print banner();
 		if (defined param('settings') || defined param('cancel')) {
 			print settings();
-		} elsif (defined param('change_password')) {
+		} if (defined param('update_profile')) {
+                if (check_update()) {
+                    update_profile();
+                    print update();
+                } else {
+                    $update_err = 1;
+                    print update();
+                }
+        } elsif (defined param('change_password')) {
 			print change_password();		
 		} elsif (defined param('add_food_search')) {
 			if (defined param('food_selected')) {
@@ -88,12 +96,10 @@ if (defined param('logout')) {
 			print diet_screen();
 		} elsif (defined param('exercise_date')) {
 			print exercise_screen();
-		} elsif (defined param('update_profile')) {
-            print update_profile();
+		} elsif (defined param('update')) {
+            print update();
         } elsif (defined param('cancel')) {
             print cancel();
-        } elsif (defined param('update')) {
-            print update();
         } elsif (defined param('friend')) {
             print friend();
         }
@@ -118,7 +124,7 @@ sub banner {
 	<div class="header-banner" id="banner">
 	<h1 align="right"><form action="doyouevenfit.cgi" method="post">
 	<input type="hidden" name="page" value="">
-	<input type="submit" name="messages" value="MESSAGES" class="button_small">
+    <input type="submit" name="messages" value="MESSAGES" class="button_small">
 	<input type="submit" name="settings" value="SETTINGS" class="button_small">
 	<input type="submit" name="logout" value="LOG OUT" class="button_small">
 	<input type="submit" name="buffer" value="" class="button_hide";><br>
@@ -171,19 +177,31 @@ $driver = "SQLite";
 	@row = $sth->fetchrow_array();
 	$height = $row[7];
     $weight = $row[8];
+    $age = $row[9];
     $exercise = $row[10];
     $goal = $row[11];
+    #$dbh->disconnect();
 	my $html = qq(
 	<div class="header-bottom" id="update">
 	<form action="doyouevenfit.cgi" method="post">
-	<center><h3 style="color:white;">Height (cm)</h3></center></body>
+);
+
+    if ($update_err == 0) {
+        $html .= qq(<h2><font color="white" size="3">&nbsp;</font></h2>);
+    } elsif ($update_err == 1) {
+        $html .= qq(<h2><font color="red" size="3">Data format wrong!</font></h2>);
+    }
+
+    $html .= qq(	<center><h3 style="color:white;">Height (cm)</h3></center></body>
 	<input type="text" name="height" size=28 style="width:350px;text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="$height" onfocus="javascript:if(this.value=='')this.value='';"><br>
 	<pre> </pre> <pre> </pre>
 	<center><h3 style="color:white">Weight (kg)</h3></center></body>
 	<input type="text" name="weight" size=28 style="width:350px;text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="$weight" onfocus="javascript:if(this.value=='')this.value='';"><br>
 	<pre> </pre> <pre> </pre>
+    <center><h3 style="color:white;">age </h3></center></body>
+	<input type="text" name="age" size=28 style="width:350px;text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="$age" onfocus="javascript:if(this.value=='')this.value='';"><br>
+	<pre> </pre> <pre> </pre>
 	<center><h3 style="color:white;">What is your exercise level?</h3></center></body>
-
 	<select name="exercise" size=28 class="styled-select" style="height:132px;"><br>
 
     <option);
@@ -258,11 +276,61 @@ $driver = "SQLite";
 	);
 }
 
-sub update_profile() {
+sub check_update() {	
 
+    $username = param('username');
+	my $height = param('height');
+	my $weight = param('weight');
+    my $age = param('age');
+	my $exercise = param('exercise');
+	my $goal = param('goal');
+
+	if ($height eq "") {
+		return 0;
+	} elsif ($height !~ /^\d+$/) {
+		return 0;
+	}
+	if ($weight eq "") {
+		return 0;
+	} elsif ($weight !~ /^\d+$/) {
+		return 0;
+	}
+	if ($age eq "") {
+		return 0;
+	} elsif ($age !~ /^\d+$/) {
+		return 0;
+	}
+	if ($exercise eq "") {
+		return 0;
+	}
+	if ($goal eq "") {
+		return 0;
+	}
+	return 1;
 }
 
+
+sub update_profile() { # update user details into database
+    $username = param('username');
+	my $height = param('height');
+	my $weight = param('weight');
+	my $age = param('age');
+	my $exercise = param('exercise');
+	my $goal = param('goal');
+	$driver = "SQLite"; 
+	$database = "project.db"; 
+	$dsn = "DBI:$driver:dbname=$database";
+	$userid = ""; $dbpassword = "";  
+	$dbh = DBI->connect($dsn, $userid, $dbpassword, { RaiseError => 1 }) or die $DBI::errstr; 
+	$stmt = qq(update user set height = "$height", weight = "$weight", age = "$age", exercise = "$exercise", goal = "$goal" where username = '$username'); 
+	$rv = $dbh->do($stmt) or die $DBI::errstr; 
+	$dbh->disconnect();
+}
+
+
 sub change_password() {
+    
+   
 
 }
 
@@ -276,7 +344,7 @@ EOF
 
 sub page_css {
 	$css = qq(
-	<link href="/css/style.css" rel="stylesheet" type="text/css" media="all" />
+	<link href="css/style.css" rel="stylesheet" type="text/css" media="all" />
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 	);
@@ -284,11 +352,11 @@ sub page_css {
     if ($bg_handler eq 0) {
         
     } if ($bg_handler eq 1) {
-        $css .= qq(<body background="/images/wood.jpg">);
+        $css .= qq(<body background="images/wood.jpg">);
     } if ($bg_handler eq 2) {
-        $css .= qq(<body background="/images/wood.jpg">);
+        $css .= qq(<body background="images/green.jpg">);
     } if ($bg_handler eq 3) {
- 		$css .= qq(<body background="/images/banner.jpg">);
+ 		$css .= qq(<body background="images/banner.jpg">);
     }       
 	$css .= qq(<body link="white">);
 	return $css;
@@ -424,7 +492,7 @@ sub register_screen() {
 	<input type="text" name="age" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>
 	<pre> </pre> <pre> </pre>
 	<center><h3 style="color:white;">What is your exercise level?</h3></center></body>
-	<select name="exercise" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:116px;width:350px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>
+	<select name="exercise"  size=28 class="styled-select" style="height:132px;"><br>
 	<option>Sedentary
 	<option>Lightly Active
 	<option>Moderately Active
@@ -433,7 +501,7 @@ sub register_screen() {
 	</select>
 	<pre> </pre> <pre> </pre>
 	<center><h3 style="color:white;">What is your goal?</h3></center></body>
-	<select name="goal" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:116px;width:350px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>
+	<select name="goal"  size=28 class="styled-select" style="height:132px;"><br>
 	<option>Extreme Weight Loss
 	<option>Weight Loss
 	<option>Maintain Weight
