@@ -130,9 +130,9 @@ color: #FFF;
 
 .header-banner {
   padding-top: 0%;
-    padding-right: 0%;
+    padding-right: 2%;
     padding-bottom: 0%;
-    padding-left: 0%;
+    padding-left: 2%;
   text-align: center;
 }
 .header-banner h1{
@@ -153,6 +153,10 @@ color: #FFF;
   color: white;
   font-family: 'AmbleRegular';
   padding: 1% 0 4%;
+}
+
+.header-banner h2 b{
+  font-weight: bold;
 }
 .header-banner h1 span{
   font-family: "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif, sans-serif; 	
@@ -233,6 +237,31 @@ color: #FFF;
 .button2:active {
    background-color: rgba(255,255,255,0.8);
 }
+
+
+.button_small {
+   font-family: 'AmbleRegular';
+   background-color: rgba(0,0,0,0);
+   border: solid 1.5px rgba(255,255,255,1);
+   -webkit-border-radius: 0px;
+      -moz-border-radius: 0px;
+           border-radius: 0px;
+
+   height: 26px;
+   padding: 2px;
+   display: inline-block;
+   font-size: 22px;
+   color: rgba(255,255,255,1);
+}
+.button_small:hover {
+   background-color: rgba(255,255,255,0.4);
+   border: solid 1.5px rgba(255,255,255,0.7);
+}
+.button_small:active {
+   background-color: rgba(255,255,255,0.8);
+}
+
+
 
 .button_hide {
    font-family: 'AmbleRegular';
