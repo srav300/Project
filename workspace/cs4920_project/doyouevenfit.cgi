@@ -11,7 +11,7 @@ warningsToBrowser(1);
 use DBI;
 
 $bg_handler = "2";
-
+$correct_input = 1;
 $update_err = 0;
 print page_header();
 
@@ -57,12 +57,41 @@ if (defined param('logout')) {
 			} else {
 				print add_food_screen();
 			}
+		} elsif (defined param('insert_set')) {
+			if (param('reps') =~ /\d+/ && defined param('reps') != 0) {
+				if (param('weight') eq "" || param('weight') =~ /\d+/) {
+					insert_set();
+					print show_exercise();
+				} else {
+					$correct_input = 0;
+					print show_exercise();
+				}
+			} else {
+				$correct_input = 0;
+				print show_exercise();
+			}
+		} elsif (defined param('insert_exercise')) {
+			if (defined param('exercise_selected')) {
+				insert_exercise();
+			}
+			print show_workout();
+		} elsif (defined param('add_set')) {
+			print show_exercise();
+		} elsif (defined param('delete_set')) {
+			delete_set();
+			print show_exercise();
+		} elsif (defined param('show_exercise')) {
+			print show_exercise();
 		} elsif (defined param('search_food')) {
 			print add_food_screen();
+		} elsif (defined param('search_exercise') || defined param('seaarch_again')) {
+			print show_workout();
 		} elsif (defined param('back_meal')){
 			print show_meal();
 		} elsif (defined param('back_exercise')) {
 			print exercise_screen();
+		} elsif (defined param('back_workout')) {
+			print show_workout();
 		} elsif (defined param('delete_meal')) {
 			delete_meal();
 			print diet_screen();
@@ -91,7 +120,7 @@ if (defined param('logout')) {
 			print show_meal();
 		} elsif (defined param('workout')) {
 			print show_workout();
-		} elsif ((defined param('add_meal') || defined param('meal_name')) && param('meal_name') ne "") {
+		} elsif ((defined param('add_meal') || defined param('meal_name')) && param('meal_name') ne "" && param('meal_name') !~ /"/) {
 			insert_meal();
 			print diet_screen();
 		} elsif (defined param('add_workout') && (param('workout_name') ne "" || param('workout_selected') ne "")) {
@@ -99,7 +128,7 @@ if (defined param('logout')) {
 			print exercise_screen();
 		} elsif (defined param('login') || defined param('home')) {
 			print home();
-		} elsif (defined param('exercise')) {
+		} elsif (defined param('exercise_screen')) {
 			print exercise_screen();
 		} elsif (defined param('diet_date')) {
 			print diet_screen();
@@ -144,7 +173,7 @@ sub banner {
 	<h1>
 	<input type="hidden" name="page" value="">
 	<input type="submit" name="diet" value="DIET" class="button" style="height:45px;">
-	<input type="submit" name="exercise" value="EXERCISE" class="button" style="height:45px;">
+	<input type="submit" name="exercise_screen" value="EXERCISE" class="button" style="height:45px;">
 	<input type="submit" name="friend" value="FRIENDS" class="button" style="height:45px;">
 	);
 	$css .= hidden('username');
@@ -1527,7 +1556,7 @@ sub insert_food_man() {	# inserts manually entered food into the database
 	$dsn = "DBI:$driver:dbname=$database";
 	$userid = ""; $dbpassword = "";  
 	$dbh = DBI->connect($dsn, $userid, $dbpassword, { RaiseError => 1 }) or die $DBI::errstr; 
-	$stmt = qq(insert into food(id,name,calories,protein,carbs,fat,fibre,sugars,monounsatfat,polyunsatfat,satfat,transfat,cholesterol) values(null,'$name','$calories',$protein,'$carbs','$fat','$fibre','$sugars','$mono','$poly','$sat','$trans','$cholesterol'));
+	$stmt = qq(insert into food(id,name,calories,protein,carbs,fat,fibre,sugars,monounsatfat,polyunsatfat,satfat,transfat,cholesterol) values(null,"$name",'$calories',$protein,'$carbs','$fat','$fibre','$sugars','$mono','$poly','$sat','$trans','$cholesterol'));
 	$rv = $dbh->do($stmt) or die $DBI::errstr;
 	$stmt = qq(select id from user where username = '$username'); 
 	$sth = $dbh->prepare($stmt);
@@ -1545,7 +1574,7 @@ sub insert_food_man() {	# inserts manually entered food into the database
 	}
 	@row = $sth->fetchrow_array();
 	my $updated = int(($row[0] + $calories * $serving / 100) + 0.5); 
-	$stmt = qq(select id from food where name = '$name' and calories = '$calories' and protein = '$protein' and carbs = '$carbs' and fat = '$fat'); 
+	$stmt = qq(select id from food where name = "$name" and calories = '$calories' and protein = '$protein' and carbs = '$carbs' and fat = '$fat'); 
 	$sth = $dbh->prepare($stmt);
 	$rv = $sth->execute() or die $DBI::errstr; 
 	if ($rv < 0) {
@@ -1657,7 +1686,7 @@ sub insert_meal() {	# inserts meal into the database
 	}
 	@row = $sth->fetchrow_array();
 	$uid = $row[0];
-	$stmt = qq(insert into meal values(null,'$uid','$meal_name',0,'$date'));
+	$stmt = qq(insert into meal values(null,'$uid',"$meal_name",0,'$date'));
 	$rv = $dbh->do($stmt) or die $DBI::errstr;
 }
 
@@ -1686,10 +1715,11 @@ sub exercise_screen() {
     <div class="column-center"><input type="text" name="exercise_date" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:22pt;height:40px;width:200px;font-family:AmbleRegular;"value="$date" onfocus="javascript:if(this.value=='')this.value='';"><br></div>
     <div class="column-right"><h3 align = "left"><font size="22" color="grey">&#8658;</font></h3></div>
 	</div>
-	);
-	$html .= qq(
-<input type="submit" name="change_date" value="" class="button_hide" style="height:0px;width;0px;"><br>);
-	$html .= qq(<p>&nbsp</p>
+	<input type="submit" name="change_date" value="" class="button_hide" style="height:0px;width;0px;"><br>);
+	$html .= hidden('username');
+	$html .= hidden('password');
+	$html .= qq(</form>
+	<p>&nbsp</p>
 	<p>&nbsp</p>);
 	if (!defined param('exercise_date') || (defined param('exercise_date') && valid_date($date))) {	# if valid date display calorie counter and meals
 		my $username = param('username');
@@ -1721,39 +1751,45 @@ sub exercise_screen() {
 				print $DBI::errstr;
 			}
 			my @wor = $hts->fetchrow_array();
-			$html .= qq(<input type="text" name="wid" value="$wid" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0);color:black;font-size:16pt;height:0px;width:0px;font-family:AmbleRegular;"><br>);
-			$html .= qq(<input type="submit" name="workout" value="$wor[0]" class="button" style="height:45px;width:600px;"><br> <pre> </pre>);
+			$html .= qq(<form action="doyouevenfit.cgi" method="post">
+			<input type="text" name="wid" value="$wid" size=28 style="text-align:center;border:0px;solid:#ffffff;background-color:rgba(255,255,255,0);color:black;font-size:16pt;height:0px;width:0px;font-family:AmbleRegular;"><br>
+			<input type="submit" name="workout" value="$wor[0]" class="button" style="height:45px;width:600px;"><br> <pre> </pre>
+			<input type="text" name="exercise_date" value="$date" size=28 style="text-align:center;border:0px;solid:#ffffff;background-color:rgba(255,255,255,0);color:black;font-size:16pt;height:0px;width:0px;font-family:AmbleRegular;"><br>);
+			$html .= hidden('username');
+			$html .= hidden('password');
+			$html .= qq(</form>);
 		}
-		$html .= qq(<pre> </pre>);
+		$html .= qq(<pre> </pre>
+		<form action="doyouevenfit.cgi" method="post">);
 		if (defined param('new_workout')) {
 			$html .= qq(<input type="text" name="workout_name" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;width:300px;font-family:AmbleRegular;"value="New Workout" onfocus="javascript:if(this.value=='New Workout')this.value='';"><br>
 			<pre> </pre>
 			<input type="submit" name="add_workout" value="+ ADD WORKOUT" class="button" style="height:45px;width:300px;"><br>);
 		} else {
-			# $html .=  qq(<center><text style="color:white;font-size:20pt;">Saved Workouts</center></body>
+			# $html .= qq(<center><text style="color:white;font-size:20pt;">Saved Workouts</center></body>
 			# <select name="workout_selected" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:100px;width:500px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>
 		 	# );
-			$stmt = qq(select name from saved_workout where uid = '$uid'); 
-			$sth = $dbh->prepare($stmt);
-			$rv = $sth->execute() or die $DBI::errstr; 
-			if ($rv < 0) {
-				print $DBI::errstr;
-			}
-			while (my @row = $sth->fetchrow_array()) {
-				$html .= qq(<option>$row[0]);
-			}
-			$html .= qq(</select> <pre> </pre>);
+			#v$stmt = qq(select name from saved_workout where uid = '$uid'); 
+			# $sth = $dbh->prepare($stmt);
+			# $rv = $sth->execute() or die $DBI::errstr; 
+			# if ($rv < 0) {
+			#	print $DBI::errstr;
+			#}
+			#while (my @row = $sth->fetchrow_array()) {
+			#	$html .= qq(<option>$row[0]);
+			#}
+			#$html .= qq(</select> <pre> </pre>);
 			# <input type="submit" name="add_workout" value="+ ADD WORKOUT" class="button" style="height:45px;width:300px;"><br>
 			# <pre> </pre> <pre> </pre>
 			$html .= qq(<input type="submit" name="new_workout" value="NEW WORKOUT" class="button" style="height:45px;width:300px;"><br>);
 		}
+		$html .= qq(<input type="text" name="exercise_date" value="$date" size=28 style="text-align:center;border:0px;solid:#ffffff;background-color:rgba(255,255,255,0);color:black;font-size:16pt;height:0px;width:0px;font-family:AmbleRegular;"><br>);
+		$html .= hidden('username');
+		$html .= hidden('password');
+		$html .= qq(</form>);
 	}
-	$html .= hidden('username');
-	$html .= hidden('password');
-	$html .= qq(</form>
-	</div>
-	</div>
-	);
+	$html .= qq(</div>
+	</div>);
 	return $html;
 }
 
@@ -1777,7 +1813,7 @@ sub insert_workout() {	# inserts workout into the database
 		### need to insert new workout from saved workoit
 	} else {
 		my $name = param('workout_name');
-		$stmt = qq(insert into workout values(null,'$uid','$name','$date'));
+		$stmt = qq(insert into workout values(null,'$uid',"$name",'$date'));
 		$rv = $dbh->do($stmt) or die $DBI::errstr;
 	}
 }
@@ -1812,7 +1848,14 @@ sub show_workout() {
 	if ($rv < 0) {
 		print $DBI::errstr;
 	}
+	$html .= hidden('username');
+	$html .= hidden('password');
+	$html .= hidden('exercise_date');
+	$html .= hidden('workout');
+	$html .= hidden('wid');
+	$html .= qq(</form>);
 	while (my @exercises = $sth->fetchrow_array()) {
+		$html .= qq(<form action="doyouevenfit.cgi" method="post">);
 		my $wcid = $exercises[0];
 		my $eid = $exercises[1];
 		$stmt = qq(select name from exercise where id = '$eid'); 
@@ -1832,32 +1875,160 @@ sub show_workout() {
 		my $n = 0;
 		my @reps;
 		my @weight;
+		my $setsbool = 0;
+		my $first;
 		while (my @row2 = $sth2->fetchrow_array()) {
-			$reps[$n] = $row2[0];
-			$weight[$n] = $row2[1];
-			$n++;
-		}
-		$html .= qq(<input type="submit" name="exercise" value="$name \($n sets - );
-		my $i = 0;
-		while ($i < $n) {
-			$html .= qq($reps[$i] reps);
-			if ($weight[$i] > 0) {
-				$html .= qq( of $weight[$i] kg);
+			if (@row2) {
+				$setsbool = 1;
+				$reps[$n] = $row2[0];
+				$weight[$n] = $row2[1];
+				$n++;
+			} else {
+				last;
 			}
-			$html .= qq(, );
-			$i++;
 		}
-		$html =~ s/, $//;
-		$html .= qq(\)" class="button" style="font-size:16pt;height:45px;width:750px;"><br>
+		$html .= qq(<input type="text" name="eid" value="$eid" size=28 style="text-align:center;border:0px;solid:#ffffff;background-color:rgba(255,255,255,0);color:black;font-size:16pt;height:0px;width:0px;font-family:AmbleRegular;"><br>
+		<input type="submit" name="show_exercise" value="$name);
+		if ($setsbool) {
+			$samereps = 1;
+			$repsinset = $reps[0];
+			foreach $rep (@reps) {
+				if ($rep != $repsinset) {
+					$samereps = 0;
+				}
+			}
+			$html.= qq( \($n sets);
+			if ($samereps) {
+				$html .= qq( x $repsinset reps);
+			} else {
+				$html .= qq( - );
+				my $i = 0;
+				while ($i < $n) {
+					$html .= qq($reps[$i]);
+					if ($weight ne "" && $weight[$i] > 0) {
+						$html .= qq( x $weight[$i] kg);
+					}
+					$html .= qq(, );
+					$i++;
+				}
+			}
+			$html =~ s/, $//;
+			$html .= qq(\));
+		}
+		$html .= qq(" class="button" style="font-size:16pt;height:45px;width:750px;"><br>
 		<pre> </pre>);
+		$html .= hidden('username');
+		$html .= hidden('password');
+		$html .= hidden('exercise_date');
+		$html .= hidden('workout');
+		$html .= hidden('wid');
+		$html .= qq(</form>);
 	}
-
-	$html .= qq(<pre> </pre> <pre> </pre>
-	<input type="submit" name="add_exercise" value="+ ADD EXERCISE" class="button" style="height:45px;width:250px;"><br>
-	<pre> </pre> <pre> </pre>
-	<input type="submit" name="delete_workout" value="DELETE WORKOUT" class="button" style="height:45px;width:300px;"><br>
-	<pre> </pre> <pre> </pre>
-	<input type="submit" name="back_exercise" value="BACK" class="button" style="height:45px;width:250px;"><br>
+	my $search_term = param('search_term');
+	$html .= qq(<form action="doyouevenfit.cgi" method="post">
+	<pre> </pre> <pre> </pre>);
+	if (!defined param('insert_exercise') || !defined param('exercise_selected')) {
+		if (defined param('add_exercise') || defined param('search_again') || (defined param('search_exercise') && param('search_term') eq "" && !defined param('muscle'))) {
+			$html .= qq(<text style="color:white;font-size:20pt;">Name<p></p>
+			<input type="text" name="search_term" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;width:300px;font-family:AmbleRegular;"value="$search_term" onfocus="javascript:if(this.value=='')this.value='';"><br>
+			<pre> </pre>
+			<text style="color:white;font-size:20pt;">Muscle Group<p></p>
+		      	<select name="muscle" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:392px;width:300px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>
+			 );
+			$driver = "SQLite"; 
+			$database = "project.db"; 
+			$dsn = "DBI:$driver:dbname=$database";
+			$userid = ""; $dbpassword = "";  
+			$dbh = DBI->connect($dsn, $userid, $dbpassword, { RaiseError => 1 }) or die $DBI::errstr;
+			$stmt = qq(select distinct muscle from exercise order by muscle); 
+			$sth = $dbh->prepare($stmt);
+			$rv = $sth->execute() or die $DBI::errstr; 
+			if ($rv < 0) {
+				print $DBI::errstr;
+			}
+			$muscle = param('muscle');
+			while (my @row = $sth->fetchrow_array()) {
+				if ($row[0] ne "") {
+					$html .= qq(<option);
+					if ($row[0] eq $muscle) {
+						$html .= " selected";
+					}
+					$html .= qq(>$row[0]
+					);
+				}
+			}
+			$html .= qq(</select>
+			<pre> </pre>
+			<input type="submit" name="search_exercise" value="SEARCH EXERCISE" class="button" style="height:45px;width:350px;"><br>);
+		} elsif (param('search_term') ne "" || defined param('muscle')) {
+			$html .= qq(<text style="color:white;font-size:20pt;">Search Results<p></p>
+		      	<select name="exercise_selected" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:210px;width:500px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>
+			 );
+			$driver = "SQLite"; 
+			$database = "project.db"; 
+			$dsn = "DBI:$driver:dbname=$database";
+			$userid = ""; $dbpassword = "";  
+			$dbh = DBI->connect($dsn, $userid, $dbpassword, { RaiseError => 1 }) or die $DBI::errstr;
+			if (param('search_term') ne "" && defined param('muscle')) {
+				my $search = param('search_term');
+				my $muscle = param('muscle');
+				$stmt = qq(select name from exercise where name like "%$search%" and muscle = "$muscle"); 
+				$sth = $dbh->prepare($stmt);
+				$rv = $sth->execute() or die $DBI::errstr; 
+				if ($rv < 0) {
+					print $DBI::errstr;
+				}
+				my $n = 0;
+				while (my @row = $sth->fetchrow_array()) {
+					$html .= qq(<option>$row[0]);
+					$n++;
+				}
+			} elsif (param('search_term') ne "") {
+				my $search = param('search_term');
+				$stmt = qq(select name from exercise where name like "%$search%"); 
+				$sth = $dbh->prepare($stmt);
+				$rv = $sth->execute() or die $DBI::errstr; 
+				if ($rv < 0) {
+					print $DBI::errstr;
+				}
+				my $n = 0;
+				while (my @row = $sth->fetchrow_array()) {
+					$html .= qq(<option>$row[0]);
+					$n++;
+				}
+			} elsif (defined param('muscle')) {
+				my $muscle = param('muscle');
+				$stmt = qq(select name from exercise where muscle = "$muscle"); 
+				$sth = $dbh->prepare($stmt);
+				$rv = $sth->execute() or die $DBI::errstr; 
+				if ($rv < 0) {
+					print $DBI::errstr;
+				}
+				my $n = 0;
+				while (my @row = $sth->fetchrow_array()) {
+					$html .= qq(<option>$row[0]);
+					$n++;
+				}
+			}
+			$html .= qq(</select>
+			<pre> </pre>
+			<input type="submit" name="insert_exercise" value="ADD TO WORKOUT" class="button" style="height:45px;width:300px;"><br>
+			<pre> </pre>
+			<input type="submit" name="search_again" value="SEARCH AGAIN" class="button" style="height:45px;width:250px;"><br>);
+			$html .= hidden('search_term');
+			$html .= hidden('muscle');
+		} else {
+			$html .= qq(<input type="submit" name="add_exercise" value="+ ADD EXERCISE" class="button" style="height:45px;width:250px;"><br>);
+		}
+	} else {
+		$html .= qq(<input type="submit" name="add_exercise" value="+ ADD EXERCISE" class="button" style="height:45px;width:250px;"><br>);
+	}
+	$html .= qq(<pre> </pre> <pre> </pre>);
+	if ((!defined param('add_exercise') && !defined param('search_exercise') && !defined param('search_again') && !defined param('insert_exercise')) || (defined param('insert_exercise') && defined param('exercise_selected'))) {
+		$html .= qq(<input type="submit" name="delete_workout" value="DELETE WORKOUT" class="button" style="height:45px;width:300px;"><br>
+		<pre> </pre> <pre> </pre>);
+	}
+	$html .= qq(<input type="submit" name="back_exercise" value="BACK" class="button" style="height:45px;width:250px;"><br>
 	<p>&nbsp</p>);
 	$html .= hidden('username');
 	$html .= hidden('password');
@@ -1866,6 +2037,168 @@ sub show_workout() {
 	$html .= hidden('wid');
 	$html.= qq(</form>);
 	return $html;
+}
+
+sub show_exercise() {
+	my $date = param('exercise_date');
+	my $wid = param('wid');
+	my $eid = param('eid');
+	$driver = "SQLite"; 
+	$database = "project.db"; 
+	$dsn = "DBI:$driver:dbname=$database";
+	$userid = ""; $dbpassword = "";  
+	$dbh = DBI->connect($dsn, $userid, $dbpassword, { RaiseError => 1 }) or die $DBI::errstr;
+	$stmt = qq(select name, muscle from exercise where id = '$eid'); 
+	$sth = $dbh->prepare($stmt);
+	$rv = $sth->execute() or die $DBI::errstr; 
+	if ($rv < 0) {
+		print $DBI::errstr;
+	}
+	@row = $sth->fetchrow_array();
+	my $name = $row[0];
+	my $muscle = $row[1];
+	$stmt = qq(select id from workout_contains where wid = '$wid' and eid = '$eid'); 
+	$sth = $dbh->prepare($stmt);
+	$rv = $sth->execute() or die $DBI::errstr; 
+	if ($rv < 0) {
+		print $DBI::errstr;
+	}
+	@row = $sth->fetchrow_array();
+	my $wcid = $row[0];
+	my $html = qq(
+	<div class="header-bottom" id="tour">
+	<div class="wrap">
+	<h1>$name [$muscle]</h1>
+	<pre> </pre>);
+	$stmt = qq(select id, reps, weight from sets where wcid = '$wcid'); 
+	$sth = $dbh->prepare($stmt);
+	$rv = $sth->execute() or die $DBI::errstr; 
+	if ($rv < 0) {
+		print $DBI::errstr;
+	}
+	my $n = 0;
+	my @sid;
+	my @reps;
+	my @weight;
+	my $setsbool = 0;
+	my $first;
+	while (my @row = $sth->fetchrow_array()) {
+		if (@row && $row[1] != 0) {
+			$setsbool = 1;
+			$sid[$n] = $row[0];
+			$reps[$n] = $row[1];
+			$weight[$n] = $row[2];
+			$n++;
+		} else {
+			last;
+		}
+	}
+	if ($setsbool) {
+		$html .= qq(<text style="color:white;font-size:24pt;">$n Sets Total <p> </p>
+		<text style="color:white;font-size:24pt;"> <p> </p>
+		);
+		my $i = 0;
+		while ($i < $n) {
+			$html .= qq(<form action="doyouevenfit.cgi" method="post">
+			<input type="text" name="sid" value="$sid[$i]" size=28 style="text-align:center;border:0px;solid:#ffffff;background-color:rgba(255,255,255,0);color:black;font-size:16pt;height:0px;width:0px;font-family:AmbleRegular;"><br>
+			<input type="text" name="wcid" value="$wcid" size=28 style="text-align:center;border:0px;solid:#ffffff;background-color:rgba(255,255,255,0);color:black;font-size:16pt;height:0px;width:0px;font-family:AmbleRegular;"><br>
+			<input type="submit" name="edit_set" value="$reps[$i] reps);
+			if ($weight[$i] ne "" || $weight[$i] != 0) {
+				$html .= qq( of $weight[$i] kg);
+			}
+			$html .= qq(" class="button" style="height:45px;width:300px;">
+			<input type="submit" name="delete_set" value="X" class="button" style="height:45px;width:50px;"><br>);
+			$html .= hidden('username');
+			$html .= hidden('password');
+			$html .= hidden('exercise_date');
+			$html .= hidden('workout');
+			$html .= hidden('wid');
+			$html .= hidden('eid');
+			$html .= qq(</form>
+			<p> </p>
+			);
+			$i++;
+		}
+	}
+	$html .= qq(<pre > </pre>
+	<form action="doyouevenfit.cgi" method="post">
+	<input type="text" name="wcid" value="$wcid" size=28 style="text-align:center;border:0px;solid:#ffffff;background-color:rgba(255,255,255,0);color:black;font-size:16pt;height:0px;width:0px;font-family:AmbleRegular;"><br>);
+	if (defined param('add_set') || !$correct_input) {
+		$html .= qq(<input type="text" name="reps" value="" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:36px;width:100px;font-family:AmbleRegular;><br>
+		<text style="color:white;font-size:16pt;"> reps of </text>
+		<input type="text" name="weight" value="" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:36px;width:100px;font-family:AmbleRegular;><br>
+		<text style="color:white;font-size:16pt;"> kg</text> <pre> </pre>
+		<input type="submit" name="insert_set" value="ADD TO EXERCISE" class="button" style="height:45px;width:300px;"><br>
+		);
+	} else {
+		$html .= qq(<input type="submit" name="add_set" value="ADD SET" class="button" style="height:45px;width:250px;"><br>);
+	}
+	$html .= qq(<pre> </pre> <pre> </pre>
+	<input type="submit" name="back_workout" value="BACK" class="button" style="height:45px;width:250px;"><br>
+	<p>&nbsp</p>);
+	$html .= hidden('username');
+	$html .= hidden('password');
+	$html .= hidden('exercise_date');
+	$html .= hidden('workout');
+	$html .= hidden('wid');
+	$html .= hidden('eid');
+	$html.= qq(</form>);
+	return $html;
+}
+
+sub delete_set() {
+	my $wcid = param('wcid');
+	my $sid = param('sid');
+	$database = "project.db"; 
+	$dsn = "DBI:$driver:dbname=$database";
+	$userid = ""; $dbpassword = "";  
+	$dbh = DBI->connect($dsn, $userid, $dbpassword, { RaiseError => 1 }) or die $DBI::errstr;
+	$stmt = qq(delete from sets where id = '$sid' and wcid = '$wcid'); 
+	$sth = $dbh->prepare($stmt);
+	$rv = $sth->execute() or die $DBI::errstr; 
+	if ($rv < 0) {
+		print $DBI::errstr;
+	}
+}
+
+sub insert_set() {
+	my $wcid = param('wcid');
+	my $reps = param('reps');
+	my $weight = param('weight');
+	$database = "project.db"; 
+	$dsn = "DBI:$driver:dbname=$database";
+	$userid = ""; $dbpassword = "";  
+	$dbh = DBI->connect($dsn, $userid, $dbpassword, { RaiseError => 1 }) or die $DBI::errstr;
+	$stmt = qq(insert into sets values (null,'$wcid','$reps','$weight')); 
+	$sth = $dbh->prepare($stmt);
+	$rv = $sth->execute() or die $DBI::errstr; 
+	if ($rv < 0) {
+		print $DBI::errstr;
+	}
+}
+
+sub insert_exercise() {
+	my $name = param('exercise_selected');
+	my $wid = param('wid');
+	$driver = "SQLite"; 
+	$database = "project.db"; 
+	$dsn = "DBI:$driver:dbname=$database";
+	$userid = ""; $dbpassword = "";  
+	$dbh = DBI->connect($dsn, $userid, $dbpassword, { RaiseError => 1 }) or die $DBI::errstr; 
+	$stmt = qq(select id from exercise where name = '$name'); 
+	$sth = $dbh->prepare($stmt);
+	$rv = $sth->execute() or die $DBI::errstr; 
+	if ($rv < 0) {
+		print $DBI::errstr;
+	}
+	@row = $sth->fetchrow_array();
+	my $eid = $row[0];
+	$stmt = qq(insert into workout_contains values (null,'$wid','$eid','','')); 
+	$sth = $dbh->prepare($stmt);
+	$rv = $sth->execute() or die $DBI::errstr; 
+	if ($rv < 0) {
+		print $DBI::errstr;
+	}
 }
 
 sub delete_workout() {
@@ -1980,14 +2313,14 @@ sub food_suggestions () {	# returns a scroll menu of foods containing the search
 	}
 	$height .= "px";
    	my $out = qq(<center><h2 style="color:white;">Suggestions</h2></center></body>
-	      	<select name="food_selected" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:$height;width:500px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>
+	      	<select name="food_selected" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:$height;width:650px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>
 		 );
 	$driver = "SQLite"; 
 	$database = "project.db"; 
 	$dsn = "DBI:$driver:dbname=$database";
 	$userid = ""; $dbpassword = "";  
 	$dbh = DBI->connect($dsn, $userid, $dbpassword, { RaiseError => 1 }) or die $DBI::errstr; 
-	$stmt = qq(select name from food where name like '%$userSearch%'); 
+	$stmt = qq(select name from food where name like "%$userSearch%"); 
 	$sth = $dbh->prepare($stmt);
 	$rv = $sth->execute() or die $DBI::errstr; 
 	if ($rv < 0) {
@@ -2038,7 +2371,7 @@ sub insert_food() {	# adds food from search to meal and updates meal calories an
 	$dsn = "DBI:$driver:dbname=$database";
 	$userid = ""; $dbpassword = "";  
 	$dbh = DBI->connect($dsn, $userid, $dbpassword, { RaiseError => 1 }) or die $DBI::errstr; 
-	$stmt = qq(select id, name, calories from food where name = '$search'); 
+	$stmt = qq(select id, name, calories from food where name = "$search"); 
 	$sth = $dbh->prepare($stmt);
 	$rv = $sth->execute() or die $DBI::errstr; 
 	if ($rv < 0) {
@@ -2063,7 +2396,7 @@ $stmt = qq(select id from user where username = '$username');
 		}
 		@row = $sth->fetchrow_array();
 		my $uid = $row[0];
-		$stmt = qq(calories from meal where id = '$mid'); 
+		$stmt = qq(select calories from meal where id = '$mid'); 
 		$sth = $dbh->prepare($stmt);
 		$rv = $sth->execute() or die $DBI::errstr; 
 		if ($rv < 0) {
@@ -2097,7 +2430,7 @@ $stmt = qq(select id from user where username = '$username');
 		$mech->get('http://ndb.nal.usda.gov/ndb/foods');
 		$mech->submit_form(
 				form_name => 'quickform', 
-				fields => {'qlookup' => $search,},);
+				fields => {'qlookup' => "$search",},);
 
 		my $content = $mech->content;
 	
@@ -2116,7 +2449,7 @@ $stmt = qq(select id from user where username = '$username');
 	
 		my @foods = keys %food_urls;
 
-		my $user_url = $food_urls{$search};
+		my $user_url = $food_urls{"$search"};
 		$mech->get("http\:\/\/ndb\.nal\.usda\.gov$user_url");
 	
 		$content = $mech->content;
@@ -2155,7 +2488,7 @@ $stmt = qq(select id from user where username = '$username');
 		$dsn = "DBI:$driver:dbname=$database";
 		$userid = ""; $dbpassword = "";  
 		$dbh = DBI->connect($dsn, $userid, $dbpassword, { RaiseError => 1 }) or die $DBI::errstr; 
-		$stmt = qq(insert into food(id,name,calories,protein,carbs,fat,fibre,sugars,monounsatfat,polyunsatfat,satfat,transfat,cholesterol) values(null,'$name','$calories','$protein','$carbs','$fat','$fibre','$sugars','$mono','$poly','$sat','$trans','$cholesterol'));
+		$stmt = qq(insert into food(id,name,calories,protein,carbs,fat,fibre,sugars,monounsatfat,polyunsatfat,satfat,transfat,cholesterol) values(null,"$name",'$calories','$protein','$carbs','$fat','$fibre','$sugars','$mono','$poly','$sat','$trans','$cholesterol'));
 		$rv = $dbh->do($stmt) or die $DBI::errstr;
 		$stmt = qq(select id from user where username = '$username'); 
 		$sth = $dbh->prepare($stmt);
@@ -2165,7 +2498,7 @@ $stmt = qq(select id from user where username = '$username');
 		}
 		@row = $sth->fetchrow_array();
 		my $uid = $row[0];
-		$stmt = qq(select id from food where name = '$name' and calories = '$calories' and protein = '$protein' and carbs = '$carbs' and fat = '$fat'); 
+		$stmt = qq(select id from food where name = "$name" and calories = '$calories' and protein = '$protein' and carbs = '$carbs' and fat = '$fat'); 
 		$sth = $dbh->prepare($stmt);
 		$rv = $sth->execute() or die $DBI::errstr; 
 		if ($rv < 0) {
