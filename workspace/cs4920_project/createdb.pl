@@ -213,6 +213,22 @@ if($rv < 0){
    print "Table created successfully\n";
 }
 
+my $stmt = qq(create TABLE friends (
+	uid INTEGER,
+	username1 TEXT,
+	username2 TEXT,
+    request_confirmed TEXT,
+	timestamp INTEGER,
+	FOREIGN KEY(username1) REFERENCES user(username),
+	FOREIGN KEY(username2) REFERENCES user(username)
+););
+my $rv = $dbh->do($stmt);
+if($rv < 0){
+   print $DBI::errstr;
+} else {
+   print "Table created successfully\n";
+}
+
 
 my $stmt = qq(create TABLE saved_workout (
 	id INTEGER PRIMARY KEY,
