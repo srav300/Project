@@ -2,7 +2,8 @@
 
 use DBI;
 use strict;
-use WWW::Mechanize;
+use LWP::Simple;
+#use WWW::Mechanize;
 
 my $driver   = "SQLite"; 
 my $database = "project.db";
@@ -213,22 +214,6 @@ if($rv < 0){
    print "Table created successfully\n";
 }
 
-my $stmt = qq(create TABLE friends (
-	uid INTEGER,
-	username1 TEXT,
-	username2 TEXT,
-    request_confirmed TEXT,
-	timestamp INTEGER,
-	FOREIGN KEY(username1) REFERENCES user(username),
-	FOREIGN KEY(username2) REFERENCES user(username)
-););
-my $rv = $dbh->do($stmt);
-if($rv < 0){
-   print $DBI::errstr;
-} else {
-   print "Table created successfully\n";
-}
-
 
 my $stmt = qq(create TABLE saved_workout (
 	id INTEGER PRIMARY KEY,
@@ -276,9 +261,8 @@ $stmt = qq(insert into user values(null,'Demonstrator','D','demo','demo', 'doyou
 my $rv = $dbh->do($stmt) or die $DBI::errstr; 
 
 for my $alpha ('a'..'z') {
-	my $mech = WWW::Mechanize->new;
-	$mech->get("http:\/\/www\.bodybuilding\.com\/exercises\/list\/index\/selected\/$alpha");
-	my $content = $mech->content;
+	my $content = get("http:\/\/www\.bodybuilding\.com\/exercises\/list\/index\/selected\/$alpha");
+	#my $content = $mech->content;
 	my @matches = ($content =~ m/<h3><a.*?>(.*?)<\/a>.*\n*.*?<p>.*?<span><a.*?>(.*?)<\/a>/g);
 	my $size = @matches;
 	for my $curr (0..$size-1){
@@ -296,4 +280,3 @@ for my $alpha ('a'..'z') {
 }
 
 $dbh->disconnect();
-
