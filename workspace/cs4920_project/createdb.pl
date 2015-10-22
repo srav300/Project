@@ -161,6 +161,7 @@ my $stmt = qq(create TABLE workout (
 	id INTEGER PRIMARY KEY,
 	uid INTEGER,
 	name TEXT,
+	date TEXT,
 	FOREIGN KEY(uid) REFERENCES user(id)
 ););
 my $rv = $dbh->do($stmt);
@@ -199,6 +200,7 @@ if($rv < 0){
 }
 
 my $stmt = qq(create TABLE sets (
+	id INTEGER PRIMARY KEY,
 	wcid INTEGER,
 	reps INTEGER,
 	weight INTEGER,
@@ -212,13 +214,40 @@ if($rv < 0){
 }
 
 
-my $stmt = qq(create TABLE day_workouts (
+my $stmt = qq(create TABLE saved_workout (
+	id INTEGER PRIMARY KEY,
 	uid INTEGER,
-	wid INTEGER,
-	date TEXT,
-	timestamp INTEGER,
-	FOREIGN KEY(uid) REFERENCES user(id),
-	FOREIGN KEY(wid) REFERENCES workout(id)
+	name TEXT,
+	FOREIGN KEY(uid) REFERENCES user(id)
+););
+my $rv = $dbh->do($stmt);
+if($rv < 0){
+   print $DBI::errstr;
+} else {
+   print "Table created successfully\n";
+}
+
+my $stmt = qq(create TABLE saved_workout_contains (
+	id INTEGER PRIMARY KEY,
+	swid INTEGER,
+	eid INTEGER,
+	duration INTEGER,
+	units TEXT,
+	FOREIGN KEY(swid) REFERENCES saved_workout(id),
+	FOREIGN KEY(eid) REFERENCES exercise(id)
+););
+my $rv = $dbh->do($stmt);
+if($rv < 0){
+   print $DBI::errstr;
+} else {
+   print "Table created successfully\n";
+}
+
+my $stmt = qq(create TABLE saved_set (
+	swcid INTEGER,
+	reps INTEGER,
+	weight INTEGER,
+	FOREIGN KEY(swcid) REFERENCES saved_workout_contains(id)
 ););
 my $rv = $dbh->do($stmt);
 if($rv < 0){
