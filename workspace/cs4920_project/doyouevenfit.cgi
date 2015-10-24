@@ -36,12 +36,14 @@ if (defined param('logout')) {
         	print banner();
 		if (defined param('settings') || defined param('cancel')) {
 			print settings();
-		} elsif (defined param('change_password')) {
+		} elsif (defined param('update_password')) {
 			$pass_change_attempt = 1;
 			$pass_error = change_check();
 			if($pass_error == 0){
 				update_password();
 			}
+			print change_password();
+		} elsif (defined param("change_password")){
 			print change_password();
 		} elsif (defined param('update_profile')) {
 			$update_attempt = 1;
@@ -398,8 +400,7 @@ sub change_password() {
 	   my $new_password = param('new_password1');
 		$html .= qq(<h2><font color="black" size="3">Update Successful!</font></h2>);
 		$html .= qq(<form action="doyouevenfit.cgi" method="post">
-			<input type="text" name="password" value="$new_password" size=28 style="text-align:center;border:0px;solid:#ffffff;background-color:rgba(255,255,255,0);color:black;font-size:16pt;height:0px;width:0px;font-family:AmbleRegular;"><br>
-			</form>);
+			<input type="text" name="password" value="$new_password" size=28 style="text-align:center;border:0px;solid:#ffffff;background-color:rgba(255,255,255,0);color:black;font-size:16pt;height:0px;width:0px;font-family:AmbleRegular;"><br>);
 	}
 	
 	$html .= qq(<center><h3 style="color:white;">Enter Old Password</h3></center></body>);
@@ -418,12 +419,12 @@ sub change_password() {
 	<input type="password" name="new_password2" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="********" onfocus="javascript:if(this.value=='********')this.value='';"><br>
 	<p>&nbsp</p>);
 	
-	$html .= qq(<input type="submit" name="change_password" value="Update" class="button" style="height:45px;width:220px;"><br>
+	$html .= qq(<input type="submit" name="update_password" value="Update" class="button" style="height:45px;width:220px;"><br>
 	<p>&nbsp</p>
 	<input type="submit" name="cancel" value="Cancel" class="button" style="height:45px;width:220px;"><br>
 	<p>&nbsp</p>);
-	$html .= param('username');
-	$html .= param('password');
+	$html .= hidden('username');
+	$html .= hidden('password');
 	$html .= qq(</form>
 	</div>
 	);
