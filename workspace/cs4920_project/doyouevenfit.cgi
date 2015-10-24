@@ -7,57 +7,32 @@ use List::Util qw/min max/;
 use Date::Calc qw/check_date/;
 use Date::Calc qw(Add_Delta_Days);
 use WWW::Mechanize;
-use CGI::Cookie;
-warningsToBrowser(1);
 use DBI;
+warningsToBrowser(1);
 
 $bg_handler = "2";
 $correct_input = 1;
 $update_err = 0;
-#print page_header();
-
-     %cookies = fetch CGI::Cookie;
-     $value2 = "undefined";
-     $value2 = cookie('CURRUSR') if cookie('CURRUSR');
+print page_header();
 
 if (defined param('logout')) {
-    # action: logout
-    my$r = cookie (
-                -name    => 'CURRUSR',
-                -value   => '',
-                -expires => '-1d'
-    );
-    print header(-cookie => $r);
-    print " <p>FROM HEADER: session belongs to $value2</p> ";
-    $ew = cookie('CURRUSR');
-    print " -$ew-";
     print login_screen();
     $bg_handler = 3;
 } elsif (defined param('register')) {
-    # action: user resgistration 
-    print page_header();
-    print register_screen();
+	print register_screen();
     $bg_handler = 2;
 } elsif (defined param('create_account')) {
-    # action: user registration submittion
-    print page_header();
-    if (check_register()) {
-        create_account();
-        print login_screen();
+	if (check_register()) {
+		create_account();
+		print login_screen();
         $bg_handler = 3;
-    } else {
-	print register_help();
+	} else {
+		print register_help();
         $bg_handler = 3;
-    }
-    
-} elsif ($value2 ne "undefined"){
-
-	print page_header();
+	}
+} elsif (defined param('username') && defined param('password')) {
 	$bg_handler = 2;
-	#state: user is active
-	print "HAHAHAHA sneaky redirect";
-	print "Refresh again (problem will sort our soon)!";
-	
+	if (check_login()) {
         	print banner();
 		if (defined param('settings') || defined param('cancel')) {
 			print settings();
@@ -67,8 +42,8 @@ if (defined param('logout')) {
 			$update_attempt = 1;
 			@error_log = check_update();
 			if (check_errors() == 0) {
-				update_profile();
-				print update();
+ 				update_profile();
+ 				print update();
 			} else {
 				print update();
 			}
@@ -164,40 +139,14 @@ if (defined param('logout')) {
 			print update();
 		} elsif (defined param('cancel')) {
 			print cancel();
-		} elsif (defined param('update')) {
-			print update();
 		} elsif (defined param('friend')) {
 			print friend();
-		}	
-
-} elsif (defined param('username') && defined param('password')) {
-    # action: attempted login 
-    $bg_handler = 2;
-    if (check_login()) {
-        # login successful
-        my $c = CGI::Cookie->new(-name    =>  'CURRUSR',
-                                 -value   => param('username'));
-        print header(-cookie => $c);
-        print "login successful";
-        print login_screen();
-
-    }else {
-        # login failure
-        print page_header();
-        print "login failure";
-	print login_screen();
-        $bg_handler = "3"	
-    }
-
-}elsif ($value2 eq "undefined"){
-        print page_header();
-        print "OPPSSSOPSOSPOS! YOU MUST LOGIN TO ACCES FEATURES";
-        print login_screen();
-        $bg_handler = 3;
-	
+		}
+	} else {
+		print login_screen();
+		$bg_handler = "3"	
+	}
 } else {
-	# action (default) : print login screen
-        print page_header();
 	print login_screen();
 	$bg_handler = 3;
 }
@@ -205,10 +154,8 @@ print page_css();
 print page_footer();
 
 sub page_header {
-	$header = header;
-	$header .= start_html("-title"=>"DoYouEvenFit");
-        $header .= " <p>FROM HEADER: session belongs to $value2</p> ";
-        return $header;
+	return header,
+	start_html("-title"=>"DoYouEvenFit"),
 }
 
 sub banner {
@@ -276,38 +223,34 @@ sub update() {
 	<form action="doyouevenfit.cgi" method="post">
 	);
 	if ($update_attempt == 1 && check_errors() == 0) {
-		$html .= qq(<h2><font color="white" size="3">Update Successful!</font></h2>);
+		$html .= qq(<text style="color:white;font-size:32pt;><font color="white">Update Successful!</font></text> <pre> </pre> <pre> </pre>);
 	}
-	
-	$html .= qq(<center><h3 style="color:white;">Height (cm)</h3></center></body>);
+	$html .= qq(<center><h3 style="color:white;">Height (cm)</h3></center></body>
+	<input type="text" name="height" size=28 style="width:350px;text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="$height" onfocus="javascript:if(this.value=='')this.value='';"><br>);
 	if($error_log[0] == 1){
-	   $html .= qq(<center><h3 style="color:red;">Field is empty</h3></center></body>);
+		$html .= qq(<center><text style="color:white;">* height must be entered</text></center></body>);
 	} elsif($error_log[0] == 2){
-	   $html .= qq(<center><h3 style="color:red;">Incorrect Format: Field must only contain numbers!</h3></center></body>);
+		$html .= qq(<center><text style="color:white;">* height must consist of numeric characters only</text></center></body>);
 	}
-	$html .= qq(<input type="text" name="height" size=28 style="width:350px;text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="$height" onfocus="javascript:if(this.value=='')this.value='';"><br>
-	<pre> </pre> <pre> </pre>
-	<center><h3 style="color:white">Weight (kg)</h3></center></body>);
+	$html .= qq(<pre> </pre> <pre> </pre>
+	<center><h3 style="color:white">Weight (kg)</h3></center></body>
+	<input type="text" name="weight" size=28 style="width:350px;text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="$weight" onfocus="javascript:if(this.value=='')this.value='';"><br>);
 	if($error_log[1] == 1){
-	   $html .= qq(<center><h3 style="color:red;">Field is empty</h3></center></body>);
+		$html .= qq(<center><text style="color:white;">* weight must be entered</text></center></body>);
 	} elsif($error_log[1] == 2){
-	   $html .= qq(<center><h3 style="color:red;">Incorrect Format: Field must only contain numbers!</h3></center></body>);
+		$html .= qq(<center><text style="color:white;">* weight must consist of numeric characters only</text></center></body>);
 	}
-	$html.=qq(<input type="text" name="weight" size=28 style="width:350px;text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="$weight" onfocus="javascript:if(this.value=='')this.value='';"><br>
-	<pre> </pre> <pre> </pre>
-    <center><h3 style="color:white;">Age</h3></center></body>);
-    if($error_log[2] == 1){
-	   $html .= qq(<center><h3 style="color:red;">Field is empty</h3></center></body>);
+	$html .= qq(<pre> </pre> <pre> </pre>
+	<center><h3 style="color:white;">Age</h3></center></body>
+	<input type="text" name="age" size=28 style="width:350px;text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="$age" onfocus="javascript:if(this.value=='')this.value='';"><br>);
+	if($error_log[2] == 1){
+		$html .= qq(<center><text style="color:white;">* age must be entered</text></center></body>);
 	} elsif($error_log[2] == 2){
-	   $html .= qq(<center><h3 style="color:red;">Incorrect Format: Field must only contain numbers!</h3></center></body>);
+	   $html .= qq(<center><text style="color:white;">* age must consist of numeric characters only</text></center></body>);
 	}
-	$html .= qq(<input type="text" name="age" size=28 style="width:350px;text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="$age" onfocus="javascript:if(this.value=='')this.value='';"><br>
-	<pre> </pre> <pre> </pre>
-	<center><h3 style="color:white;">What is your exercise level?</h3></center></body>);
-	if($error_log[3] == 1){
-	   $html .= qq(<center><h3 style="color:red;">Field is empty</h3></center></body>);
-	} 
-	$html .= qq(<select name="exercise" size=28 class="styled-select" style="height:132px;"><br>
+	$html .= qq(<pre> </pre> <pre> </pre>
+	<center><h3 style="color:white;">What is your exercise level?</h3></center></body>
+	<select name="exercise" size=28 class="styled-select" style="height:132px;"><br>
 	<option);
 	if ($exercise eq "Sedentary") {
 		$html .= " selected";
@@ -335,12 +278,12 @@ sub update() {
  	$html .= qq(>Extremely Active
 	</select>
 	<pre> </pre> <pre> </pre>);
-	if($error_log[4] == 1){
-	   $html .= qq(<center><h3 style="color:red;">Field is empty</h3></center></body>);
-	} 
-	$html .= qq(<center><h3 style="color:white;">What is your goal?</h3></center></body>
+	if($error_log[3] == 1){
+		$html .= qq(<center><text style="color:white;">* exercise level must be selected</text></center></body>);
+	}
+	$html .= qq(<center><h3 style="color:white;">What is goal?</h3></center></body>
 	<select name="goal" size=28 class="styled-select" style="height:132px;"><br>
-	<option );
+	<option);
 	if ($goal eq "Extreme Weight Loss") {
 		$html .= " selected";
 	}
@@ -365,10 +308,11 @@ sub update() {
 		$html .= " selected";
 	}
 	$html .= qq(>Extreme Weight Gain
-	</select>
-	<p>&nbsp</p>
-	<pre>
-	</pre>
+	</select>);
+	if($error_log[4] == 1){
+		$html .= qq(<center><text style="color:white;">* a weight goal must be selected</text></center></body>);
+	} 
+	$html .= qq(<pre> </pre> <pre> </pre>
 	<input type="submit" name="update_profile" value="Update" class="button" style="height:45px;width:220px;"><br>
 	<p>&nbsp</p>
 	<input type="submit" name="cancel" value="Cancel" class="button" style="height:45px;width:220px;"><br>
@@ -414,7 +358,7 @@ sub check_update() {
 }
 
 sub check_errors(){
-   foreach $value (@error_log){
+   foreach $value (@error_log) {
       if($value != 0){
          return 1;
       }
@@ -1092,9 +1036,8 @@ sub show_meal() {	# displayed if user selects a meal from diet screen
 	<div class="header-bottom" id="tour">
 	<div class="wrap">
 	<h1>$meal ($calories calories)</h1>  
-	<form action="doyouevenfit.cgi" method="post">
 	<pre> </pre>);
-	$stmt = qq(select fid, serving from meal_contains where mid = '$mid'); 
+	$stmt = qq(select fid, serving, id from meal_contains where mid = '$mid'); 
 	$sth = $dbh->prepare($stmt);
 	$rv = $sth->execute() or die $DBI::errstr; 
 	if ($rv < 0) {
@@ -1103,9 +1046,11 @@ sub show_meal() {	# displayed if user selects a meal from diet screen
 	$i = 0;
 	my @fid;
 	my @serving;
+	my @mcid;
 	while (my @row = $sth->fetchrow_array()) {
 		$fid[$i] = $row[0];
 		$serving[$i] = $row[1];
+		$mcid[$i] = $row[2];
 		$i++;
 	}
 	$j = 0;
@@ -1123,11 +1068,23 @@ sub show_meal() {	# displayed if user selects a meal from diet screen
 		my $carbs = $info[3] * $serving[$j] / 100;
 		my $fat = $info[4] * $serving[$j] / 100;
 		#$html .= qq(<text style="color:white";>$serving[$j] g of $name ($calories calories, $protein g of protein, $carbs g of carbs, $fat g of fat)<p></p>);
-		$html .= qq(<input type="submit" name="food" value="$name ($calories calories)" class="button" style="font-size:16pt;height:45px;width:750px;"><br>
+		$html .= qq(<form action="doyouevenfit.cgi" method="post">
+		<input type="text" name="fid" value="$fid[$j]" size=28 style="text-align:center;border:0px;solid:#ffffff;background-color:rgba(255,255,255,0);color:black;font-size:16pt;height:0px;width:0px;font-family:AmbleRegular;">
+		<input type="text" name="mcid" value="$mcid[$j]" size=28 style="text-align:center;border:0px;solid:#ffffff;background-color:rgba(255,255,255,0);color:black;font-size:16pt;height:0px;width:0px;font-family:AmbleRegular;">
+		<input type="text" name="calories" value="$calories" size=28 style="text-align:center;border:0px;solid:#ffffff;background-color:rgba(255,255,255,0);color:black;font-size:16pt;height:0px;width:0px;font-family:AmbleRegular;">
+		<input type="submit" name="food" value="$name ($calories calories)" class="button" style="font-size:16pt;height:45px;width:750px;">
+		<input type="submit" name="delete_food" value="X" class="button" style="font-size:16pt;height:45px;width:50px;">
 	<pre> </pre>);
+		$html .= hidden('username');
+		$html .= hidden('password');
+		$html .= hidden('diet_date');
+		$html .= hidden('meal');
+		$html .= hidden('mid');
+		$html.= qq(</form>);
 		$j++;
 	}
 	$html .= qq(<pre> </pre> <pre> </pre>
+	<form action="doyouevenfit.cgi" method="post">
 	<input type="submit" name="add_food" value="+ ADD FOOD" class="button" style="height:45px;width:250px;"><br>
 	<pre> </pre> <pre> </pre>
 	<input type="submit" name="delete_meal" value="DELETE MEAL" class="button" style="height:45px;width:250px;"><br>
@@ -1148,6 +1105,8 @@ sub show_food() {	# displayed if user selects food from show meal
 	my $date = param('diet_date');
 	my $meal = param('meal');
 	my $mid = param('mid');
+	my $fid = param('fid');
+	my $mcid = param('mcid');
 	$meal =~ s/ \(\d+ calories\)$//;
 	my $food = param('food');
 	$food =~ s/ \((\d+) calories\)$//;
@@ -1155,44 +1114,16 @@ sub show_food() {	# displayed if user selects food from show meal
 	$driver = "SQLite"; 
 	$database = "project.db"; 
 	$dsn = "DBI:$driver:dbname=$database";
-	$userid = ""; $dbpassword = "";  
-	$dbh = DBI->connect($dsn, $userid, $dbpassword, { RaiseError => 1 }) or die $DBI::errstr; 
-	$stmt = qq(select id from user where username = '$username'); 
+	$userid = ""; $dbpassword = "";
+	$dbh = DBI->connect($dsn, $userid, $dbpassword, { RaiseError => 1 }) or die $DBI::errstr;
+	$stmt = qq(select serving from meal_contains where id = '$mcid'); 
 	$sth = $dbh->prepare($stmt);
 	$rv = $sth->execute() or die $DBI::errstr; 
 	if ($rv < 0) {
 		print $DBI::errstr;
 	}
 	my @row = $sth->fetchrow_array();
-	my $uid = $row[0];
-	$stmt = qq(select fid, serving from meal_contains where mid = '$mid'); 
-	$sth = $dbh->prepare($stmt);
-	$rv = $sth->execute() or die $DBI::errstr; 
-	if ($rv < 0) {
-		print $DBI::errstr;
-	}
-	my $fid;
-	my $serving;
-	while (my @row = $sth->fetchrow_array()) {	# making sure food with proper serving size is selected (accounting for duplicates)
-		$serving = $row[1];	
-		$stmt = qq(select calories from food where id = $row[0]);
-		$hts = $dbh->prepare($stmt);
-		$rv = $hts->execute() or die $DBI::errstr; 
-		if ($rv < 0) {
-			print $DBI::errstr;
-		}
-		@wor = $hts->fetchrow_array();
-		if ($calories == int(($wor[0] * $serving / 100) + 0.5)) {
-			$fid = $row[0];
-			last;
-		}
-	}
-	my $html = qq(
-	<div class="header-bottom" id="tour">
-	<div class="wrap">
-	<h3> <text style="color:white";>$food ($calories calories)</h3>  
-	<form action="doyouevenfit.cgi" method="post">
-	<pre> </pre>);
+	my $serving = $row[0];
 	$stmt = qq(select protein, carbs, fat from food where id = '$fid'); 
 	$sth = $dbh->prepare($stmt);
 	$rv = $sth->execute() or die $DBI::errstr; 
@@ -1203,15 +1134,21 @@ sub show_food() {	# displayed if user selects food from show meal
 	my $protein = $row[0] * $serving / 100;
 	my $carbs = $row[1] * $serving / 100;
 	my $fat = $row[2] * $serving / 100;
-	$html .= qq(<text style="color:white;font-size:20pt">Serving: $serving g
-		<p>
-		Protein: $protein g
-		<p>
-		Carbs: $carbs g
-		<p>
-		Fat: $fat g</text>
-		<p></p>);
-	$html .= qq(<pre> </pre>
+	my $html = qq(
+	<div class="header-bottom" id="tour">
+	<div class="wrap">
+	<h3> <text style="color:white";>$food ($calories calories)</h3>  
+	<form action="doyouevenfit.cgi" method="post">
+	<pre> </pre>
+	<text style="color:white;font-size:20pt">Serving: $serving g
+	<p>
+	Protein: $protein g
+	<p>
+	Carbs: $carbs g
+	<p>
+	Fat: $fat g</text>
+	<p></p>
+	<pre> </pre>
 	<input type="submit" name="delete_food" value="DELETE FOOD" class="button" style="height:45px;width:250px;"><br>
 	<pre> </pre>
 	<input type="submit" name="back_meal" value="BACK" class="button" style="height:45px;width:250px;"><br>
@@ -1220,8 +1157,10 @@ sub show_food() {	# displayed if user selects food from show meal
 	$html .= hidden('password');
 	$html .= hidden('diet_date');
 	$html .= hidden('meal');
-	$html .= hidden('mid');
 	$html .= hidden('food');
+	$html .= hidden('mid');
+	$html .= hidden('fid');
+	$html .= hidden('mcid');
 	$html .= qq(</form>);
 	return $html;
 }
@@ -1278,11 +1217,14 @@ sub delete_food() {	# deletes table relating food to meal from database and upda
 	my $username = param('username');
 	my $date = param('diet_date');
 	my $mid = param('mid');
-	my $meal = param('meal');
-	$meal =~ s/ \(\d+ calories\)$//;
+	my $fid = param('fid');
+	my $mcid = param('mcid');
 	my $food = param('food');
 	$food =~ s/ \((\d+) calories\)$//;
 	my $calories = $1;
+	if (defined param('calories')) {
+		$calories = param('calories');
+	}
 	$driver = "SQLite"; 
 	$database = "project.db"; 
 	$dsn = "DBI:$driver:dbname=$database";
@@ -1296,6 +1238,11 @@ sub delete_food() {	# deletes table relating food to meal from database and upda
 	}
 	my @row = $sth->fetchrow_array();
 	my $uid = $row[0];
+	$stmt = qq(delete from meal_contains where id = '$mcid');
+	$rv = $dbh->do($stmt) or die $DBI::errstr;
+	if ($rv < 0) {
+		print $DBI::errstr;
+	}
 	$stmt = qq(select calories from meal where id = '$mid'); 
 	$sth = $dbh->prepare($stmt);
 	$rv = $sth->execute() or die $DBI::errstr; 
@@ -1304,33 +1251,6 @@ sub delete_food() {	# deletes table relating food to meal from database and upda
 	}
 	@row = $sth->fetchrow_array();
 	my $mcalories = $row[0];
-	$stmt = qq(select fid, serving from meal_contains where mid = '$mid'); 
-	$sth = $dbh->prepare($stmt);
-	$rv = $sth->execute() or die $DBI::errstr; 
-	if ($rv < 0) {
-		print $DBI::errstr;
-	}
-	my $fid;
-	my $serving;
-	while (my @row = $sth->fetchrow_array()) {
-		$serving = $row[1];	
-		$stmt = qq(select calories from food where id = $row[0]);
-		$hts = $dbh->prepare($stmt);
-		$rv = $hts->execute() or die $DBI::errstr; 
-		if ($rv < 0) {
-			print $DBI::errstr;
-		}
-		@wor = $hts->fetchrow_array();
-		if ($calories == int(($wor[0] * $serving / 100) + 0.5)) {
-			$fid = $row[0];
-			last;
-		}
-	}
-	$stmt = qq(delete from meal_contains where fid = '$fid' and mid = '$mid');
-	$rv = $dbh->do($stmt) or die $DBI::errstr;
-	if ($rv < 0) {
-		print $DBI::errstr;
-	}
 	my $updated = int(($mcalories - $calories) + 0.5);
 	$stmt = qq(update meal set calories = $updated where id = '$mid');
 	$rv = $dbh->do($stmt) or die $DBI::errstr;
@@ -1686,7 +1606,7 @@ sub insert_food_man() {	# inserts manually entered food into the database
 	}
 	@row = $sth->fetchrow_array();
 	$fid = $row[0];
-	$stmt = qq(insert into meal_contains(mid,fid,serving) values('$mid','$fid','$serving'));
+	$stmt = qq(insert into meal_contains values(null,'$mid','$fid','$serving'));
 	$rv = $dbh->do($stmt) or die $DBI::errstr;
 	$stmt = qq(update meal set calories = $updated where id = '$mid');
 	$rv = $dbh->do($stmt) or die $DBI::errstr;
@@ -2219,7 +2139,11 @@ sub show_exercise() {
 		}
 	}
 	if ($setsbool) {
-		$html .= qq(<text style="color:white;font-size:24pt;">$n Sets Total <p> </p>
+		$html .= qq(<text style="color:white;font-size:24pt;">$n Set);
+		if ($n > 1) {
+			$html .= qq(s);
+		}
+		$html .= qq( Total <p> </p>
 		<text style="color:white;font-size:24pt;"> <p> </p>
 		);
 		my $i = 0;
@@ -2228,7 +2152,7 @@ sub show_exercise() {
 			<input type="text" name="sid" value="$sid[$i]" size=28 style="text-align:center;border:0px;solid:#ffffff;background-color:rgba(255,255,255,0);color:black;font-size:16pt;height:0px;width:0px;font-family:AmbleRegular;"><br>
 			<input type="text" name="wcid" value="$wcid" size=28 style="text-align:center;border:0px;solid:#ffffff;background-color:rgba(255,255,255,0);color:black;font-size:16pt;height:0px;width:0px;font-family:AmbleRegular;"><br>
 			<input type="submit" name="edit_set" value="$reps[$i] reps);
-			if ($weight[$i] ne "" || $weight[$i] != 0) {
+			if ($weight[$i] ne "" && $weight[$i] > 0) {
 				$html .= qq( of $weight[$i] kg);
 			}
 			$html .= qq(" class="button" style="height:45px;width:300px;">
@@ -2294,7 +2218,7 @@ sub insert_set() {
 	$dsn = "DBI:$driver:dbname=$database";
 	$userid = ""; $dbpassword = "";  
 	$dbh = DBI->connect($dsn, $userid, $dbpassword, { RaiseError => 1 }) or die $DBI::errstr;
-	$stmt = qq(insert into sets values (null,'$wcid','$reps','$weight')); 
+	$stmt = qq(insert into sets(id,wcid,reps,weight) values (null,'$wcid','$reps','$weight')); 
 	$sth = $dbh->prepare($stmt);
 	$rv = $sth->execute() or die $DBI::errstr; 
 	if ($rv < 0) {
@@ -2318,7 +2242,7 @@ sub insert_exercise() {
 	}
 	@row = $sth->fetchrow_array();
 	my $eid = $row[0];
-	$stmt = qq(insert into workout_contains values (null,'$wid','$eid','','')); 
+	$stmt = qq(insert into workout_contains values (null,'$wid','$eid')); 
 	$sth = $dbh->prepare($stmt);
 	$rv = $sth->execute() or die $DBI::errstr; 
 	if ($rv < 0) {
@@ -2529,7 +2453,7 @@ $stmt = qq(select id from user where username = '$username');
 		}
 		@row = $sth->fetchrow_array();
 		my $updated = int(($row[0] + $calories * $serving / 100) + 0.5);	# update meal calories
-		$stmt = qq(insert into meal_contains(mid,fid,serving) values('$mid','$fid','$serving'));
+		$stmt = qq(insert into meal_contains values(null,'$mid','$fid','$serving'));
 		$rv = $dbh->do($stmt) or die $DBI::errstr;
 		$stmt = qq(update meal set calories = $updated where id = '$mid');
 		$rv = $dbh->do($stmt) or die $DBI::errstr;
@@ -2631,7 +2555,7 @@ $stmt = qq(select id from user where username = '$username');
 		}
 		@row = $sth->fetchrow_array();
 		$fid = $row[0];
-		$stmt = qq(insert into meal_contains(mid,fid,serving) values('$mid','$fid','$serving'));
+		$stmt = qq(insert into meal_contains values(null,'$mid','$fid','$serving'));
 		$rv = $dbh->do($stmt) or die $DBI::errstr;
 		$stmt = qq(select calories from meal where id = '$mid'); 
 		$sth = $dbh->prepare($stmt);
