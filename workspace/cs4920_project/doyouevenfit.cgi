@@ -7,33 +7,57 @@ use List::Util qw/min max/;
 use Date::Calc qw/check_date/;
 use Date::Calc qw(Add_Delta_Days);
 use WWW::Mechanize;
+use CGI::Cookie;
 warningsToBrowser(1);
-
 use DBI;
 
 $bg_handler = "2";
 $correct_input = 1;
 $update_err = 0;
-print page_header();
+#print page_header();
+
+     %cookies = fetch CGI::Cookie;
+     $value2 = "undefined";
+     $value2 = cookie('CURRUSR') if cookie('CURRUSR');
 
 if (defined param('logout')) {
+    # action: logout
+    my$r = cookie (
+                -name    => 'CURRUSR',
+                -value   => '',
+                -expires => '-1d'
+    );
+    print header(-cookie => $r);
+    print " <p>FROM HEADER: session belongs to $value2</p> ";
+    $ew = cookie('CURRUSR');
+    print " -$ew-";
     print login_screen();
     $bg_handler = 3;
 } elsif (defined param('register')) {
-	print register_screen();
+    # action: user resgistration 
+    print page_header();
+    print register_screen();
     $bg_handler = 2;
 } elsif (defined param('create_account')) {
-	if (check_register()) {
-		create_account();
-		print login_screen();
+    # action: user registration submittion
+    print page_header();
+    if (check_register()) {
+        create_account();
+        print login_screen();
         $bg_handler = 3;
-	} else {
-		print register_help();
+    } else {
+	print register_help();
         $bg_handler = 3;
-	}
-} elsif (defined param('username') && defined param('password')) {
+    }
+    
+} elsif ($value2 ne "undefined"){
+
+	print page_header();
 	$bg_handler = 2;
-	if (check_login()) {
+	#state: user is active
+	print "HAHAHAHA sneaky redirect";
+	print "Refresh again (problem will sort our soon)!";
+	
         	print banner();
 		if (defined param('settings') || defined param('cancel')) {
 			print settings();
@@ -144,12 +168,36 @@ if (defined param('logout')) {
 			print update();
 		} elsif (defined param('friend')) {
 			print friend();
-		}
-	} else {
-		print login_screen();
-		$bg_handler = "3"	
-	}
+		}	
+
+} elsif (defined param('username') && defined param('password')) {
+    # action: attempted login 
+    $bg_handler = 2;
+    if (check_login()) {
+        # login successful
+        my $c = CGI::Cookie->new(-name    =>  'CURRUSR',
+                                 -value   => param('username'));
+        print header(-cookie => $c);
+        print "login successful";
+        print login_screen();
+
+    }else {
+        # login failure
+        print page_header();
+        print "login failure";
+	print login_screen();
+        $bg_handler = "3"	
+    }
+
+}elsif ($value2 eq "undefined"){
+        print page_header();
+        print "OPPSSSOPSOSPOS! YOU MUST LOGIN TO ACCES FEATURES";
+        print login_screen();
+        $bg_handler = 3;
+	
 } else {
+	# action (default) : print login screen
+        print page_header();
 	print login_screen();
 	$bg_handler = 3;
 }
@@ -157,8 +205,10 @@ print page_css();
 print page_footer();
 
 sub page_header {
-	return header,
-	start_html("-title"=>"DoYouEvenFit"),
+	$header = header;
+	$header .= start_html("-title"=>"DoYouEvenFit");
+        $header .= " <p>FROM HEADER: session belongs to $value2</p> ";
+        return $header;
 }
 
 sub banner {
