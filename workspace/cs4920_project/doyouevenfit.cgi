@@ -37,6 +37,11 @@ if (defined param('logout')) {
 		if (defined param('settings') || defined param('cancel')) {
 			print settings();
 		} elsif (defined param('change_password')) {
+			$pass_change_attempt = 1;
+			$pass_error = change_check();
+			if($pass_error == 0){
+				update_password();
+			}
 			print change_password();
 		} elsif (defined param('update_profile')) {
 			$update_attempt = 1;
@@ -385,7 +390,72 @@ sub update_profile() { # update user details into database
 }
 
 sub change_password() {
+	my $html = qq(<div class="header-bottom" id="update">
+	<form action="doyouevenfit.cgi" method="post">
+	);
+	
+	if ($pass_change_attempt == 1 && $pass_error == 0) {
+	   my $new_password = param('new_password1');
+		$html .= qq(<h2><font color="black" size="3">Update Successful!</font></h2>);
+		$html .= qq(<form action="doyouevenfit.cgi" method="post">
+			<input type="text" name="password" value="$new_password" size=28 style="text-align:center;border:0px;solid:#ffffff;background-color:rgba(255,255,255,0);color:black;font-size:16pt;height:0px;width:0px;font-family:AmbleRegular;"><br>
+			</form>);
+	}
+	
+	$html .= qq(<center><h3 style="color:white;">Enter Old Password</h3></center></body>);
+	if($pass_error == 1){
+	   $html .= qq(<center><h3 style="color:red;">Old Password is Incorrect!</h3></center></body>);
+	} 
+	$html .= qq(<input type="password" name="old_password" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="********" onfocus="javascript:if(this.value=='********')this.value='';"><br>
+	<pre> </pre>
+	<center><h3 style="color:white">Enter New Password</h3></center></body>);
+	if($pass_error == 2){
+	   $html .= qq(<center><h3 style="color:red;">New Passwords do not match!</h3></center></body>);
+	} 
+	$html .= qq(<input type="password" name="new_password1" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="********" onfocus="javascript:if(this.value=='********')this.value='';"><br>
+	<p>&nbsp</p>
+	<center><h3 style="color:white">Re-Enter New Password</h3></center></body>
+	<input type="password" name="new_password2" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="********" onfocus="javascript:if(this.value=='********')this.value='';"><br>
+	<p>&nbsp</p>);
+	
+	$html .= qq(<input type="submit" name="change_password" value="Update" class="button" style="height:45px;width:220px;"><br>
+	<p>&nbsp</p>
+	<input type="submit" name="cancel" value="Cancel" class="button" style="height:45px;width:220px;"><br>
+	<p>&nbsp</p>);
+	$html .= param('username');
+	$html .= param('password');
+	$html .= qq(</form>
+	</div>
+	);
+	return $html;
+}
 
+
+sub change_check(){
+   my $old_password = param('old_password');
+   my $new_password1 = param('new_password1');
+   my $new_password2 = param('new_password2');
+   my $current_password = param('password');
+   if($old_password ne $current_password){
+      return 1;
+   } elsif ($new_password1 ne $new_password2){
+      return 2;   
+   }
+   return 0;
+}
+
+sub update_password() { # update user details into database
+	$username = param('username');
+	my $new_password = param('new_password1');
+	$driver = "SQLite"; 
+	$database = "project.db"; 
+	$dsn = "DBI:$driver:dbname=$database";
+	$userid = ""; $dbpassword = "";  
+	$dbh = DBI->connect($dsn, $userid, $dbpassword, { RaiseError => 1 }) or die $DBI::errstr; 
+	$stmt = qq(update user set password = "$new_password"); 
+	$rv = $dbh->do($stmt) or die $DBI::errstr; 
+	$dbh->disconnect();
+   
 }
 
 sub friend() {
