@@ -1,5 +1,6 @@
 #!/usr/bin/perl -w
 
+#supported modules 
 use CGI qw/:all/;
 use CGI::Carp qw(fatalsToBrowser warningsToBrowser);
 use Data::Dumper;  
@@ -7,7 +8,6 @@ use List::Util qw/min max/;
 use Date::Calc qw/check_date/;
 use WWW::Mechanize;
 warningsToBrowser(1);
-
 use DBI;
 
 $bg_handler = "2";
@@ -15,144 +15,153 @@ $correct_input = 1;
 $update_err = 0;
 print page_header();
 
+
 if (defined param('logout')) {
+    # action: logout
     print login_screen();
     $bg_handler = 3;
 } elsif (defined param('register')) {
-	print register_screen();
+    # action: user resgistration 
+    print register_screen();
     $bg_handler = 2;
 } elsif (defined param('create_account')) {
-	if (check_register()) {
-		create_account();
-		print login_screen();
+    # action: user registration submittion
+    if (check_register()) {
+        create_account();
+        print login_screen();
         $bg_handler = 3;
-	} else {
-		print register_help();
+    } else {
+	print register_help();
         $bg_handler = 3;
-	}
+    }
 } elsif (defined param('username') && defined param('password')) {
+    # action: attempted login 
     $bg_handler = 2;
-	if (check_login()) {
-        print banner();
-		if (defined param('settings') || defined param('cancel')) {
-			print settings();
-		} elsif (defined param('change_password')) {
-			print change_password();
-		} elsif (defined param('update_profile')) {
-			if (check_update()) {
-				update_profile();
-				print update();
-			} else {
-				$update_err = 1;
-				print update();
-			}
-		} elsif (defined param('add_food_search')) {
-			if (defined param('food_selected')) {
-				if (check_serving()) {
-					insert_food();
-					print show_meal();
-				} else {
-					print add_food_screen();
-				}
+    if (check_login()) {
+    print banner();
+	if (defined param('settings') || defined param('cancel')) {
+		print settings();
+	} elsif (defined param('change_password')) {
+		print change_password();
+	} elsif (defined param('update_profile')) {
+		if (check_update()) {
+			update_profile();
+			print update();
+		} else {
+			$update_err = 1;
+			print update();
+		}
+	} elsif (defined param('add_food_search')) {
+		if (defined param('food_selected')) {
+			if (check_serving()) {
+				insert_food();
+				print show_meal();
 			} else {
 				print add_food_screen();
 			}
-		} elsif (defined param('insert_set')) {
-			if (param('reps') =~ /\d+/ && defined param('reps') != 0) {
-				if (param('weight') eq "" || param('weight') =~ /\d+/) {
-					insert_set();
-					print show_exercise();
-				} else {
-					$correct_input = 0;
-					print show_exercise();
-				}
+		} else {
+			print add_food_screen();
+		}
+	} elsif (defined param('insert_set')) {
+		if (param('reps') =~ /\d+/ && defined param('reps') != 0) {
+			if (param('weight') eq "" || param('weight') =~ /\d+/) {
+				insert_set();
+				print show_exercise();
 			} else {
 				$correct_input = 0;
 				print show_exercise();
 			}
-		} elsif (defined param('insert_exercise')) {
-			if (defined param('exercise_selected')) {
-				insert_exercise();
-			}
-			print show_workout();
-		} elsif (defined param('add_set')) {
+		} else {
+			$correct_input = 0;
 			print show_exercise();
-		} elsif (defined param('delete_set')) {
-			delete_set();
-			print show_exercise();
-		} elsif (defined param('show_exercise')) {
-			print show_exercise();
-		} elsif (defined param('search_food')) {
-			print add_food_screen();
-		} elsif (defined param('search_exercise') || defined param('seaarch_again')) {
-			print show_workout();
-		} elsif (defined param('back_meal')){
-			print show_meal();
-		} elsif (defined param('back_exercise')) {
-			print exercise_screen();
-		} elsif (defined param('back_workout')) {
-			print show_workout();
-		} elsif (defined param('delete_meal')) {
-			delete_meal();
-			print diet_screen();
-		} elsif (defined param('delete_food')) {
-			delete_food();
-			print show_meal();
-		} elsif (defined param('delete_workout')) {
-			delete_workout();
-			print exercise_screen();
-		} elsif (defined param('diet') || defined param('back_diet')) {
-			print diet_screen();
-		} elsif (defined param('add_to_meal')) {
-			if (check_food()) {
-				insert_food_man();
-				print show_meal();
-			} else {
-				print food_help();
-			}
-		} elsif (defined param('add_food_man')) {
-			print add_food_man();
-		} elsif (defined param('add_food')) {
-			print add_food_screen();
-		} elsif (defined param('food')) {
-			print show_food();
-		} elsif (defined param('meal')) {
-			print show_meal();
-		} elsif (defined param('workout')) {
-			print show_workout();
-		} elsif ((defined param('add_meal') || defined param('meal_name')) && param('meal_name') ne "" && param('meal_name') !~ /"/) {
-			insert_meal();
-			print diet_screen();
-		} elsif (defined param('add_workout') && (param('workout_name') ne "" || param('workout_selected') ne "")) {
-			insert_workout();
-			print exercise_screen();
-		} elsif (defined param('login') || defined param('home')) {
-			print home();
-		} elsif (defined param('exercise_screen')) {
-			print exercise_screen();
-		} elsif (defined param('diet_date')) {
-			print diet_screen();
-		} elsif (defined param('exercise_date')) {
-			print exercise_screen();
-		} elsif (defined param('update')) {
-			print update();
-		} elsif (defined param('cancel')) {
-			print cancel();
-		} elsif (defined param('update')) {
-			print update();
-		} elsif (defined param('friend')) {
-			print friend();
 		}
-	} else {
-		print login_screen();
-        $bg_handler = "3"	
+	} elsif (defined param('insert_exercise')) {
+		if (defined param('exercise_selected')) {
+			insert_exercise();
+		}
+		print show_workout();
+	} elsif (defined param('add_set')) {
+		print show_exercise();
+	} elsif (defined param('delete_set')) {
+		delete_set();
+		print show_exercise();
+	} elsif (defined param('show_exercise')) {
+		print show_exercise();
+	} elsif (defined param('search_food')) {
+		print add_food_screen();
+	} elsif (defined param('search_exercise') || defined param('seaarch_again')) {
+		print show_workout();
+	} elsif (defined param('back_meal')){
+		print show_meal();
+	} elsif (defined param('back_exercise')) {
+		print exercise_screen();
+	} elsif (defined param('back_workout')) {
+		print show_workout();
+	} elsif (defined param('delete_meal')) {
+		delete_meal();
+		print diet_screen();
+	} elsif (defined param('delete_food')) {
+		delete_food();
+		print show_meal();
+	} elsif (defined param('delete_workout')) {
+		delete_workout();
+		print exercise_screen();
+	} elsif (defined param('diet') || defined param('back_diet')) {
+		print diet_screen();
+	} elsif (defined param('add_to_meal')) {
+		if (check_food()) {
+			insert_food_man();
+			print show_meal();
+		} else {
+			print food_help();
+		}
+	} elsif (defined param('add_food_man')) {
+		print add_food_man();
+	} elsif (defined param('add_food')) {
+		print add_food_screen();
+	} elsif (defined param('food')) {
+		print show_food();
+	} elsif (defined param('meal')) {
+		print show_meal();
+	} elsif (defined param('workout')) {
+		print show_workout();
+	} elsif ((defined param('add_meal') || defined param('meal_name')) && param('meal_name') ne "" && param('meal_name') !~ /"/) {
+		insert_meal();
+		print diet_screen();
+	} elsif (defined param('add_workout') && (param('workout_name') ne "" || param('workout_selected') ne "")) {
+		insert_workout();
+		print exercise_screen();
+	} elsif (defined param('login') || defined param('home')) {
+		print home();
+	} elsif (defined param('exercise_screen')) {
+		print exercise_screen();
+	} elsif (defined param('diet_date')) {
+		print diet_screen();
+	} elsif (defined param('exercise_date')) {
+		print exercise_screen();
+	} elsif (defined param('update')) {
+		print update();
+	} elsif (defined param('cancel')) {
+		print cancel();
+	} elsif (defined param('update')) {
+		print update();
+	} elsif (defined param('friend')) {
+		print friend();
 	}
-} else {
+    } else {
 	print login_screen();
-	$bg_handler = 3;
+        $bg_handler = "3"	
+    }
+} else {
+    print login_screen();
+    $bg_handler = 3;
 }
 print page_css();
 print page_footer();
+
+#
+# subroutines
+#
 
 sub page_header {
 	return header,
