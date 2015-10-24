@@ -40,11 +40,12 @@ if (defined param('logout')) {
 		} elsif (defined param('change_password')) {
 			print change_password();
 		} elsif (defined param('update_profile')) {
-			if (check_update()) {
+			$update_attempt = 1;
+			@error_log = check_update();
+			if (check_errors() == 0) {
 				update_profile();
 				print update();
 			} else {
-				$update_err = 1;
 				print update();
 			}
 		} elsif (defined param('add_food_search')) {
@@ -224,22 +225,39 @@ sub update() {
 	<div class="header-bottom" id="update">
 	<form action="doyouevenfit.cgi" method="post">
 	);
-	if ($update_err == 0) {
-		$html .= qq(<h2><font color="white" size="3">&nbsp;</font></h2>);
-	} elsif ($update_err == 1) {
-		$html .= qq(<h2><font color="red" size="3">Data format wrong!</font></h2>);
+	if ($update_attempt == 1 && check_errors() == 0) {
+		$html .= qq(<h2><font color="white" size="3">Update Successful!</font></h2>);
 	}
-	$html .= qq(<center><h3 style="color:white;">Height (cm)</h3></center></body>
-	<input type="text" name="height" size=28 style="width:350px;text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="$height" onfocus="javascript:if(this.value=='')this.value='';"><br>
+	
+	$html .= qq(<center><h3 style="color:white;">Height (cm)</h3></center></body>);
+	if($error_log[0] == 1){
+	   $html .= qq(<center><h3 style="color:red;">Field is empty</h3></center></body>);
+	} elsif($error_log[0] == 2){
+	   $html .= qq(<center><h3 style="color:red;">Incorrect Format: Field must only contain numbers!</h3></center></body>);
+	}
+	$html .= qq(<input type="text" name="height" size=28 style="width:350px;text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="$height" onfocus="javascript:if(this.value=='')this.value='';"><br>
 	<pre> </pre> <pre> </pre>
-	<center><h3 style="color:white">Weight (kg)</h3></center></body>
-	<input type="text" name="weight" size=28 style="width:350px;text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="$weight" onfocus="javascript:if(this.value=='')this.value='';"><br>
+	<center><h3 style="color:white">Weight (kg)</h3></center></body>);
+	if($error_log[1] == 1){
+	   $html .= qq(<center><h3 style="color:red;">Field is empty</h3></center></body>);
+	} elsif($error_log[1] == 2){
+	   $html .= qq(<center><h3 style="color:red;">Incorrect Format: Field must only contain numbers!</h3></center></body>);
+	}
+	$html.=qq(<input type="text" name="weight" size=28 style="width:350px;text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="$weight" onfocus="javascript:if(this.value=='')this.value='';"><br>
 	<pre> </pre> <pre> </pre>
-    <center><h3 style="color:white;">Age</h3></center></body>
-	<input type="text" name="age" size=28 style="width:350px;text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="$age" onfocus="javascript:if(this.value=='')this.value='';"><br>
+    <center><h3 style="color:white;">Age</h3></center></body>);
+    if($error_log[2] == 1){
+	   $html .= qq(<center><h3 style="color:red;">Field is empty</h3></center></body>);
+	} elsif($error_log[2] == 2){
+	   $html .= qq(<center><h3 style="color:red;">Incorrect Format: Field must only contain numbers!</h3></center></body>);
+	}
+	$html .= qq(<input type="text" name="age" size=28 style="width:350px;text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="$age" onfocus="javascript:if(this.value=='')this.value='';"><br>
 	<pre> </pre> <pre> </pre>
-	<center><h3 style="color:white;">What is your exercise level?</h3></center></body>
-	<select name="exercise" size=28 class="styled-select" style="height:132px;"><br>
+	<center><h3 style="color:white;">What is your exercise level?</h3></center></body>);
+	if($error_log[3] == 1){
+	   $html .= qq(<center><h3 style="color:red;">Field is empty</h3></center></body>);
+	} 
+	$html .= qq(<select name="exercise" size=28 class="styled-select" style="height:132px;"><br>
 	<option);
 	if ($exercise eq "Sedentary") {
 		$html .= " selected";
@@ -266,8 +284,11 @@ sub update() {
 	}
  	$html .= qq(>Extremely Active
 	</select>
-	<pre> </pre> <pre> </pre>
-	<center><h3 style="color:white;">What is your goal?</h3></center></body>
+	<pre> </pre> <pre> </pre>);
+	if($error_log[4] == 1){
+	   $html .= qq(<center><h3 style="color:red;">Field is empty</h3></center></body>);
+	} 
+	$html .= qq(<center><h3 style="color:white;">What is your goal?</h3></center></body>
 	<select name="goal" size=28 class="styled-select" style="height:132px;"><br>
 	<option );
 	if ($goal eq "Extreme Weight Loss") {
@@ -310,6 +331,7 @@ sub update() {
 }
 
 sub check_update() {	
+	my @errors = ("0", "0", "0", "0", "0");
 	$username = param('username');
 	my $height = param('height');
 	my $weight = param('weight');
@@ -318,27 +340,36 @@ sub check_update() {
 	my $goal = param('goal');
 
 	if ($height eq "") {
-		return 0;
+		$errors[0] = 1;
 	} elsif ($height !~ /^\d+$/) {
-		return 0;
+		$errors[0] = 2;
 	}
 	if ($weight eq "") {
-		return 0;
+		$errors[1] = 1;
 	} elsif ($weight !~ /^\d+$/) {
-		return 0;
+		$errors[1] = 2;
 	}
 	if ($age eq "") {
-		return 0;
+		$errors[2] = 1;
 	} elsif ($age !~ /^\d+$/) {
-		return 0;
+		$errors[2] = 2;
 	}
 	if ($exercise eq "") {
-		return 0;
+		$errors[3] = 1;
 	}
 	if ($goal eq "") {
-		return 0;
+		$errors[4] = 1;
 	}
-	return 1;
+	return @errors;
+}
+
+sub check_errors(){
+   foreach $value (@error_logs){
+      if($value != 0){
+         return 1;
+      }
+   }
+   return 0;
 }
 
 
