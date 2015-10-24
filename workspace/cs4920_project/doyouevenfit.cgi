@@ -782,6 +782,8 @@ sub create_account() {	# inserts user and details into database
 	my $date = "$day/$month/$year";
 	$stmt = qq(insert into weight values(null,'$uid','$weight','$date')); 
 	$rv = $dbh->do($stmt) or die $DBI::errstr;
+	$stmt = qq(insert into weight values(null,'$uid','$weight','01/01/1900')); 
+	$rv = $dbh->do($stmt) or die $DBI::errstr;
 	$dbh->disconnect();
 }
 
@@ -2145,23 +2147,37 @@ sub show_workout() {
 			<pre> </pre>
 			<input type="submit" name="search_exercise" value="SEARCH EXERCISE" class="button" style="height:45px;width:350px;"><br>);
 		} elsif (param('search_term') ne "" || defined param('muscle')) {
-			$html .= qq(<text style="color:white;font-size:20pt;">Search Results<p></p>
-		      	<select name="exercise_selected" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:210px;width:500px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>
-			 );
 			$driver = "SQLite"; 
 			$database = "project.db"; 
 			$dsn = "DBI:$driver:dbname=$database";
 			$userid = ""; $dbpassword = "";  
 			$dbh = DBI->connect($dsn, $userid, $dbpassword, { RaiseError => 1 }) or die $DBI::errstr;
+			my $nsearchresults;
 			if (param('search_term') ne "" && defined param('muscle')) {
 				my $search = param('search_term');
 				my $muscle = param('muscle');
+				$stmt = qq(select count(*) from exercise where name like "%$search%" and muscle = "$muscle"); 
+				$sth = $dbh->prepare($stmt);
+				$rv = $sth->execute() or die $DBI::errstr; 
+				if ($rv < 0) {
+					print $DBI::errstr;
+				}
+				my @count = $sth->fetchrow_array();
+				$nsearchresults = $count[0];
 				$stmt = qq(select name from exercise where name like "%$search%" and muscle = "$muscle"); 
 				$sth = $dbh->prepare($stmt);
 				$rv = $sth->execute() or die $DBI::errstr; 
 				if ($rv < 0) {
 					print $DBI::errstr;
 				}
+				my $height = 24 * $nsearchresults;
+				if ($height > 240) {
+					$height = 240;
+				}
+				$height .= "px";
+				$html .= qq(<text style="color:white;font-size:20pt;">Search Results ($nsearchresults found)<p></p>
+			      	<select name="exercise_selected" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:$height;width:500px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>
+				);
 				my $n = 0;
 				while (my @row = $sth->fetchrow_array()) {
 					$html .= qq(<option>$row[0]);
@@ -2169,12 +2185,28 @@ sub show_workout() {
 				}
 			} elsif (param('search_term') ne "") {
 				my $search = param('search_term');
+				$stmt = qq(select count(*) from exercise where name like "%$search%"); 
+				$sth = $dbh->prepare($stmt);
+				$rv = $sth->execute() or die $DBI::errstr; 
+				if ($rv < 0) {
+					print $DBI::errstr;
+				}
+				my @count = $sth->fetchrow_array();
+				$nsearchresults = $count[0];
 				$stmt = qq(select name from exercise where name like "%$search%"); 
 				$sth = $dbh->prepare($stmt);
 				$rv = $sth->execute() or die $DBI::errstr; 
 				if ($rv < 0) {
 					print $DBI::errstr;
 				}
+				my $height = 24 * $nsearchresults;
+				if ($height > 240) {
+					$height = 240;
+				}
+				$height .= "px";
+				$html .= qq(<text style="color:white;font-size:20pt;">Search Results ($nsearchresults found)<p></p>
+			      	<select name="exercise_selected" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:$height;width:500px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>
+				);
 				my $n = 0;
 				while (my @row = $sth->fetchrow_array()) {
 					$html .= qq(<option>$row[0]);
@@ -2182,12 +2214,28 @@ sub show_workout() {
 				}
 			} elsif (defined param('muscle')) {
 				my $muscle = param('muscle');
+				$stmt = qq(select count(*) from exercise where muscle = "$muscle"); 
+				$sth = $dbh->prepare($stmt);
+				$rv = $sth->execute() or die $DBI::errstr; 
+				if ($rv < 0) {
+					print $DBI::errstr;
+				}
+				my @count = $sth->fetchrow_array();
+				$nsearchresults = $count[0];
 				$stmt = qq(select name from exercise where muscle = "$muscle"); 
 				$sth = $dbh->prepare($stmt);
 				$rv = $sth->execute() or die $DBI::errstr; 
 				if ($rv < 0) {
 					print $DBI::errstr;
 				}
+				my $height = 24 * $nsearchresults;
+				if ($height > 240) {
+					$height = 240;
+				}
+				$height .= "px";
+				$html .= qq(<text style="color:white;font-size:20pt;">Search Results ($nsearchresults found)<p></p>
+			      	<select name="exercise_selected" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:$height;width:500px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>
+				);
 				my $n = 0;
 				while (my @row = $sth->fetchrow_array()) {
 					$html .= qq(<option>$row[0]);
@@ -2312,11 +2360,11 @@ sub show_exercise() {
 	<form action="doyouevenfit.cgi" method="post">
 	<input type="text" name="wcid" value="$wcid" size=28 style="text-align:center;border:0px;solid:#ffffff;background-color:rgba(255,255,255,0);color:black;font-size:16pt;height:0px;width:0px;font-family:AmbleRegular;"><br>);
 	if (defined param('add_set') || !$correct_input) {
-		$html .= qq(<input type="text" name="reps" value="" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:36px;width:100px;font-family:AmbleRegular;><br>
-		<text style="color:white;font-size:16pt;"> reps of </text>
-		<input type="text" name="weight" value="" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:36px;width:100px;font-family:AmbleRegular;><br>
-		<text style="color:white;font-size:16pt;"> kg</text> <pre> </pre>
-		<input type="submit" name="insert_set" value="ADD TO EXERCISE" class="button" style="height:45px;width:300px;"><br>
+		$html .= qq(<center> <input type="text" name="reps" value="" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:36px;width:100px;font-family:AmbleRegular;>
+		<text style="color:white;font-size:20px;"> <font color="white"> reps of </font> </text>
+		<input type="text" name="weight" value="" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:36px;width:100px;font-family:AmbleRegular;>
+		<text style="color:white;font-size:20pt;"> <font color="white"> kg</font> </text> <pre> </pre>
+		<input type="submit" name="insert_set" value="ADD TO EXERCISE" class="button" style="height:45px;width:300px;"><br></center> </body>
 		);
 	} else {
 		$html .= qq(<input type="submit" name="add_set" value="ADD SET" class="button" style="height:45px;width:250px;"><br>);
@@ -2330,7 +2378,9 @@ sub show_exercise() {
 	$html .= hidden('workout');
 	$html .= hidden('wid');
 	$html .= hidden('eid');
-	$html.= qq(</form>);
+	$html.= qq(</form>
+	</div>
+	</div>);
 	return $html;
 }
 
@@ -2490,24 +2540,28 @@ sub food_suggestions () {	# returns a scroll menu of foods containing the search
 		$food_urls{$food} = $url;
 		#print "$food ($url)\n";
 	}
-	
-	my @foods = keys %food_urls;
-	my $key_size = @foods;
-	my $height = 30*$key_size;
-	if($height > 210){
-	     	$height = 210;
-	} elsif ($height < 30) {
-		$height = 30;
-	}
-	$height .= "px";
-   	my $out = qq(<center><h2 style="color:white;">Suggestions</h2></center></body>
-	      	<select name="food_selected" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:$height;width:650px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>
-		 );
 	$driver = "SQLite"; 
 	$database = "project.db"; 
 	$dsn = "DBI:$driver:dbname=$database";
 	$userid = ""; $dbpassword = "";  
 	$dbh = DBI->connect($dsn, $userid, $dbpassword, { RaiseError => 1 }) or die $DBI::errstr; 
+	$stmt = qq(select count(*) from food where name like "%$userSearch%"); 
+	$sth = $dbh->prepare($stmt);
+	$rv = $sth->execute() or die $DBI::errstr;
+	my @count = $sth->fetchrow_array();
+	my @foods = keys %food_urls;
+	my $key_size = @foods;
+	my $nsearchresults = $key_size + $count[0];
+	my $height = 24*$nsearchresults;
+	if($height > 240){
+	     	$height = 240;
+	} elsif ($height < 24) {
+		$height = 24;
+	}
+	$height .= "px";
+   	my $out = qq(<center><text style="color:white;font-size:20pt;">Search Results ($nsearchresults found)</text></center></body> <p> </p>
+	      	<select name="food_selected" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:$height;width:650px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>
+		 );
 	$stmt = qq(select name from food where name like "%$userSearch%"); 
 	$sth = $dbh->prepare($stmt);
 	$rv = $sth->execute() or die $DBI::errstr; 
@@ -2532,8 +2586,8 @@ sub food_suggestions () {	# returns a scroll menu of foods containing the search
      		);
 	}
 	$out .= qq(</select>
-	<pre> </pre>
-	<center><h2 style="color:white;">Serving Size (g)</h2></center></body>
+	<pre> </pre> <pre> </pre>
+	<center><text style="color:white;font-size:20pt;">Serving Size (g)</text></center></body> <p> </p>
 	<input type="text" name="serving" value="" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>
 	<pre> </pre>
 	<input type="submit" name="add_food_search" value="ADD TO MEAL
