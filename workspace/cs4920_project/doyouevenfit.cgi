@@ -1,13 +1,14 @@
 #!/usr/bin/perl -w
 
-#supported modules 
 use CGI qw/:all/;
 use CGI::Carp qw(fatalsToBrowser warningsToBrowser);
 use Data::Dumper;  
 use List::Util qw/min max/;
 use Date::Calc qw/check_date/;
+use Date::Calc qw(Add_Delta_Days);
 use WWW::Mechanize;
 warningsToBrowser(1);
+
 use DBI;
 
 $bg_handler = "2";
@@ -15,153 +16,144 @@ $correct_input = 1;
 $update_err = 0;
 print page_header();
 
-
 if (defined param('logout')) {
-    # action: logout
     print login_screen();
     $bg_handler = 3;
 } elsif (defined param('register')) {
-    # action: user resgistration 
-    print register_screen();
+	print register_screen();
     $bg_handler = 2;
 } elsif (defined param('create_account')) {
-    # action: user registration submittion
-    if (check_register()) {
-        create_account();
-        print login_screen();
+	if (check_register()) {
+		create_account();
+		print login_screen();
         $bg_handler = 3;
-    } else {
-	print register_help();
+	} else {
+		print register_help();
         $bg_handler = 3;
-    }
+	}
 } elsif (defined param('username') && defined param('password')) {
-    # action: attempted login 
     $bg_handler = 2;
-    if (check_login()) {
-    print banner();
-	if (defined param('settings') || defined param('cancel')) {
-		print settings();
-	} elsif (defined param('change_password')) {
-		print change_password();
-	} elsif (defined param('update_profile')) {
-		if (check_update()) {
-			update_profile();
-			print update();
-		} else {
-			$update_err = 1;
-			print update();
-		}
-	} elsif (defined param('add_food_search')) {
-		if (defined param('food_selected')) {
-			if (check_serving()) {
-				insert_food();
-				print show_meal();
+	if (check_login()) {
+        print banner();
+		if (defined param('settings') || defined param('cancel')) {
+			print settings();
+		} elsif (defined param('change_password')) {
+			print change_password();
+		} elsif (defined param('update_profile')) {
+			if (check_update()) {
+				update_profile();
+				print update();
+			} else {
+				$update_err = 1;
+				print update();
+			}
+		} elsif (defined param('add_food_search')) {
+			if (defined param('food_selected')) {
+				if (check_serving()) {
+					insert_food();
+					print show_meal();
+				} else {
+					print add_food_screen();
+				}
 			} else {
 				print add_food_screen();
 			}
-		} else {
-			print add_food_screen();
-		}
-	} elsif (defined param('insert_set')) {
-		if (param('reps') =~ /\d+/ && defined param('reps') != 0) {
-			if (param('weight') eq "" || param('weight') =~ /\d+/) {
-				insert_set();
-				print show_exercise();
+		} elsif (defined param('insert_set')) {
+			if (param('reps') =~ /\d+/ && defined param('reps') != 0) {
+				if (param('weight') eq "" || param('weight') =~ /\d+/) {
+					insert_set();
+					print show_exercise();
+				} else {
+					$correct_input = 0;
+					print show_exercise();
+				}
 			} else {
 				$correct_input = 0;
 				print show_exercise();
 			}
-		} else {
-			$correct_input = 0;
+		} elsif (defined param('insert_exercise')) {
+			if (defined param('exercise_selected')) {
+				insert_exercise();
+			}
+			print show_workout();
+		} elsif (defined param('add_set')) {
 			print show_exercise();
-		}
-	} elsif (defined param('insert_exercise')) {
-		if (defined param('exercise_selected')) {
-			insert_exercise();
-		}
-		print show_workout();
-	} elsif (defined param('add_set')) {
-		print show_exercise();
-	} elsif (defined param('delete_set')) {
-		delete_set();
-		print show_exercise();
-	} elsif (defined param('show_exercise')) {
-		print show_exercise();
-	} elsif (defined param('search_food')) {
-		print add_food_screen();
-	} elsif (defined param('search_exercise') || defined param('seaarch_again')) {
-		print show_workout();
-	} elsif (defined param('back_meal')){
-		print show_meal();
-	} elsif (defined param('back_exercise')) {
-		print exercise_screen();
-	} elsif (defined param('back_workout')) {
-		print show_workout();
-	} elsif (defined param('delete_meal')) {
-		delete_meal();
-		print diet_screen();
-	} elsif (defined param('delete_food')) {
-		delete_food();
-		print show_meal();
-	} elsif (defined param('delete_workout')) {
-		delete_workout();
-		print exercise_screen();
-	} elsif (defined param('diet') || defined param('back_diet')) {
-		print diet_screen();
-	} elsif (defined param('add_to_meal')) {
-		if (check_food()) {
-			insert_food_man();
+		} elsif (defined param('delete_set')) {
+			delete_set();
+			print show_exercise();
+		} elsif (defined param('show_exercise')) {
+			print show_exercise();
+		} elsif (defined param('search_food')) {
+			print add_food_screen();
+		} elsif (defined param('search_exercise') || defined param('seaarch_again')) {
+			print show_workout();
+		} elsif (defined param('back_meal')){
 			print show_meal();
-		} else {
-			print food_help();
+		} elsif (defined param('back_exercise')) {
+			print exercise_screen();
+		} elsif (defined param('back_workout')) {
+			print show_workout();
+		} elsif (defined param('delete_meal')) {
+			delete_meal();
+			print diet_screen();
+		} elsif (defined param('delete_food')) {
+			delete_food();
+			print show_meal();
+		} elsif (defined param('delete_workout')) {
+			delete_workout();
+			print exercise_screen();
+		} elsif (defined param('diet') || defined param('back_diet')) {
+			print diet_screen();
+		} elsif (defined param('add_to_meal')) {
+			if (check_food()) {
+				insert_food_man();
+				print show_meal();
+			} else {
+				print food_help();
+			}
+		} elsif (defined param('add_food_man')) {
+			print add_food_man();
+		} elsif (defined param('add_food')) {
+			print add_food_screen();
+		} elsif (defined param('food')) {
+			print show_food();
+		} elsif (defined param('meal')) {
+			print show_meal();
+		} elsif (defined param('workout')) {
+			print show_workout();
+		} elsif ((defined param('add_meal') || defined param('meal_name')) && param('meal_name') ne "" && param('meal_name') !~ /"/) {
+			insert_meal();
+			print diet_screen();
+		} elsif (defined param('add_workout') && (param('workout_name') ne "" || param('workout_selected') ne "")) {
+			insert_workout();
+			print exercise_screen();
+		} elsif (defined param('login') || defined param('home')) {
+			print home();
+		} elsif (defined param('exercise_screen')) {
+			print exercise_screen();
+		} elsif (defined param('change_diet_date') || defined param('new_meal')) {
+			print diet_screen();
+		} elsif (defined param('change_exercise_date') || defined param('new_workout')) {
+			print exercise_screen();
+		} elsif (defined param('update')) {
+			print update();
+		} elsif (defined param('cancel')) {
+			print cancel();
+		} elsif (defined param('update')) {
+			print update();
+		} elsif (defined param('friend')) {
+			print friend();
 		}
-	} elsif (defined param('add_food_man')) {
-		print add_food_man();
-	} elsif (defined param('add_food')) {
-		print add_food_screen();
-	} elsif (defined param('food')) {
-		print show_food();
-	} elsif (defined param('meal')) {
-		print show_meal();
-	} elsif (defined param('workout')) {
-		print show_workout();
-	} elsif ((defined param('add_meal') || defined param('meal_name')) && param('meal_name') ne "" && param('meal_name') !~ /"/) {
-		insert_meal();
-		print diet_screen();
-	} elsif (defined param('add_workout') && (param('workout_name') ne "" || param('workout_selected') ne "")) {
-		insert_workout();
-		print exercise_screen();
-	} elsif (defined param('login') || defined param('home')) {
-		print home();
-	} elsif (defined param('exercise_screen')) {
-		print exercise_screen();
-	} elsif (defined param('diet_date')) {
-		print diet_screen();
-	} elsif (defined param('exercise_date')) {
-		print exercise_screen();
-	} elsif (defined param('update')) {
-		print update();
-	} elsif (defined param('cancel')) {
-		print cancel();
-	} elsif (defined param('update')) {
-		print update();
-	} elsif (defined param('friend')) {
-		print friend();
-	}
-    } else {
-	print login_screen();
+	} else {
+		print login_screen();
         $bg_handler = "3"	
-    }
+	}
 } else {
-    print login_screen();
-    $bg_handler = 3;
+	print login_screen();
+	$bg_handler = 3;
 }
 print page_css();
 print page_footer();
-
-#
-# subroutines
-#
 
 sub page_header {
 	return header,
@@ -880,15 +872,38 @@ sub register_help() {	# notifies user of details entered incorrectly
 
 
 sub diet_screen() {	# displays current calories out of goal calories and a list of meals for date selected
-	$day = `date +%d`;
+	my $day = `date +%d`;
 	chomp($day);
-	$month = `date +%m`;
+	my $month = `date +%m`;
 	chomp($month);
-	$year = `date +%Y`;
+	my $year = `date +%Y`;
 	chomp($year);
-	$date = "$day/$month/$year";	# display current date if date is not already defined
-	if (defined param('diet_date')) {
+	my $date = "$day/$month/$year";	# display current date if date is not already defined
+	my $offset = 0;
+	if (defined param('change_diet_date')) {
 		$date = param('diet_date');
+		($day, $month, $year) = split(/\//, $date);
+		if (param('change_diet_date') eq "<") {
+			$offset = -1;
+			($year, $month, $day) = Add_Delta_Days($year, $month, $day, $offset);
+			if ($day =~ /^(\d)$/) {
+				$day = "0$day";
+			}
+			if ($month =~ /^(\d)$/) {
+				$month = "0$month";
+			}
+			$date = "$day/$month/$year";
+		} elsif (param('change_diet_date') eq ">") {
+			$offset = 1;
+			($year, $month, $day) = Add_Delta_Days($year, $month, $day, $offset);
+			if ($day =~ /^(\d)$/) {
+				$day = "0$day";
+			}
+			if ($month =~ /^(\d)$/) {
+				$month = "0$month";
+			}
+			$date = "$day/$month/$year";
+		}
 	}
 	my $html = qq(
 	<div class="header-bottom" id="tour">
@@ -898,21 +913,22 @@ sub diet_screen() {	# displays current calories out of goal calories and a list 
 	if (defined param('diet_date') && !valid_date($date)) {	# notify user if they have entered an invalid date
 		$html .= qq(<text style="color:white";> * invalid date (DD/MM/YYYY)<p></p>);
 	}
-	$html .= qq(
+	$html .= qq(<input type="submit" name="change_diet_date" value="" class="button_hide" style="height:0px;width;0px;"><br>
 	<div class="container">
-	<div class="column-left"><h3 align="right"><font size="22" color="grey">&#8656;</font></h3></div>
-	<div class="column-center"><input type="text" name="diet_date" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:22pt;height:40px;width:200px;font-family:AmbleRegular;"value="$date" onfocus="javascript:if(this.value=='')this.value='';"><br></div>
-	<div class="column-right"><h3 align = "left"><font size="22" color="grey">&#8658;</font></h3></div>
-	</div>);
-	$html .= qq(<input type="submit" name="change_date" value="" class="button_hide" style="height:0px;width;0px;"><br>);
-	$html .= qq(<p>&nbsp</p>
+	<div class="column-center">
+	<input type="submit" name="change_diet_date" value="<" class="button" style="height:50px;width:50px;">
+	<input type="text" name="diet_date" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:22pt;height:40px;width:200px;font-family:AmbleRegular;"value="$date" onfocus="javascript:if(this.value=='')this.value='';">
+	<input type="submit" name="change_diet_date" value=">" class="button" style="height:50px;width:50px;">
+	</div>
+	</div>
+	<p>&nbsp</p>
 	<p>&nbsp</p>);
 	$html .= hidden('username');
 	$html .= hidden('password');
 	$html .= qq(</form>);
 	if (!defined param('diet_date') || (defined param('diet_date') && valid_date($date))) {	# if valid date display calorie counter and meals
 		$html .= qq(<h1>);
-		$html .= getCalories();
+		$html .= getCalories($date);
 		$html .= qq(</h1> <p>&nbsp</p>
 		<pre> </pre>
 		<p>&nbsp</p>);
@@ -1614,10 +1630,7 @@ sub insert_food_man() {	# inserts manually entered food into the database
 }
 
 sub getCalories() {	# returns the calorie counter as a string i.e. *current* of *goal* calories
-	$username = param('username');
-	if (defined param('diet_date')) {
-		$date = param('diet_date');
-	}
+	my $date = $_[0];
 	$driver = "SQLite"; 
 	$database = "project.db"; 
 	$dsn = "DBI:$driver:dbname=$database";
@@ -1707,8 +1720,31 @@ sub exercise_screen() {
 	my $year = `date +%Y`;
 	chomp($year);
 	my $date = "$day/$month/$year";	# display current date if date is not already defined
-	if (defined param('exercise_date')) {
+	my $offset = 0;
+	if (defined param('change_exercise_date')) {
 		$date = param('exercise_date');
+		($day, $month, $year) = split(/\//, $date);
+		if (param('change_exercise_date') eq "<") {
+			$offset = -1;
+			($year, $month, $day) = Add_Delta_Days($year, $month, $day, $offset);
+			if ($day =~ /^(\d)$/) {
+				$day = "0$day";
+			}
+			if ($month =~ /^(\d)$/) {
+				$month = "0$month";
+			}
+			$date = "$day/$month/$year";
+		} elsif (param('change_exercise_date') eq ">") {
+			$offset = 1;
+			($year, $month, $day) = Add_Delta_Days($year, $month, $day, $offset);
+			if ($day =~ /^(\d)$/) {
+				$day = "0$day";
+			}
+			if ($month =~ /^(\d)$/) {
+				$month = "0$month";
+			}
+			$date = "$day/$month/$year";
+		}
 	}
 	my $html = qq(
 	<div class="header-bottom" id="tour">
@@ -1718,18 +1754,19 @@ sub exercise_screen() {
 	if (defined param('exercise_date') && !valid_date($date)) {	# notify user if they have entered an invalid date
 		$html .= qq(<text style="color:white";> * invalid date (DD/MM/YYYY)<p></p>);
 	}
-	$html .= qq(
+	$html .= qq(<input type="submit" name="change_exercise_date" value="" class="button_hide" style="height:0px;width;0px;"><br>
 	<div class="container">
-    <div class="column-left"><h3 align="right"><font size="22" color="grey">&#8656;</font></h3></div>
-    <div class="column-center"><input type="text" name="exercise_date" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:22pt;height:40px;width:200px;font-family:AmbleRegular;"value="$date" onfocus="javascript:if(this.value=='')this.value='';"><br></div>
-    <div class="column-right"><h3 align = "left"><font size="22" color="grey">&#8658;</font></h3></div>
+	<div class="column-center">
+	<input type="submit" name="change_exercise_date" value="<" class="button" style="height:50px;width:50px;">
+	<input type="text" name="exercise_date" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:22pt;height:40px;width:200px;font-family:AmbleRegular;"value="$date" onfocus="javascript:if(this.value=='')this.value='';">
+	<input type="submit" name="change_exercise_date" value=">" class="button" style="height:50px;width:50px;">
 	</div>
-	<input type="submit" name="change_date" value="" class="button_hide" style="height:0px;width;0px;"><br>);
-	$html .= hidden('username');
-	$html .= hidden('password');
-	$html .= qq(</form>
+	</div>
 	<p>&nbsp</p>
 	<p>&nbsp</p>);
+	$html .= hidden('username');
+	$html .= hidden('password');
+	$html .= qq(</form>);
 	if (!defined param('exercise_date') || (defined param('exercise_date') && valid_date($date))) {	# if valid date display calorie counter and meals
 		my $username = param('username');
 		$driver = "SQLite"; 
