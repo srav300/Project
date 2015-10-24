@@ -404,7 +404,7 @@ if($rv < 0){
 my $stmt = qq (CREATE TABLE friends (
 	userid INTEGER,
 	friendid INTEGER,
-	status BOOLEAN,
+	status INTEGER,
 	FOREIGN KEY (userid) REFRENCES user(id),
 	FOREIGN KEY (friendid) REFRENCS user(id)
 ););
