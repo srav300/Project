@@ -3,7 +3,6 @@
 use DBI;
 use strict;
 use LWP::Simple;
-#use WWW::Mechanize;
 
 my $driver   = "SQLite"; 
 my $database = "project.db";
@@ -131,6 +130,7 @@ if($rv < 0){
 }
 
 my $stmt = qq(create TABLE meal_contains (
+	id INTEGER PRIMARY KEY,
 	mid INTEGER,
 	fid INTEGER,
 	serving INTEGER,
@@ -188,8 +188,6 @@ my $stmt = qq(create TABLE workout_contains (
 	id INTEGER PRIMARY KEY,
 	wid INTEGER,
 	eid INTEGER,
-	duration INTEGER,
-	units TEXT,
 	FOREIGN KEY(wid) REFERENCES workout(id),
 	FOREIGN KEY(eid) REFERENCES exercise(id)
 ););
@@ -205,6 +203,10 @@ my $stmt = qq(create TABLE sets (
 	wcid INTEGER,
 	reps INTEGER,
 	weight INTEGER,
+	distance INTEGER,
+	distance_units TEXT,
+	duration INTEGER,
+	duration_units TEXT,
 	FOREIGN KEY(wcid) REFERENCES workout_contains(id)
 ););
 my $rv = $dbh->do($stmt);
@@ -262,7 +264,6 @@ my $rv = $dbh->do($stmt) or die $DBI::errstr;
 
 for my $alpha ('a'..'z') {
 	my $content = get("http:\/\/www\.bodybuilding\.com\/exercises\/list\/index\/selected\/$alpha");
-	#my $content = $mech->content;
 	my @matches = ($content =~ m/<h3><a.*?>(.*?)<\/a>.*\n*.*?<p>.*?<span><a.*?>(.*?)<\/a>/g);
 	my $size = @matches;
 	for my $curr (0..$size-1){
@@ -278,5 +279,127 @@ for my $alpha ('a'..'z') {
 		}	
 	}
 }
+
+my $stmt = qq(update exercise set muscle = 'Cardio' where name like "%Cycling%");
+my $rv = $dbh->do($stmt);
+if($rv < 0){
+   print $DBI::errstr;
+} else {
+   print "Updated successfully\n";
+}
+
+my $stmt = qq(update exercise set muscle = 'Cardio' where name like "%Running%");
+my $rv = $dbh->do($stmt);
+if($rv < 0){
+   print $DBI::errstr;
+} else {
+   print "Updated successfully\n";
+}
+
+my $stmt = qq(update exercise set muscle = 'Cardio' where name like "%Treadmill%");
+my $rv = $dbh->do($stmt);
+if($rv < 0){
+   print $DBI::errstr;
+} else {
+   print "Updated successfully\n";
+}
+
+my $stmt = qq(update exercise set muscle = 'Cardio' where name like "%Elliptical%");
+my $rv = $dbh->do($stmt);
+if($rv < 0){
+   print $DBI::errstr;
+} else {
+   print "Updated successfully\n";
+}
+
+my $stmt = qq(update exercise set muscle = 'Cardio' where name like "%Rowing%");
+my $rv = $dbh->do($stmt);
+if($rv < 0){
+   print $DBI::errstr;
+} else {
+   print "Updated successfully\n";
+}
+
+my $stmt = qq(update exercise set muscle = 'Cardio' where name like "%Skipping%");
+my $rv = $dbh->do($stmt);
+if($rv < 0){
+   print $DBI::errstr;
+} else {
+   print "Updated successfully\n";
+}
+
+my $stmt = qq(insert into exercise values (null,'Cycling','Cardio'));
+my $rv = $dbh->do($stmt);
+if($rv < 0){
+   print $DBI::errstr;
+} else {
+   print "Updated successfully\n";
+}
+
+my $stmt = qq(insert into exercise values (null,'Hiking','Cardio'));
+my $rv = $dbh->do($stmt);
+if($rv < 0){
+   print $DBI::errstr;
+} else {
+   print "Updated successfully\n";
+}
+
+my $stmt = qq(insert into exercise values (null,'Jump Rope','Cardio'));
+my $rv = $dbh->do($stmt);
+if($rv < 0){
+   print $DBI::errstr;
+} else {
+   print "Updated successfully\n";
+}
+
+
+my $stmt = qq(insert into exercise values (null,'Skipping','Cardio'));
+my $rv = $dbh->do($stmt);
+if($rv < 0){
+   print $DBI::errstr;
+} else {
+   print "Updated successfully\n";
+}
+
+my $stmt = qq(insert into exercise values (null,'Swimming','Cardio'));
+my $rv = $dbh->do($stmt);
+if($rv < 0){
+   print $DBI::errstr;
+} else {
+   print "Updated successfully\n";
+}
+
+my $stmt = qq(insert into exercise values (null,'Walking','Cardio'));
+my $rv = $dbh->do($stmt);
+if($rv < 0){
+   print $DBI::errstr;
+} else {
+   print "Updated successfully\n";
+}
+
+my $stmt = qq(insert into exercise values (null,'Jogging','Cardio'));
+my $rv = $dbh->do($stmt);
+if($rv < 0){
+   print $DBI::errstr;
+} else {
+   print "Updated successfully\n";
+}
+
+my $stmt = qq(insert into exercise values (null,'Running','Cardio'));
+my $rv = $dbh->do($stmt);
+if($rv < 0){
+   print $DBI::errstr;
+} else {
+   print "Updated successfully\n";
+}
+
+my $stmt = qq(insert into exercise values (null,'Sprints','Cardio'));
+my $rv = $dbh->do($stmt);
+if($rv < 0){
+   print $DBI::errstr;
+} else {
+   print "Updated successfully\n";
+}
+
 
 $dbh->disconnect();
