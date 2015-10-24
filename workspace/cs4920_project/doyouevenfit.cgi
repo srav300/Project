@@ -32,9 +32,9 @@ if (defined param('logout')) {
         $bg_handler = 3;
 	}
 } elsif (defined param('username') && defined param('password')) {
-    $bg_handler = 2;
+	$bg_handler = 2;
 	if (check_login()) {
-        print banner();
+        	print banner();
 		if (defined param('settings') || defined param('cancel')) {
 			print settings();
 		} elsif (defined param('change_password')) {
@@ -146,7 +146,7 @@ if (defined param('logout')) {
 		}
 	} else {
 		print login_screen();
-        $bg_handler = "3"	
+		$bg_handler = "3"	
 	}
 } else {
 	print login_screen();
@@ -171,7 +171,6 @@ sub banner {
 	<input type="submit" name="buffer" value="" class="button_hide";><br>
 	</h1>
 	<h1>DoYouEvenFit</h1>
-	<h1>
 	<input type="hidden" name="page" value="">
 	<input type="submit" name="diet" value="DIET" class="button" style="height:45px;">
 	<input type="submit" name="exercise_screen" value="EXERCISE" class="button" style="height:45px;">
@@ -180,7 +179,6 @@ sub banner {
 	$css .= hidden('username');
 	$css .= hidden('password');
 	$css .= qq(</form>   
-	</h1>
 	</div>
 	);
 	return $css;
@@ -880,7 +878,7 @@ sub diet_screen() {	# displays current calories out of goal calories and a list 
 	chomp($year);
 	my $date = "$day/$month/$year";	# display current date if date is not already defined
 	my $offset = 0;
-	if (defined param('change_diet_date')) {
+	if (defined param('diet_date')) {
 		$date = param('diet_date');
 		($day, $month, $year) = split(/\//, $date);
 		if (param('change_diet_date') eq "<") {
@@ -1721,7 +1719,7 @@ sub exercise_screen() {
 	chomp($year);
 	my $date = "$day/$month/$year";	# display current date if date is not already defined
 	my $offset = 0;
-	if (defined param('change_exercise_date')) {
+	if (defined param('exercise_date')) {
 		$date = param('exercise_date');
 		($day, $month, $year) = split(/\//, $date);
 		if (param('change_exercise_date') eq "<") {
