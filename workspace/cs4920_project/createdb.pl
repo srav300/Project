@@ -401,5 +401,19 @@ if($rv < 0){
    print "Updated successfully\n";
 }
 
+my $stmt = qq (CREATE TABLE friends (
+	userid INTEGER,
+	friendid INTEGER,
+	status BOOLEAN,
+	FOREIGN KEY (userid) REFRENCES user(id),
+	FOREIGN KEY (friendid) REFRENCS user(id)
+););
+my $rv = $dbh->do($stmt);
+if($rv < 0){
+   /*print $DBI::errstr;*/
+} else {
+   print "Table created successfully\n";
+}
+
 
 $dbh->disconnect();
