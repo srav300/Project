@@ -6,6 +6,7 @@ use Data::Dumper;
 use List::Util qw/min max/;
 use Date::Calc qw/check_date/;
 use Date::Calc qw(Add_Delta_Days);
+use Date::Calc qw(Delta_Days);
 use WWW::Mechanize;
 use DBI;
 warningsToBrowser(1);
@@ -43,7 +44,7 @@ if (defined param('logout')) {
 				update_password();
 			}
 			print change_password();
-		} elsif (defined param("change_password")){
+		} elsif (defined param('change_password')) {
 			print change_password();
 		} elsif (defined param('update_profile')) {
 			$update_attempt = 1;
@@ -288,7 +289,7 @@ sub update() {
 	if($error_log[3] == 1){
 		$html .= qq(<center><text style="color:white;">* exercise level must be selected</text></center></body>);
 	}
-	$html .= qq(<center><h3 style="color:white;">What is goal?</h3></center></body>
+	$html .= qq(<center><h3 style="color:white;">What is your goal?</h3></center></body>
 	<select name="goal" size=28 class="styled-select" style="height:132px;"><br>
 	<option);
 	if ($goal eq "Extreme Weight Loss") {
@@ -365,17 +366,17 @@ sub check_update() {
 }
 
 sub check_errors(){
-   foreach $value (@error_log) {
-      if($value != 0){
-         return 1;
-      }
-   }
-   return 0;
+	foreach $value (@error_log) {
+		if($value != 0){
+			return 1;
+		}
+	}
+	return 0;
 }
 
 
 sub update_profile() { # update user details into database
-	$username = param('username');
+	my $username = param('username');
 	my $height = param('height');
 	my $weight = param('weight');
 	my $age = param('age');
@@ -385,7 +386,24 @@ sub update_profile() { # update user details into database
 	$database = "project.db"; 
 	$dsn = "DBI:$driver:dbname=$database";
 	$userid = ""; $dbpassword = "";  
-	$dbh = DBI->connect($dsn, $userid, $dbpassword, { RaiseError => 1 }) or die $DBI::errstr; 
+	$dbh = DBI->connect($dsn, $userid, $dbpassword, { RaiseError => 1 }) or die $DBI::errstr;
+	$stmt = qq(select id, weight from user where username = '$username');
+	$sth = $dbh->prepare($stmt);
+	$rv = $sth->execute() or die $DBI::errstr;
+	my @row = $sth->fetchrow_array();
+	my $uid = $row[0];
+	my $old_weight = $row[1];
+	if ($weight != $old_Weight) {
+		my $day = `date +%d`;
+		chomp($day);
+		my $month = `date +%m`;
+		chomp($month);
+		my $year = `date +%Y`;
+		chomp($year);
+		my $date = "$day/$month/$year";
+		$stmt = qq(insert into weight values(null,'$uid','$weight','$date')); 
+		$rv = $dbh->do($stmt) or die $DBI::errstr; 
+	}
 	$stmt = qq(update user set height = "$height", weight = "$weight", age = "$age", exercise = "$exercise", goal = "$goal" where username = '$username'); 
 	$rv = $dbh->do($stmt) or die $DBI::errstr; 
 	$dbh->disconnect();
@@ -395,31 +413,27 @@ sub change_password() {
 	my $html = qq(<div class="header-bottom" id="update">
 	<form action="doyouevenfit.cgi" method="post">
 	);
-	
 	if ($pass_change_attempt == 1 && $pass_error == 0) {
-	   my $new_password = param('new_password1');
-		$html .= qq(<h2><font color="black" size="3">Update Successful!</font></h2>);
-		$html .= qq(<form action="doyouevenfit.cgi" method="post">
-			<input type="text" name="password" value="$new_password" size=28 style="text-align:center;border:0px;solid:#ffffff;background-color:rgba(255,255,255,0);color:black;font-size:16pt;height:0px;width:0px;font-family:AmbleRegular;"><br>);
+		my $new_password = param('new_password1');
+		$html .= qq(<h2><font color="white";font-size:32pt;>Change Password Successful</font></h2>);
+		$html .= qq(<input type="text" name="password" value="$new_password" size=28 style="text-align:center;border:0px;solid:#ffffff;background-color:rgba(255,255,255,0);color:black;font-size:16pt;height:0px;width:0px;font-family:AmbleRegular;"><br>);
 	}
-	
-	$html .= qq(<center><h3 style="color:white;">Enter Old Password</h3></center></body>);
+	$html .= qq(<center><h3 style="color:white;">Old Password</h3></center></body>
+	<input type="password" name="old_password" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="********" onfocus="javascript:if(this.value=='********')this.value='';"><br>);
 	if($pass_error == 1){
-	   $html .= qq(<center><h3 style="color:red;">Old Password is Incorrect!</h3></center></body>);
-	} 
-	$html .= qq(<input type="password" name="old_password" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="********" onfocus="javascript:if(this.value=='********')this.value='';"><br>
-	<pre> </pre>
-	<center><h3 style="color:white">Enter New Password</h3></center></body>);
-	if($pass_error == 2){
-	   $html .= qq(<center><h3 style="color:red;">New Passwords do not match!</h3></center></body>);
-	} 
-	$html .= qq(<input type="password" name="new_password1" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="********" onfocus="javascript:if(this.value=='********')this.value='';"><br>
-	<p>&nbsp</p>
+		$html .= qq(<center><text style="color:white;">* old password is incorrect</text></center></body>);
+	}
+	$html .= qq(<pre> </pre> <pre> </pre>
+	<center><h3 style="color:white">New Password</h3></center></body>
+	<input type="password" name="new_password1" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="********" onfocus="javascript:if(this.value=='********')this.value='';"><br>
+	<pre> </pre> <pre> </pre>
 	<center><h3 style="color:white">Re-Enter New Password</h3></center></body>
-	<input type="password" name="new_password2" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="********" onfocus="javascript:if(this.value=='********')this.value='';"><br>
-	<p>&nbsp</p>);
-	
-	$html .= qq(<input type="submit" name="update_password" value="Update" class="button" style="height:45px;width:220px;"><br>
+	<input type="password" name="new_password2" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="********" onfocus="javascript:if(this.value=='********')this.value='';"><br>);
+	if($pass_error == 2){
+		$html .= qq(<center><text style="color:white;">* new passwords do not match</text></center></body>);
+	}
+	$html .= qq(<pre> </pre> <pre> </pre>
+	<input type="submit" name="update_password" value="Update" class="button" style="height:45px;width:220px;"><br>
 	<p>&nbsp</p>
 	<input type="submit" name="cancel" value="Cancel" class="button" style="height:45px;width:220px;"><br>
 	<p>&nbsp</p>);
@@ -433,16 +447,18 @@ sub change_password() {
 
 
 sub change_check(){
-   my $old_password = param('old_password');
-   my $new_password1 = param('new_password1');
-   my $new_password2 = param('new_password2');
-   my $current_password = param('password');
-   if($old_password ne $current_password){
-      return 1;
-   } elsif ($new_password1 ne $new_password2){
-      return 2;   
-   }
-   return 0;
+	my $old_password = param('old_password');
+	my $new_password1 = param('new_password1');
+	my $new_password2 = param('new_password2');
+	my $current_password = param('password');
+	if($old_password ne $current_password) {
+		return 1;
+	} elsif ($new_password1 eq $current_password) {
+
+	} elsif ($new_password1 ne $new_password2) {
+		return 2;   
+	}
+	return 0;
 }
 
 sub update_password() { # update user details into database
@@ -458,12 +474,11 @@ sub update_password() { # update user details into database
 	$dbh->disconnect();
    
 }
-
 sub friend() {
-    print <<EOF;
-    <div class="header-banner" id="banner">
-    <h1>TEST</h1>    
-    </div>
+	print <<EOF;
+	<div class="header-banner" id="banner">
+	<h1>TEST</h1>    
+	</div>
 EOF
 }
 
@@ -752,7 +767,21 @@ sub create_account() {	# inserts user and details into database
 	$userid = ""; $dbpassword = "";  
 	$dbh = DBI->connect($dsn, $userid, $dbpassword, { RaiseError => 1 }) or die $DBI::errstr; 
 	$stmt = qq(insert into user values(null,'$fname','$lname','$username','$password', '$email', '$gender', $height, $weight, $age, '$exercise', '$goal')); 
-	$rv = $dbh->do($stmt) or die $DBI::errstr; 
+	$rv = $dbh->do($stmt) or die $DBI::errstr;
+	$stmt = qq(select id from user where username = '$username');
+	$sth = $dbh->prepare($stmt);
+	$rv = $sth->execute() or die $DBI::errstr;
+	my @row = $sth->fetchrow_array();
+	my $uid = $row[0];
+	my $day = `date +%d`;
+	chomp($day);
+	my $month = `date +%m`;
+	chomp($month);
+	my $year = `date +%Y`;
+	chomp($year);
+	my $date = "$day/$month/$year";
+	$stmt = qq(insert into weight values(null,'$uid','$weight','$date')); 
+	$rv = $dbh->do($stmt) or die $DBI::errstr;
 	$dbh->disconnect();
 }
 
@@ -1713,15 +1742,16 @@ sub getCalories() {	# returns the calorie counter as a string i.e. *current* of 
 		print $DBI::errstr;
 	}
 	@row = $sth->fetchrow_array();
-	$uid = $row[0];
-	$stmt = qq(select current from calories where uid = '$uid' and date = '$date'); 
+	my $uid = $row[0];
+	$stmt = qq(select current, goal from calories where uid = '$uid' and date = '$date'); 
 	$sth = $dbh->prepare($stmt);
 	$rv = $sth->execute() or die $DBI::errstr; 
 	if ($rv < 0) {
 		print $DBI::errstr;
 	}
 	@row = $sth->fetchrow_array();
-	$currentCal = $row[0];
+	my $currentCal = $row[0];
+	my $currentGoal = $row[1];
 	if ($currentCal eq "") {
 		$currentCal = 0;
 		$stmt = qq(select gender, height, weight, age, exercise, goal from user where username = '$username'); 
@@ -1730,19 +1760,57 @@ sub getCalories() {	# returns the calorie counter as a string i.e. *current* of 
 		if ($rv < 0) {
 			print $DBI::errstr;
 		}
-		@row = $sth->fetchrow_array();
-		$goalCal = calorie_calculator(@row);
+		my @details = $sth->fetchrow_array();
+		$stmt = qq(select value, date from weight where uid = '$uid' order by id desc); 
+		$sth = $dbh->prepare($stmt);
+		$rv = $sth->execute() or die $DBI::errstr;
+		my $oldweight;
+		my $wdate;
+		while (my @row = $sth->fetchrow_array()) {
+			$oldweight = $row[0];
+			$wdate = $row[1];
+			($wday, $wmonth, $wyear) = split(/\//,$wdate);
+			($day, $month, $year) = split(/\//,$date);
+			$diff = Delta_Days($wyear, $wmonth, $wday, $year, $month, $day);
+			if ($diff >= 0) {
+				$details[2] = $oldweight;
+				last;
+			}
+		}
+		$goalCal = calorie_calculator(@details);
 		$stmt = qq(insert into calories values('$uid','$currentCal','$goalCal','$date'));
 		$rv = $dbh->do($stmt) or die $DBI::errstr;
 	} else {
-		$stmt = qq(select goal from calories where uid = '$uid' and date = '$date'); 
+		$stmt = qq(select gender, height, weight, age, exercise, goal from user where username = '$username'); 
 		$sth = $dbh->prepare($stmt);
 		$rv = $sth->execute() or die $DBI::errstr; 
 		if ($rv < 0) {
 			print $DBI::errstr;
 		}
-		@row = $sth->fetchrow_array();
-		$goalCal = $row[0];
+		my @details = $sth->fetchrow_array();
+		$stmt = qq(select value, date from weight where uid = '$uid' order by id desc); 
+		$sth = $dbh->prepare($stmt);
+		$rv = $sth->execute() or die $DBI::errstr;
+		my $oldweight;
+		my $wdate;
+		while (my @row = $sth->fetchrow_array()) {
+			$correct_weight = $row[0];
+			$wdate = $row[1];
+			($wday, $wmonth, $wyear) = split(/\//,$wdate);
+			($day, $month, $year) = split(/\//,$date);
+			$diff = Delta_Days($wyear, $wmonth, $wday, $year, $month, $day);
+			if ($diff >= 0) {
+				$details[2] = $correct_weight;
+				last;
+			}
+		}
+		$goalCal = calorie_calculator(@details);
+		if ($currentGoal != $goalCal) {
+			$stmt = qq(delete from calories where uid = '$uid' and date = '$date');
+			$rv = $dbh->do($stmt) or die $DBI::errstr;
+			$stmt = qq(insert into calories values('$uid','$currentCal','$goalCal','$date'));
+			$rv = $dbh->do($stmt) or die $DBI::errstr;
+		}
 	}
 	$counter = "$currentCal of $goalCal calories";
 	return $counter;
