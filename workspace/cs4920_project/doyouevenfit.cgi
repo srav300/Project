@@ -414,7 +414,7 @@ sub check_update() {
 }
 
 sub check_errors(){
-   foreach $value (@error_logs){
+   foreach $value (@error_log){
       if($value != 0){
          return 1;
       }
