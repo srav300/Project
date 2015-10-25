@@ -628,6 +628,8 @@ sub update_friend(){
 	$size = @status;
 	if($size == 0){
 	   	$stat = 0;
+	   	$stmt = qq(delete from friends where userid = "$uid" and friendid = "$friend_id");
+	   	$rv = $dbh->do($stmt) or die $DBI::errstr;
 	   	$stmt = qq(insert into friends values ("$uid", "$friend_id", "$stat"));
 	   	$rv = $dbh->do($stmt) or die $DBI::errstr;
 	} else {
@@ -649,7 +651,9 @@ sub update_friend(){
       		$stat = $status[0];
       		if($stat == 0){
         		$stat = 1;
-         		$stmt = qq(insert into friends values ("$uid", "$friend_id", "$stat"));
+        		$stmt = qq(delete from friends where userid = "$friend_id" and friendid = "$uid");
+	   		$rv = $dbh->do($stmt) or die $DBI::errstr;
+         		$stmt = qq(insert into friends values ("$friend_id", "$uid", "$stat"));
 	      		$rv = $dbh->do($stmt) or die $DBI::errstr;
       		}
    	}
