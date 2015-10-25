@@ -225,7 +225,7 @@ sub banner {
 	<input type="hidden" name="page" value="">
 	<input type="submit" name="diet" value="DIET" class="button" style="height:45px;">
 	<input type="submit" name="exercise_screen" value="EXERCISE" class="button" style="height:45px;">
-	<input type="submit" name="friends" value="FRIENDS" class="button" style="height:45px;">
+	<input type="submit" name="friend" value="FRIENDS" class="button" style="height:45px;">
 	);
 	$css .= hidden('username');
 	$css .= hidden('password');
@@ -749,9 +749,9 @@ sub messages() {
     }  
 
     if ($fName1[0] eq 0) {
-        $html .= qq(<h2 align="left">You have no friends requests currently.</h2> <pre> </pre>);
+        $html .= qq(<h2 align="left">You have 0 friend requests.</h2> <pre> </pre>);
     } else {
-        $html .= qq(<h2 align="left">There are $size people request you as friends.</h4> <pre> </pre>);
+        $html .= qq(<h2 align="left">You have $size friend requests.</h4> <pre> </pre>);
     }
 
     for ($a = 0; $a < $size; $a++) {
@@ -806,8 +806,8 @@ $html .= qq(
     </div>
     <div class="column-hardright">
     <h2 align="left">My messages.</h2> <pre> </pre>
-    <h4>From: System</h4> 
-    <p style="font-size:1.4 em;color:white;line-height:180%;background:rgba(255,255,255,0.2)">Congratiulations, you have reached your daily best.</p>
+    <h4>From: DoYouEvenFit</h4> 
+    <p style="font-size:1.4 em;color:white;line-height:180%;background:rgba(255,255,255,0.2)">Welcome! We hope to help you reach your fitness goals.</p>
 <pre> </pre>
     
 );
@@ -853,11 +853,11 @@ my $friend = param('friend');
 	    <div class="column-hardleft">
 
         <form action="doyouevenfit.cgi" method="get">
-        <input type="text" name="friend" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="Search friends" onfocus="javascript:if(this.value=='Search friends')this.value='';"><br>
+        <input type="text" name="friend" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="Search Friends" onfocus="javascript:if(this.value=='Search Friends')this.value='';"><br>
         <pre> </pre>
         <input type="submit" name="search_friends" value="Search" class="button" style="height:45px;"><br>
         <pre> </pre>
-        
+        </div> </div> </div> </div>
         
         
     );
@@ -1119,7 +1119,7 @@ sub friend() {
 	    <div class="column-hardleft">
 
         <form action="doyouevenfit.cgi" method="get">
-        <input type="text" name="friend" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="Search friends" onfocus="javascript:if(this.value=='Search friends')this.value='';"><br>
+        <input type="text" name="friend" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="Search Friends" onfocus="javascript:if(this.value=='Search Friends')this.value='';"><br>
         <pre> </pre>
         <input type="submit" name="search_friends" value="Search" class="button" style="height:45px;"><br>
         </div>
