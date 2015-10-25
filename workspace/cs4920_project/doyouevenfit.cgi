@@ -602,13 +602,13 @@ sub update_friend(){
    	my $value = param('update_friend');
    	my @split_value = split / /, $value;
    	my $size = @split_value;
-   	my $friend_id = $split_value[$size-1];
+   	my $friend_name = $split_value[$size-1];
    	$driver = "SQLite";
    	$database = "project.db";
 	$dsn = "DBI:$driver:dbname=$database";
 	$userid = ""; $dbpassword = "";
 	$dbh = DBI->connect($dsn, $userid, $dbpassword, { RaiseError => 1 }) or die $DBI::errstr;
-	$stmt = qq(select id from user where username = $username);
+	$stmt = qq(select id from user where username = '$username');
 	$sth = $dbh->prepare($stmt);
 	$rv = $sth->execute() or die $DBI::errstr;
 	if ($rv < 0) {
@@ -616,7 +616,14 @@ sub update_friend(){
 	}
 	push @id, $sth->fetchrow_array();
 	my $uid = $id[0];
-	
+	$stmt = qq(select id from user where username = '$friend_name');
+	$sth = $dbh->prepare($stmt);
+	$rv = $sth->execute() or die $DBI::errstr;
+	if ($rv < 0) {
+	   	print $DBI::errstr;
+	}
+	push @id, $sth->fetchrow_array();
+	my $friend_id = $id[0];
 	$stmt = qq(select status from friends where userid = "$uid" AND friendid = "$friend_id");
 	$sth = $dbh->prepare($stmt);
 	$rv = $sth->execute() or die $DBI::errstr;
@@ -647,8 +654,9 @@ sub update_friend(){
             			$stmt = qq(delete from friends values where userid = "$friend_id" AND friendid = "$uid");
             			$rv = $dbh->do($stmt) or die $DBI::errstr;
          		}
+		}
 	} else {
-	   	$stmt = qq(delete from friends values where userid = "$uid" AND friendid = "$friend_id");
+	   	$stmt = qq(delete from friends where userid = "$uid" AND friendid = "$friend_id");
       		$rv = $dbh->do($stmt) or die $DBI::errstr;  
 	}
 }
@@ -1406,6 +1414,9 @@ sub show_food() {	# displayed if user selects food from show meal
 	my $protein = $row[0] * $serving / 100;
 	my $carbs = $row[1] * $serving / 100;
 	my $fat = $row[2] * $serving / 100;
+	$protein = sprintf ("%.1f", $protein);
+	$carbs = sprintf ("%.1f", $carbs);
+	$fat = sprintf ("%.1f", $fat);
 	my $html = qq(
 	<div class="header-bottom" id="tour">
 	<div class="wrap">
