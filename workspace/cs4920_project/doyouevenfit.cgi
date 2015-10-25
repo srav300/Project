@@ -853,7 +853,7 @@ my $friend = param('friend');
 	    <div class="column-hardleft">
 
         <form action="doyouevenfit.cgi" method="get">
-        <input type="text" name="friend" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="Search Friends" onfocus="javascript:if(this.value=='Search Friends')this.value='';"><br>
+        <input type="text" name="friend" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="Search Users" onfocus="javascript:if(this.value=='Search Users')this.value='';"><br>
         <pre> </pre>
         <input type="submit" name="search_friends" value="Search" class="button" style="height:45px;"><br>
         <pre> </pre>
@@ -867,7 +867,7 @@ my $friend = param('friend');
 	$dsn = "DBI:$driver:dbname=$database";
 	$userid = ""; $dbpassword = "";
 	$dbh = DBI->connect($dsn, $userid, $dbpassword, { RaiseError => 1 }) or die $DBI::errstr;
-	$stmt = qq(select * from user where username = "$friend");
+	$stmt = qq(select * from user where username like "%$friend%");
 	$sth = $dbh->prepare($stmt);
 	$rv = $sth->execute() or die $DBI::errstr;
 	@info = $sth->fetchrow_array();
@@ -883,7 +883,7 @@ my $friend = param('friend');
                 <img src="images/icon.jpg" alt="" style="height:60px;">
             </div>
             <div class="column-center1">
-                <h4>&nbsp;&nbsp;$searched_fName $searched_lName</h4>
+                <h4>&nbsp;&nbsp;$info[3]</h4>
             </div>);
                 $driver = "SQLite";
 	            $database = "project.db";
@@ -1118,7 +1118,7 @@ sub friend() {
 	    <div class="column-hardleft">
 
         <form action="doyouevenfit.cgi" method="get">
-        <input type="text" name="friend" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="Search Friends" onfocus="javascript:if(this.value=='Search Friends')this.value='';"><br>
+        <input type="text" name="friend" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="Search Users" onfocus="javascript:if(this.value=='Search Users')this.value='';"><br>
         <pre> </pre>
         <input type="submit" name="search_friends" value="Search" class="button" style="height:45px;"><br>
         </div>
