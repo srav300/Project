@@ -497,58 +497,112 @@ sub update_password() { # update user details into database
 
 sub friend() {
 	my $search = param('friend');
-	my $username = param('username');
-	my @words = split / /, $search;
-	my @row;
-	$driver = "SQLite";
-	$database = "project.db";
+   	my $username = param('usernmae');
+   	my @words = split / /, $search;
+   	my @row;
+   	$driver = "SQLite";
+   	$database = "project.db";
 	$dsn = "DBI:$driver:dbname=$database";
 	$userid = ""; $dbpassword = "";
 	$dbh = DBI->connect($dsn, $userid, $dbpassword, { RaiseError => 1 }) or die $DBI::errstr;
-	$stmt = qq(select id from user where username = '$username');
+	$stmt = qq(select id from user where username = $username);
 	$sth = $dbh->prepare($stmt);
 	$rv = $sth->execute() or die $DBI::errstr;
 	if ($rv < 0) {
-	   print $DBI::errstr;
+		print $DBI::errstr;
 	}
 	push @id, $sth->fetchrow_array();
 	my $uid = $id[0];
 	  
-	foreach my $word (@words){
-		$stmt = qq(select id from user where '$word' in (username, fName, lName));
-		$sth = $dbh->prepare($stmt);
-	 	$rv = $sth->execute() or die $DBI::errstr;
-	   	if ($rv < 0) {
-			print $DBI::errstr;
-	   	}
-		push @row, $sth->fetchrow_array();
-	}
-   
-	my $html = qq(<div class="header-bottom" id="update">
-	<form action="doyouevenfit.cgi" method="post">
-      <input type="text" name="friend" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="$search" onfocus="javascript:if(this.value=='')this.value='';">
-	<pre> </pre>
-	<input type="submit" name="search_friends" value="SEARCH" class="button" style="height:45px;width:200px;"><br>
-	<pre> </pre> <pre> </pre>);
-
-	foreach my $result (@row){
-		my @info;
-	   	$stmt = qq(select username, fName, lName from user where id = $result);
-	   	$sth = $dbh->prepare($stmt);
+   	foreach my $word (@words){
+      		$stmt = qq(select id from user where '$word' in (username, fName, lName));
+	  	$sth = $dbh->prepare($stmt);
 	   	$rv = $sth->execute() or die $DBI::errstr;
 	   	if ($rv < 0) {
 		   	print $DBI::errstr;
-	   	} 
+	   	}
+	   	push @row, $sth->fetchrow_array();
+   	}
+   
+   	my @frands = ();
+   	$stmt = qq(select friendid from friends where userid = "$uid" AND status = "1");
+   	$sth = $dbh->prepare($stmt);
+   	$rv = $sth->execute() or die $DBI::errstr;
+   	push @frands, $sth->fetchrow_array();
+   
+   	$stmt = qq(select friendid from friends where friendid = "$uid" AND status = "1");
+   	$sth = $dbh->prepare($stmt);
+   	$rv = $sth->execute() or die $DBI::errstr;
+   	push @frands, $sth->fetchrow_array();
+   
+   	my $frandList = @frands;
+   
+   	my $html = qq(<center><h2 style="color:white;">Friends ($frandList)</h2></center></body>);
+   	foreach my $frand (@frands){
+      		my @info = ();
+      		$stmt = qq(select username, fName, lName from user where id = "$frand");
+      		$sth = $dbh->prepare($stmt);
+	   	$rv = $sth->execute() or die $DBI::errstr;
+	   	@info = $sth->fetchrow_array();  
+	   	$html .= qq(<center><h3 style="color:white;">$info[0]: $info[1] $info[2]</h3></center></body>);
+	   	$html .= qq(<input type="submit" name="update_friend" value="Send Request to $info[0]" class="button" style="height:45px;width:220px;"><br>);
+   	}
+   
+   	my @pendings = ();
+   	$stmt = qq(select friendid from friends where friendid = "$uid" AND status = "0");
+   	$sth = $dbh->prepare($stmt);
+   	$rv = $sth->execute() or die $DBI::errstr;
+   	push @pendings, $sth->fetchrow_array();
+   	my $pendingList = @pendings;
+   
+   	$html .= qq(<center><h2 style="color:white;">Pending Requests ($pendingList)</h2></center></body>);
+   
+   	foreach my $pending (@pendings){
+      		@info = ();
+      		$stmt = qq(select username, fName, lName from user where id = "$pending");
+      		$sth = $dbh->prepare($stmt);
+	   	$rv = $sth->execute() or die $DBI::errstr;
+	   	@info = $sth->fetchrow_array();  
+	   	$html .= qq(<center><h3 style="color:white;">$info[0]: $info[1] $info[2]</h3></center></body>);
+	   	$html .= qq(<input type="submit" name="update_friend" value="Cancel Request to $info[0]" class="button" style="height:45px;width:220px;"><br>);
+   	}
+   
+   	my @waitings = ();
+   	$stmt = qq(select friendid from friends where friendid = "$uid" AND status = "0");
+   	$sth = $dbh->prepare($stmt);
+   	$rv = $sth->execute() or die $DBI::errstr;
+   	push @waitings, $sth->fetchrow_array();
+   	my $waitingList = @waitings;
+   	$html .= qq(<center><h2 style="color:white;">Confirm Requests ($waitingList)</h2></center></body>);
+   
+   	foreach my $waiting (@waiting){
+      		@info = ();
+      		$stmt = qq(select username, fName, lName from user where id = "$waiting");
+      		$sth = $dbh->prepare($stmt);
+	   	$rv = $sth->execute() or die $DBI::errstr;
+	   	@info = $sth->fetchrow_array();  
+	   	$html .= qq(<center><h3 style="color:white;">$info[0]: $info[1] $info[2]</h3></center></body>);
+	   	$html .= qq(<input type="submit" name="update_friend" value="Accept Request from $info[0]" class="button" style="height:45px;width:220px;"><br>);
+   	}
+   
+   	$html .= qq(<form action="doyouevenfit.cgi" method="post">
+      	<input type="text" name="friend" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="$search" onfocus="javascript:if(this.value=='')this.value='';"><input type="submit" name="search_friends" value="Submit" class="button" style="height:45px;width:100px;"><br> <pre> </pre>);
+
+	foreach my $result (@row){
+	   	@info = ();
+	   	$stmt = qq(select username, fName, lName from user where id = $result);
+	   	$sth = $dbh->prepare($stmt);
+	   	$rv = $sth->execute() or die $DBI::errstr;
 	   	@info = $sth->fetchrow_array();  
 	   	$html .= qq(<center><h3 style="color:white;">$info[0]: $info[1] $info[2]</h3></center></body>);
 	   	my $status = friend_status($uid, $result);
-	   	$html .= qq(<input type="submit" name="update_friend" value="$status $info[0]" class="button" style="height:45px;width:600px;"><br>);
+	   	$html .= qq(<input type="submit" name="update_friend" value="$status $result" class="button" style="height:45px;width:220px;"><br>);
 	}
+	
 	
 	$html .= hidden('username');
 	$html .= hidden('password');
-	$html .= qq(</form>
-	</div>);
+	$html .= qq(</form>);
 
 	return $html;
 }
@@ -591,7 +645,7 @@ sub friend_status(){
 	} else {
 	   	my $stat = $status1[0];
 	   	if($stat == 0){
-	      		return "Cancel Request from";
+	      		return "Cancel Request to";
 	   	} else {
 	      		return "Delete";
 	   	}
@@ -599,10 +653,13 @@ sub friend_status(){
 }
 
 sub update_friend(){
+
    	my $value = param('update_friend');
    	my @split_value = split / /, $value;
    	my $size = @split_value;
    	my $friend_name = $split_value[$size-1];
+   	my $command = $split_value[0];
+   
    	$driver = "SQLite";
    	$database = "project.db";
 	$dsn = "DBI:$driver:dbname=$database";
@@ -611,47 +668,33 @@ sub update_friend(){
 	$stmt = qq(select id from user where username = '$username');
 	$sth = $dbh->prepare($stmt);
 	$rv = $sth->execute() or die $DBI::errstr;
-	push @id, $sth->fetchrow_array();
+	@id = $sth->fetchrow_array();
 	my $uid = $id[0];
+	
 	$stmt = qq(select id from user where username = '$friend_name');
 	$sth = $dbh->prepare($stmt);
 	$rv = $sth->execute() or die $DBI::errstr;
-	push @frid, $sth->fetchrow_array();
+	@frid = $sth->fetchrow_array();
 	my $friend_id = $frid[0];
-	$stmt = qq(select status from friends where userid = "$uid" AND friendid = "$friend_id");
-	$sth = $dbh->prepare($stmt);
-	$rv = $sth->execute() or die $DBI::errstr;
-	push @status1, $sth->fetchrow_array();
-	$size1 = @status1;
 	
-	@status = ();
-	$stmt = qq(select status from friends where userid = "$friend_id" AND friendid = "$uid");
-	$sth = $dbh->prepare($stmt);
-	$rv = $sth->execute() or die $DBI::errstr;
-	push @status2, $sth->fetchrow_array();
-	$size2 = @status2;
-	
-	if($size1 == 0){
-	   	if($size2 == 0){
-	      		$stat = 0;
-	      		$stmt = qq(insert into friends values ("$uid", "$friend_id", "$stat"));
-	      		$rv = $dbh->do($stmt) or die $DBI::errstr;
-	   	} else {
-	      		$stat = $status2[0];
-        		if($stat == 0){
-            			$stmt = qq(delete from friends where userid = "$friend_id" AND friendid = "$uid");
-            			$rv = $dbh->do($stmt) or die $DBI::errstr;
-            			$stat = 1;
-            			$stmt = qq(insert into friends values ("$friend_id", "$uid", "$stat"));
-	         		$rv = $dbh->do($stmt) or die $DBI::errstr;
-         		} else {
-            			$stmt = qq(delete from friends where userid = "$friend_id" AND friendid = "$uid");
-            			$rv = $dbh->do($stmt) or die $DBI::errstr;
-         		}
-		}
-	} else {
+	if($command eq "Accept"){
+	   	$stmt = qq(delete from friends where userid = "$friend_id" AND friendid = "$uid");
+	   	$rv = $dbh->do($stmt) or die $DBI::errstr;
+      	   	my $stat = 1;
+           	$stmt = qq(insert into friends values ("$friend_id", "$uid", "$stat"));
+	   	$rv = $dbh->do($stmt) or die $DBI::errstr;
+	} elsif($command eq "Send"){
+	   	my $stat = 0;
+	   	$stmt = qq(insert into friends values ("$uid", "$friend_id", "$stat"));
+	   	$rv = $dbh->do($stmt) or die $DBI::errstr;
+	} elsif($command eq "Cancel"){
 	   	$stmt = qq(delete from friends where userid = "$uid" AND friendid = "$friend_id");
-      		$rv = $dbh->do($stmt) or die $DBI::errstr;  
+	   	$rv = $dbh->do($stmt) or die $DBI::errstr;	   
+	} elsif($command eq "Delete"){
+	   	$stmt = qq(delete from friends where userid = "$uid" AND friendid = "$friend_id");
+	   	$rv = $dbh->do($stmt) or die $DBI::errstr;
+	   	$stmt = qq(delete from friends where userid = "$friend_id" AND friendid = "$uid");
+	   	$rv = $dbh->do($stmt) or die $DBI::errstr;
 	}
 }
 
