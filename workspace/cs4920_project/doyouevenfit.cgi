@@ -1943,10 +1943,14 @@ sub diet_screen() {	# displays current calories out of goal calories and a list 
 	}
 	$html .= qq(<input type="submit" name="change_diet_date" value="" class="button_hide" style="height:0px;width;0px;"><br>
 	<div class="container">
-	<div class="column-center">
-	<input type="submit" name="change_diet_date" value="<" class="button" style="height:50px;width:50px;">
+	<div class="column-left">
+	<input type="submit" name="change_diet_date" align="right" value="<" class="button_nav">
+    </div>
+    <div class="column-center">
 	<input type="text" name="diet_date" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:22pt;height:40px;width:200px;font-family:AmbleRegular;"value="$date" onfocus="javascript:if(this.value=='')this.value='';">
-	<input type="submit" name="change_diet_date" value=">" class="button" style="height:50px;width:50px;">
+    </div>
+    <div class="column-right">
+	<input type="submit" name="change_diet_date" value=">" class="button_nav"">
 	</div>
 	</div>
 	<p>&nbsp</p>
