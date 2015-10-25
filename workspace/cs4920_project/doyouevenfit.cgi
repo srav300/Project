@@ -558,105 +558,99 @@ sub friend_status(){
    	$database = "project.db";
 	$dsn = "DBI:$driver:dbname=$database";
 	$userid = ""; $dbpassword = "";
+	my $uid = $_[0];
+	my $friend_id = $_[1];
 	$dbh = DBI->connect($dsn, $userid, $dbpassword, { RaiseError => 1 }) or die $DBI::errstr;
-	$stmt = qq(select status from friends where userid = "$_[0]" AND friendid = "$_[1]");
-	$sth = $dbh->prepare($stmt);
-	$rv = $sth->execute() or die $DBI::errstr;
-	push @status, $sth->fetchrow_array();
-	$size = @status;
-	if($size == 0){
-	   	return "Send Friend Request to";
-	} else {
-	   	my $stat = $status[0];
-	   	if($stat == 0){
-	      		return "Cancel Request from";
-	   	} elsif($stat == 1) {
-	      		return "Delete";
-	   	}
-	}
-	@status = ();
-	$stmt = qq(select status from friends where userid = "$friend_id" AND friendid = "$uid");
-	$sth = $dbh->prepare($stmt);
-	$rv = $sth->execute() or die $DBI::errstr;
-	if ($rv < 0) {
-	   	print $DBI::errstr;
-	}
-	push @status, $sth->fetchrow_array();
-	$size = @status;
-   	if($size != 0){
-      		$stat = $status[0];
-      		if($stat == 0){
-         		return "Accept Request from";
-      		}
-   	}
-}
-
-sub update_friend(){
-	my $username = param('username');
-   	my $value = param('update_friend');
-   	my @split_value = split / /, $value;
-   	my $size = @split_value;
-   	my $friend_name = $split_value[$size-1];
-   	$driver = "SQLite";
-   	$database = "project.db";
-	$dsn = "DBI:$driver:dbname=$database";
-	$userid = ""; $dbpassword = "";
-	$dbh = DBI->connect($dsn, $userid, $dbpassword, { RaiseError => 1 }) or die $DBI::errstr;
-	$stmt = qq(select id from user where username = '$username');
-	$sth = $dbh->prepare($stmt);
-	$rv = $sth->execute() or die $DBI::errstr;
-	if ($rv < 0) {
-	   	print $DBI::errstr;
-	}
-	my @id = $sth->fetchrow_array();
-	my $uid = $id[0];
-	$stmt = qq(select id from user where username = '$friend_name');
-	$sth = $dbh->prepare($stmt);
-	$rv = $sth->execute() or die $DBI::errstr;
-	if ($rv < 0) {
-	   	print $DBI::errstr;
-	}
-	@id = $sth->fetchrow_array();
-	my $friend_id = $id[0];
 	$stmt = qq(select status from friends where userid = "$uid" AND friendid = "$friend_id");
 	$sth = $dbh->prepare($stmt);
 	$rv = $sth->execute() or die $DBI::errstr;
-	if ($rv < 0) {
-	   	print $DBI::errstr;
-	}
-	push @status, $sth->fetchrow_array();
-	$size = @status;
-	if($size == 0){
-	   	$stat = 0;
-	   	$stmt = qq(delete from friends where userid = "$uid" and friendid = "$friend_id");
-	   	$rv = $dbh->do($stmt) or die $DBI::errstr;
-	   	$stmt = qq(insert into friends values ("$uid", "$friend_id", "$stat"));
-	   	$rv = $dbh->do($stmt) or die $DBI::errstr;
-	} else {
-	   	$stmt = qq(delete from friends where userid = "$uid" and friendid = "$friend_id");
-	   	$rv = $dbh->do($stmt) or die $DBI::errstr;
-	   
-	}
+	push @status1, $sth->fetchrow_array();
+	$size1 = @status1;
 	
 	@status = ();
 	$stmt = qq(select status from friends where userid = "$friend_id" AND friendid = "$uid");
 	$sth = $dbh->prepare($stmt);
 	$rv = $sth->execute() or die $DBI::errstr;
 	if ($rv < 0) {
-		print $DBI::errstr;
+	   	print $DBI::errstr;
 	}
-	push @status, $sth->fetchrow_array();
-	$size = @status;
-   	if($size != 0){
-      		$stat = $status[0];
-      		if($stat == 0){
-        		$stat = 1;
-        		$stmt = qq(delete from friends where userid = "$friend_id" and friendid = "$uid");
-	   		$rv = $dbh->do($stmt) or die $DBI::errstr;
-         		$stmt = qq(insert into friends values ("$friend_id", "$uid", "$stat"));
+	push @status2, $sth->fetchrow_array();
+	$size2 = @status2;
+	
+	if($size1 == 0){
+	   	if($size2 == 0){
+	      		return "Send Friend Request to";
+	   	} else {
+	      		$stat = $status2[0];
+         		if($stat == 0){
+            			return "Accept Request from";
+         		} else {
+            			return "Delete";
+         		}
+	   	}
+	} else {
+	   	my $stat = $status1[0];
+	   	if($stat == 0){
+	      		return "Cancel Request from";
+	   	} else {
+	      		return "Delete";
+	   	}
+	}
+}
+
+sub update_friend(){
+   	my $value = param('update_friend');
+   	my @split_value = split / /, $value;
+   	my $size = @split_value;
+   	my $friend_id = $split_value[$size-1];
+   	$driver = "SQLite";
+   	$database = "project.db";
+	$dsn = "DBI:$driver:dbname=$database";
+	$userid = ""; $dbpassword = "";
+	$dbh = DBI->connect($dsn, $userid, $dbpassword, { RaiseError => 1 }) or die $DBI::errstr;
+	$stmt = qq(select id from user where username = $username);
+	$sth = $dbh->prepare($stmt);
+	$rv = $sth->execute() or die $DBI::errstr;
+	if ($rv < 0) {
+	   	print $DBI::errstr;
+	}
+	push @id, $sth->fetchrow_array();
+	my $uid = $id[0];
+	
+	$stmt = qq(select status from friends where userid = "$uid" AND friendid = "$friend_id");
+	$sth = $dbh->prepare($stmt);
+	$rv = $sth->execute() or die $DBI::errstr;
+	push @status1, $sth->fetchrow_array();
+	$size1 = @status1;
+	
+	@status = ();
+	$stmt = qq(select status from friends where userid = "$friend_id" AND friendid = "$uid");
+	$sth = $dbh->prepare($stmt);
+	$rv = $sth->execute() or die $DBI::errstr;
+	push @status2, $sth->fetchrow_array();
+	$size2 = @status2;
+	
+	if($size1 == 0){
+	   	if($size2 == 0){
+	      		$stat = 0;
+	      		$stmt = qq(insert into friends values ("$uid", "$friend_id", "$stat"));
 	      		$rv = $dbh->do($stmt) or die $DBI::errstr;
-      		}
-   	}
+	   	} else {
+	      		$stat = $status2[0];
+        		if($stat == 0){
+            			$stmt = qq(delete from friends values where userid = "$friend_id" AND friendid = "$uid");
+            			$rv = $dbh->do($stmt) or die $DBI::errstr;
+            			$stat = 1;
+            			$stmt = qq(insert into friends values ("$friend_id", "$uid", "$stat"));
+	         		$rv = $dbh->do($stmt) or die $DBI::errstr;
+         		} else {
+            			$stmt = qq(delete from friends values where userid = "$friend_id" AND friendid = "$uid");
+            			$rv = $dbh->do($stmt) or die $DBI::errstr;
+         		}
+	} else {
+	   	$stmt = qq(delete from friends values where userid = "$uid" AND friendid = "$friend_id");
+      		$rv = $dbh->do($stmt) or die $DBI::errstr;  
+	}
 }
 
 sub page_css {
