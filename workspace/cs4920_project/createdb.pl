@@ -216,49 +216,6 @@ if($rv < 0){
    print "Table created successfully\n";
 }
 
-
-my $stmt = qq(create TABLE saved_workout (
-	id INTEGER PRIMARY KEY,
-	uid INTEGER,
-	name TEXT,
-	FOREIGN KEY(uid) REFERENCES user(id)
-););
-my $rv = $dbh->do($stmt);
-if($rv < 0){
-   print $DBI::errstr;
-} else {
-   print "Table created successfully\n";
-}
-
-my $stmt = qq(create TABLE saved_workout_contains (
-	id INTEGER PRIMARY KEY,
-	swid INTEGER,
-	eid INTEGER,
-	duration INTEGER,
-	units TEXT,
-	FOREIGN KEY(swid) REFERENCES saved_workout(id),
-	FOREIGN KEY(eid) REFERENCES exercise(id)
-););
-my $rv = $dbh->do($stmt);
-if($rv < 0){
-   print $DBI::errstr;
-} else {
-   print "Table created successfully\n";
-}
-
-my $stmt = qq(create TABLE saved_set (
-	swcid INTEGER,
-	reps INTEGER,
-	weight INTEGER,
-	FOREIGN KEY(swcid) REFERENCES saved_workout_contains(id)
-););
-my $rv = $dbh->do($stmt);
-if($rv < 0){
-   print $DBI::errstr;
-} else {
-   print "Table created successfully\n";
-}
-
 $stmt = qq(insert into user values(null,'Demonstrator','D','demo','demo', 'doyouevenfit.com', 'Male', 183, 85, 21, 'Moderately Active', 'Maintain Weight')); 
 my $rv = $dbh->do($stmt) or die $DBI::errstr; 
 
@@ -352,7 +309,6 @@ if($rv < 0){
    print "Updated successfully\n";
 }
 
-
 my $stmt = qq(insert into exercise values (null,'Skipping','Cardio'));
 my $rv = $dbh->do($stmt);
 if($rv < 0){
@@ -402,17 +358,28 @@ if($rv < 0){
 }
 
 my $stmt = qq (CREATE TABLE friends (
-	userid INTEGER,
-	friendid INTEGER,
-	status INTEGER,
-	FOREIGN KEY (userid) REFERENCES user(id),
-	FOREIGN KEY (friendid) REFERENCES user(id)
+	userid TEXT,
+	friendid TEXT,
+	status INTEGER
 ););
 my $rv = $dbh->do($stmt);
 if($rv < 0){
-	print $DBI::errstr;
+   /*print $DBI::errstr;*/
 } else {
-	print "Table created successfully\n";
+   print "Table created successfully\n";
+}
+
+my $stmt = qq (CREATE TABLE share (
+	fromuser TEXT,
+	touser TEXT,
+	message_remark TEXT,
+    status INTEGER
+););
+my $rv = $dbh->do($stmt);
+if($rv < 0){
+   /*print $DBI::errstr;*/
+} else {
+   print "Table created successfully\n";
 }
 
 $dbh->disconnect();
