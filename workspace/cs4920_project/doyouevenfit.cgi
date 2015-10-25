@@ -3036,13 +3036,13 @@ sub calorie_calculator() {	# calculates calories of user based on personal detai
 	if ($exercise eq 'Sedentary') {
 		$multiplier = 1.2;	
 	} elsif ($exercise eq 'Lightly Active') {
-		$multiplier = 1.375;
+		$multiplier = 1.36;
 	} elsif ($exercise eq 'Moderately Active') {
-		$multiplier = 1.55;
+		$multiplier = 1.52;
 	} elsif ($exercise eq 'Very Active') {
-		$multiplier = 1.725;
+		$multiplier = 1.68;
 	} elsif ($exercise eq 'Extremely Active') {
-		$multiplier = 1.9;
+		$multiplier = 1.84;
 	}	
 
 	$calories = $BMR*$multiplier;
