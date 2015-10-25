@@ -1388,11 +1388,11 @@ sub update_friend(){
 
 sub page_css {
 	$css = qq(
-	<link href="/css/style.css" rel="stylesheet" type="text/css" media="all" />
+	<link href="css/style.css" rel="stylesheet" type="text/css" media="all" />
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 	);
- 	$css .= qq(<body background="/images/background.jpg">);       
+ 	$css .= qq(<body background="images/background.jpg">);       
 	$css .= qq(<body link="white">);
 	return $css;
 }
