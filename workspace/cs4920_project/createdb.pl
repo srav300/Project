@@ -402,17 +402,30 @@ if($rv < 0){
 }
 
 my $stmt = qq (CREATE TABLE friends (
-	userid INTEGER,
-	friendid INTEGER,
-	status INTEGER,
-	FOREIGN KEY (userid) REFERENCES user(id),
-	FOREIGN KEY (friendid) REFERENCES user(id)
+	userid TEXT,
+	friendid TEXT,
+	status INTEGER
 ););
 my $rv = $dbh->do($stmt);
 if($rv < 0){
-	print $DBI::errstr;
+   /*print $DBI::errstr;*/
 } else {
-	print "Table created successfully\n";
+   print "Table created successfully\n";
 }
+
+my $stmt = qq (CREATE TABLE share (
+	fromuser TEXT,
+	touser TEXT,
+	message_remark TEXT,
+    status INTEGER
+););
+my $rv = $dbh->do($stmt);
+if($rv < 0){
+   /*print $DBI::errstr;*/
+} else {
+   print "Table created successfully\n";
+}
+
+
 
 $dbh->disconnect();
