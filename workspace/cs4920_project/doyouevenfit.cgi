@@ -602,18 +602,18 @@ sub share(){
 
 <form action="doyouevenfit.cgi" method="get">
 <center><h3 style="color:white;">From</h3></center></body>
-<input type="text" name="from_remark" size=28 style="width:350px;text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="$from_fName $from_lName" onfocus="javascript:if(this.value=='')this.value='';"><br>
+<input type="text" name="from_remark" size=28 style="width:350px;text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="$username" onfocus="javascript:if(this.value=='')this.value='';"><br>
 
 <pre> </pre>
 
 <center><h3 style="color:white;">To</h3></center></body>
-<input type="text" name="to_remark" size=28 style="width:350px;text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="$to_fName $to_lName" onfocus="javascript:if(this.value=='')this.value='';"><br>
+<input type="text" name="to_remark" size=28 style="width:350px;text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="$to" onfocus="javascript:if(this.value=='')this.value='';"><br>
 
 <pre> </pre>
 
 <center><h3 style="color:white;">Message</h3></center></body>
-<textarea name="message_remark"size=28 style="width:350px;text-align:left;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:400px;font-family:AmbleRegular;" onfocus="javascript:if(this.value=='')this.value='';">
-Your friend $from_fName $from_lName has achieved $current out of his $goal Calories goal on $date!
+<textarea name="message_remark"size=28 style="width:350px;text-align:left;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:200px;font-family:AmbleRegular;" onfocus="javascript:if(this.value=='')this.value='';">
+I achieved $current out of my $goal calorie goal on $date!
 </textarea>
 
 <pre> </pre>);
@@ -669,8 +669,8 @@ sub share_submit() {
  
 $html = qq(<div class="header-bottom" id="tour">
 <div class="wrap">
-<h2>You have shared your achievement with $to_fName $to_lName!</h2>
-<h2>$message</h2>
+<h2>You have shared your achievement with $to!</h2>
+<text style="color:white;font-size:20pt;">"$message"
 </div></div>
 );
     
@@ -695,7 +695,7 @@ sub confirm() {
  
 $html = qq(<div class="header-bottom" id="tour">
 <div class="wrap">
-<h2>You have confirmed this friend request.</h2>
+<h2>Friend request accepted.</h2>
 </div></div>
 );
 }
@@ -757,13 +757,13 @@ sub messages() {
     for ($a = 0; $a < $size; $a++) {
         $html .= qq(<div class="container">
             <div class="column-left1">
-                <img src="images/icon.jpg" alt="Mountain View" style="height:60px;">
+                <img src="images/icon.jpg" alt="" style="height:60px;">
             </div>
             <div class="column-center1">
                 <h4>&nbsp;&nbsp;$fName1[$a] $lName1[$a]</h4>
             </div>
             <div class="column-right1">
-                <a href="doyouevenfit.cgi?confirm=yes&username=$username&password=$password&from=$info[$a]"><h6>CONFIRM</h6><a>
+                <a href="doyouevenfit.cgi?confirm=yes&username=$username&password=$password&from=$info[$a]"><h6>ACCEPT</h6><a>
 
             </div>
             </div>
@@ -830,7 +830,7 @@ for ($a = 0; $a < $size; $a++) {
     $html .= qq(
 
 
-<h4>From: $fName2[0] $lName2[0]</h4> 
+<h4>From: $info[$a]</h4> 
 <p style="font-size:1.4 em;color:white;line-height:180%;background:rgba(255,255,255,0.2)">$info1[$a]</p>
 
 
@@ -857,7 +857,6 @@ my $friend = param('friend');
         <pre> </pre>
         <input type="submit" name="search_friends" value="Search" class="button" style="height:45px;"><br>
         <pre> </pre>
-        </div> </div> </div> </div>
         
         
     );
@@ -881,7 +880,7 @@ my $friend = param('friend');
             $html .= qq(
             <div class="container">
             <div class="column-left1">
-                <img src="images/icon.jpg" alt="Mountain View" style="height:60px;">
+                <img src="images/icon.jpg" alt="" style="height:60px;">
             </div>
             <div class="column-center1">
                 <h4>&nbsp;&nbsp;$searched_fName $searched_lName</h4>
@@ -923,7 +922,7 @@ my $friend = param('friend');
 
             
         } else {
-            $html .= qq(<h4>No matches.</h4> <pre> </pre></div>);
+            $html .= qq(<h4>No search results</h4> <pre> </pre></div>);
         }
 
 
@@ -957,7 +956,7 @@ my $friend = param('friend');
 	    $dsn = "DBI:$driver:dbname=$database";
 	    $userid = ""; $dbpassword = "";
 	    $dbh = DBI->connect($dsn, $userid, $dbpassword, { RaiseError => 1 }) or die $DBI::errstr;
-	    $stmt = qq(select * from user where username = "$info[a]");
+	    $stmt = qq(select * from user where username = "$info[$a]");
 	    $sth = $dbh->prepare($stmt);
 	    $rv = $sth->execute() or die $DBI::errstr;
 	    @name = $sth->fetchrow_array();
@@ -970,10 +969,10 @@ my $friend = param('friend');
         $html .= qq(
             <div class="container">
             <div class="column-left1">
-                <img src="images/icon.jpg" alt="Mountain View" style="height:60px;">
+                <img src="images/icon.jpg" alt="" style="height:60px;">
             </div>
             <div class="column-center1">
-                <h4>&nbsp;&nbsp;$fName $lName</h4>
+                <h4>&nbsp;&nbsp;$info[$a]</h4>
             </div>
             <div class="column-right1">
                 <h6>REQUESTED</h6>
@@ -1000,7 +999,7 @@ my $friend = param('friend');
 	    $dsn = "DBI:$driver:dbname=$database";
 	    $userid = ""; $dbpassword = "";
 	    $dbh = DBI->connect($dsn, $userid, $dbpassword, { RaiseError => 1 }) or die $DBI::errstr;
-	    $stmt = qq(select * from user where username = "$info[a]");
+	    $stmt = qq(select * from user where username = "$info[$a]");
 	    $sth = $dbh->prepare($stmt);
 	    $rv = $sth->execute() or die $DBI::errstr;
 	    @name = $sth->fetchrow_array();
@@ -1013,10 +1012,10 @@ my $friend = param('friend');
         $html .= qq(
             <div class="container">
             <div class="column-left1">
-                <img src="images/icon.jpg" alt="Mountain View" style="height:60px;">
+                <img src="images/icon.jpg" alt="" style="height:60px;">
             </div>
             <div class="column-center1">
-                <a href="doyouevenfit.cgi?share=yes&from=$username&to=$info[$a]&username=$username&password=$password"><h4>&nbsp;&nbsp;$fName $lName</h4></a>
+                <a href="doyouevenfit.cgi?share=yes&from=$username&to=$info[$a]&username=$username&password=$password"><h4>&nbsp;&nbsp;$info[$a]</h4></a>
             </div>
             <div class="column-right1">
                 <h5>FRIEND</h5>
@@ -1043,7 +1042,7 @@ my $friend = param('friend');
 	    $dsn = "DBI:$driver:dbname=$database";
 	    $userid = ""; $dbpassword = "";
 	    $dbh = DBI->connect($dsn, $userid, $dbpassword, { RaiseError => 1 }) or die $DBI::errstr;
-	    $stmt = qq(select * from user where username = "$info[a]");
+	    $stmt = qq(select * from user where username = "$info[$a]");
 	    $sth = $dbh->prepare($stmt);
 	    $rv = $sth->execute() or die $DBI::errstr;
 	    @name = $sth->fetchrow_array();
@@ -1056,10 +1055,10 @@ my $friend = param('friend');
         $html .= qq(
             <div class="container">
             <div class="column-left1">
-                <img src="images/icon.jpg" alt="Mountain View" style="height:60px;">
+                <img src="images/icon.jpg" alt="" style="height:60px;">
             </div>
             <div class="column-center1">
-                <a href="doyouevenfit.cgi?share=yes&from=$username&to=$info[$a]&username=$username&password=$password"><h4>&nbsp;&nbsp;$fName $lName</h4></a>
+                <a href="doyouevenfit.cgi?share=yes&from=$username&to=$info[$a]&username=$username&password=$password"><h4>&nbsp;&nbsp;$info[$a]</h4></a>
             </div>
             <div class="column-right1">
                 <h5>FRIEND</h5>
@@ -1145,7 +1144,7 @@ sub friend() {
 	    $dsn = "DBI:$driver:dbname=$database";
 	    $userid = ""; $dbpassword = "";
 	    $dbh = DBI->connect($dsn, $userid, $dbpassword, { RaiseError => 1 }) or die $DBI::errstr;
-	    $stmt = qq(select * from user where username = "$info[a]");
+	    $stmt = qq(select * from user where username = "$info[$a]");
 	    $sth = $dbh->prepare($stmt);
 	    $rv = $sth->execute() or die $DBI::errstr;
 	    @name = $sth->fetchrow_array();
@@ -1158,10 +1157,10 @@ sub friend() {
         $html .= qq(
             <div class="container">
             <div class="column-left1">
-                <img src="images/icon.jpg" alt="Mountain View" style="height:60px;">
+                <img src="images/icon.jpg" alt="" style="height:60px;">
             </div>
             <div class="column-center1">
-                <h4>&nbsp;&nbsp;$fName $lName</h4>
+                <h4>&nbsp;&nbsp;$info[$a]</h4>
             </div>
             <div class="column-right1">
                 <h6>REQUESTED</h6>
@@ -1190,7 +1189,7 @@ sub friend() {
 	    $dsn = "DBI:$driver:dbname=$database";
 	    $userid = ""; $dbpassword = "";
 	    $dbh = DBI->connect($dsn, $userid, $dbpassword, { RaiseError => 1 }) or die $DBI::errstr;
-	    $stmt = qq(select * from user where username = "$info[a]");
+	    $stmt = qq(select * from user where username = "$info[$a]");
 	    $sth = $dbh->prepare($stmt);
 	    $rv = $sth->execute() or die $DBI::errstr;
 	    @name = $sth->fetchrow_array();
@@ -1203,10 +1202,10 @@ sub friend() {
         $html .= qq(
             <div class="container">
             <div class="column-left1">
-                <img src="images/icon.jpg" alt="Mountain View" style="height:60px;">
+                <img src="images/icon.jpg" alt="" style="height:60px;">
             </div>
             <div class="column-center1">
-                <a href="doyouevenfit.cgi?share=yes&from=$username&to=$info[$a]&username=$username&password=$password"><h4>&nbsp;&nbsp;$fName $lName</h4></a>
+                <a href="doyouevenfit.cgi?share=yes&from=$username&to=$info[$a]&username=$username&password=$password"><h4>&nbsp;&nbsp;$info[$a]</h4></a>
             </div>
             <div class="column-right1">
                 <h5>FRIEND</h5>
@@ -1233,7 +1232,7 @@ sub friend() {
 	    $dsn = "DBI:$driver:dbname=$database";
 	    $userid = ""; $dbpassword = "";
 	    $dbh = DBI->connect($dsn, $userid, $dbpassword, { RaiseError => 1 }) or die $DBI::errstr;
-	    $stmt = qq(select * from user where username = "$info[a]");
+	    $stmt = qq(select * from user where username = "$info[$a]");
 	    $sth = $dbh->prepare($stmt);
 	    $rv = $sth->execute() or die $DBI::errstr;
 	    @name = $sth->fetchrow_array();
@@ -1246,10 +1245,10 @@ sub friend() {
         $html .= qq(
             <div class="container">
             <div class="column-left1">
-                <img src="images/icon.jpg" alt="Mountain View" style="height:60px;">
+                <img src="images/icon.jpg" alt="" style="height:60px;">
             </div>
             <div class="column-center1">
-                <a href="doyouevenfit.cgi?share=yes&from=$username&to=$info[$a]&username=$username&password=$password"><h4>&nbsp;&nbsp;$fName $lName</h4></a>
+                <a href="doyouevenfit.cgi?share=yes&from=$username&to=$info[$a]&username=$username&password=$password"><h4>&nbsp;&nbsp;$info[$a]</h4></a>
             </div>
             <div class="column-right1">
                 <h5>FRIEND</h5>
@@ -1418,7 +1417,7 @@ sub login_screen(){
 	if (defined param('username') && defined param('password') && !check_login()) {	# if user has failed to log in notify them	
 		$html .= qq(<h2><font color="white" size="2">Your login details seem to be incorrect.</font></h2>	);
 	} elsif (defined param('create_account')) {	# if user has successfully created an account notify them
-		$html .= qq(<h2><font color="white" size="2">Registration successful. You can now proceed to log in.</font></h2>	);
+		$html .= qq(<h2><font color="white" size="3">Registration successful. You can now proceed to log in.</font></h2>	);
 	} else {
 		$html .= qq(<h2><font color="red" size="2">&nbsp;</font></h2>);
 	}
@@ -4126,7 +4125,6 @@ sub insert_food() {	# adds food from search to meal and updates meal calories an
 sub page_footer() {
 	return qq(
 	<div class="footer">
-	<p class="copy" style="color:#f2f5f2;font-family:AmbleRegular;font-size:12pt">Copyright &copy; 2015. All rights reserved.</p>
 	</div>
 	</div>
 	</body>
