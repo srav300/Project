@@ -505,7 +505,7 @@ sub friend() {
 	$dsn = "DBI:$driver:dbname=$database";
 	$userid = ""; $dbpassword = "";
 	$dbh = DBI->connect($dsn, $userid, $dbpassword, { RaiseError => 1 }) or die $DBI::errstr;
-	$stmt = qq(select id from user where username = $username);
+	$stmt = qq(select id from user where username = '$username');
 	$sth = $dbh->prepare($stmt);
 	$rv = $sth->execute() or die $DBI::errstr;
 	if ($rv < 0) {
@@ -537,7 +537,9 @@ sub friend() {
    
    	my $frandList = @frands;
    
-   	my $html = qq(<center><h2 style="color:white;">Friends ($frandList)</h2></center></body>);
+   	my $html = qq(<div class="header-bottom" id="update">
+	<form action="doyouevenfit.cgi" method="post">
+	<center><h2 style="color:white;">Friends ($frandList)</h2></center></body>);
    	foreach my $frand (@frands){
       		my @info = ();
       		$stmt = qq(select username, fName, lName from user where id = "$frand");
@@ -545,7 +547,7 @@ sub friend() {
 	   	$rv = $sth->execute() or die $DBI::errstr;
 	   	@info = $sth->fetchrow_array();  
 	   	$html .= qq(<center><h3 style="color:white;">$info[0]: $info[1] $info[2]</h3></center></body>);
-	   	$html .= qq(<input type="submit" name="update_friend" value="Send Request to $info[0]" class="button" style="height:45px;width:220px;"><br>);
+	   	$html .= qq(<input type="submit" name="update_friend" value="Send Request to $info[0]" class="button" style="height:45px;width:600px;"><br>);
    	}
    
    	my @pendings = ();
@@ -564,7 +566,7 @@ sub friend() {
 	   	$rv = $sth->execute() or die $DBI::errstr;
 	   	@info = $sth->fetchrow_array();  
 	   	$html .= qq(<center><h3 style="color:white;">$info[0]: $info[1] $info[2]</h3></center></body>);
-	   	$html .= qq(<input type="submit" name="update_friend" value="Cancel Request to $info[0]" class="button" style="height:45px;width:220px;"><br>);
+	   	$html .= qq(<input type="submit" name="update_friend" value="Cancel Request to $info[0]" class="button" style="height:45px;width:600px;"><br>);
    	}
    
    	my @waitings = ();
@@ -582,11 +584,12 @@ sub friend() {
 	   	$rv = $sth->execute() or die $DBI::errstr;
 	   	@info = $sth->fetchrow_array();  
 	   	$html .= qq(<center><h3 style="color:white;">$info[0]: $info[1] $info[2]</h3></center></body>);
-	   	$html .= qq(<input type="submit" name="update_friend" value="Accept Request from $info[0]" class="button" style="height:45px;width:220px;"><br>);
+	   	$html .= qq(<input type="submit" name="update_friend" value="Accept Request from $info[0]" class="button" style="height:45px;width:600px;"><br>);
    	}
    
-   	$html .= qq(<form action="doyouevenfit.cgi" method="post">
-      	<input type="text" name="friend" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="$search" onfocus="javascript:if(this.value=='')this.value='';"><input type="submit" name="search_friends" value="Submit" class="button" style="height:45px;width:100px;"><br> <pre> </pre>);
+   	$html .= qq(<pre> </pre>
+ 	<input type="text" name="friend" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="$search" onfocus="javascript:if(this.value=='')this.value='';">
+	<pre> <pre> <input type="submit" name="search_friends" value="SEARCH" class="button" style="height:45px;width:200px;"><br> <pre> </pre>);
 
 	foreach my $result (@row){
 	   	@info = ();
@@ -596,7 +599,7 @@ sub friend() {
 	   	@info = $sth->fetchrow_array();  
 	   	$html .= qq(<center><h3 style="color:white;">$info[0]: $info[1] $info[2]</h3></center></body>);
 	   	my $status = friend_status($uid, $result);
-	   	$html .= qq(<input type="submit" name="update_friend" value="$status $result" class="button" style="height:45px;width:220px;"><br>);
+	   	$html .= qq(<input type="submit" name="update_friend" value="$status $info[0]" class="button" style="height:45px;width:600px;"><br>);
 	}
 	
 	
@@ -697,6 +700,7 @@ sub update_friend(){
 	   	$rv = $dbh->do($stmt) or die $DBI::errstr;
 	}
 }
+
 
 sub page_css {
 	$css = qq(
