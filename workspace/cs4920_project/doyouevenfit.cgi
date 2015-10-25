@@ -127,7 +127,7 @@ if (defined param('logout')) {
 		} elsif (defined param('delete_workout')) {
 			delete_workout();
 			print exercise_screen();
-		} elsif (defined param('diet') || defined param('back_diet')) {
+		} elsif (defined param('diet') || defined param('back_diet') || defined param('cancel_add_meal')) {
 			print diet_screen();
 		} elsif (defined param('add_to_meal')) {
 			if (check_food()) {
@@ -136,6 +136,9 @@ if (defined param('logout')) {
 			} else {
 				print food_help();
 			}
+		} elsif (defined param('save_meal')) {
+			save_meal();
+			print diet_screen();
 		} elsif (defined param('add_food_man')) {
 			print add_food_man();
 		} elsif (defined param('add_food')) {
@@ -149,6 +152,9 @@ if (defined param('logout')) {
 		} elsif ((defined param('add_meal') || defined param('meal_name')) && param('meal_name') ne "" && param('meal_name') !~ /"/) {
 			insert_meal();
 			print diet_screen();
+		} elsif (defined param('add_saved_meal') && param('s_meal_selected') ne "") {
+			add_saved_meal();
+			print diet_screen();
 		} elsif (defined param('add_workout') && (param('workout_name') ne "" || param('workout_selected') ne "")) {
 			insert_workout();
 			print exercise_screen();
@@ -156,7 +162,7 @@ if (defined param('logout')) {
 			print home();
 		} elsif (defined param('exercise_screen')) {
 			print exercise_screen();
-		} elsif (defined param('change_diet_date') || defined param('new_meal')) {
+		} elsif (defined param('change_diet_date') || defined param('new_meal') || defined param('saved_meal') || defined param('add_saved_meal')) {
 			print diet_screen();
 		} elsif (defined param('change_exercise_date') || defined param('new_workout')) {
 			print exercise_screen();
@@ -1311,9 +1317,33 @@ sub diet_screen() {	# displays current calories out of goal calories and a list 
 		if (defined param('new_meal')) {
 			$html .= 	qq(<input type="text" name="meal_name" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;width:300px;font-family:AmbleRegular;"value="New Meal" onfocus="javascript:if(this.value=='New Meal')this.value='';"><br>
 			<pre> </pre>
-			<input type="submit" name="add_meal" value="+ ADD MEAL" class="button" style="height:45px;width:200px;"><br>);
+			<input type="submit" name="add_meal" value="ADD MEAL" class="button" style="height:45px;width:200px;"><br> <pre> </pre>
+			<input type="submit" name="cancel_add_meal" value="CANCEL" class="button" style="height:45px;width:200px;"><br>);
+		} elsif (defined param('saved_meal') || (defined param('add_saved_meal') && param('s_meal_selected') eq "")) {
+			$stmt = qq(select count(*) from meal where uid = '$uid' and date = ''); 
+			$sth = $dbh->prepare($stmt);
+			$rv = $sth->execute() or die $DBI::errstr;
+			@row = $sth->fetchrow_array();
+			my $height = 24 * $row[0];
+			if ($height > 240) {
+				$height = 240;
+			}
+			$height .= "px";
+			$stmt = qq(select name from meal where uid = '$uid' and date = ''); 
+			$sth = $dbh->prepare($stmt);
+			$rv = $sth->execute() or die $DBI::errstr;
+			$html .= qq(<select name="s_meal_selected" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:$height;width:300px;font-family:AmbleRegular;"value="" onfocus="javascript:if(this.value=='')this.value='';"><br>
+			);
+			while (@row = $sth->fetchrow_array()) {
+				$html .= qq(<option>$row[0]
+				);
+			}
+			$html .= qq(</select> <pre> </pre>
+			<input type="submit" name="add_saved_meal" value="ADD MEAL" class="button" style="height:45px;width:200px;"><br> <pre> </pre>
+			<input type="submit" name="cancel_add_meal" value="CANCEL" class="button" style="height:45px;width:200px;"><br>);
 		} else {
-			$html .= qq(<input type="submit" name="new_meal" value="NEW MEAL" class="button" style="height:45px;"><br>);
+			$html .= qq(<input type="submit" name="new_meal" value="NEW MEAL" class="button" style="height:45px;width:250px;"><br> <pre> </pre>
+			<input type="submit" name="saved_meal" value="SAVED MEAL" class="button" style="height:45px;width:250px;"><br>);
 		}
 		$html .= qq(<input type="text" name="diet_date" value="$date" size=28 style="text-align:center;border:0px;solid:#ffffff;background-color:rgba(255,255,255,0);color:black;font-size:16pt;height:0px;width:0px;font-family:AmbleRegular;"><br>);
 		$html .= hidden('username');
@@ -1408,6 +1438,8 @@ sub show_meal() {	# displayed if user selects a meal from diet screen
 	<form action="doyouevenfit.cgi" method="post">
 	<input type="submit" name="add_food" value="+ ADD FOOD" class="button" style="height:45px;width:250px;"><br>
 	<pre> </pre> <pre> </pre>
+	<input type="submit" name="save_meal" value="SAVE MEAL" class="button" style="height:45px;width:250px;"><br>
+	<pre> </pre> <pre> </pre>
 	<input type="submit" name="delete_meal" value="DELETE MEAL" class="button" style="height:45px;width:250px;"><br>
 	<pre> </pre> <pre> </pre>
 	<input type="submit" name="back_diet" value="BACK" class="button" style="height:45px;width:250px;"><br>
@@ -1419,6 +1451,42 @@ sub show_meal() {	# displayed if user selects a meal from diet screen
 	$html .= hidden('mid');
 	$html.= qq(</form>);
 	return $html;
+}
+
+sub save_meal() {
+	my $mid = param('mid');
+	$driver = "SQLite";
+	$database = "project.db"; 
+	$dsn = "DBI:$driver:dbname=$database";
+	$userid = ""; $dbpassword = "";  
+	$dbh = DBI->connect($dsn, $userid, $dbpassword, { RaiseError => 1 }) or die $DBI::errstr; 
+	$stmt = qq(select uid, name, calories from meal where id = '$mid'); 
+	$sth = $dbh->prepare($stmt);
+	$rv = $sth->execute() or die $DBI::errstr;
+	my @row = $sth->fetchrow_array();
+	my $uid = $row[0];
+	my $name = $row[1];
+	my $calories = $row[2];
+	$stmt = qq(insert into meal values(null, '$uid', '$name', '$calories', '')); 
+	$rv = $dbh->do($stmt) or die $DBI::errstr;
+	$stmt = qq(select id from meal where uid = '$uid' and name = '$name' and calories = '$calories' order by id desc); 
+	$sth = $dbh->prepare($stmt);
+	$rv = $sth->execute() or die $DBI::errstr;
+	@row = $sth->fetchrow_array();
+	$smid = $row[0];
+	$stmt = qq(select fid, serving from meal_contains where mid = '$mid'); 
+	$sth = $dbh->prepare($stmt);
+	$rv = $sth->execute() or die $DBI::errstr;
+	while (my @row = $sth->fetchrow_array()) {
+		my $fid = $row[0];
+		my $serving = $row[1];
+		$stmt = qq(insert into meal_contains values(null, '$smid', '$fid', '$serving')); 
+		$rv = $dbh->do($stmt) or die $DBI::errstr;
+	}
+}
+
+sub add_saved_meal() {
+
 }
 
 sub show_food() {	# displayed if user selects food from show meal
