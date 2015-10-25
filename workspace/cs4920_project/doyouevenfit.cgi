@@ -176,12 +176,25 @@ if (defined param('logout')) {
 			print update();
 		} elsif (defined param('cancel')) {
 			print cancel();
-		} elsif (defined param('friends') || defined param('search_friends')) {
+		}
+		if (defined param('search_friends')) {  ### DONT CHANGE IT
+			print search_friends();
+        } elsif (defined param('friend')) {
 			print friend();
 		} elsif (defined param('update_friend')){
 			update_friend();
 			print friend();
-		}
+		} elsif (defined param('add')) {
+            print add();        
+        } elsif (defined param('messages')) {
+            print messages();
+        } elsif (defined param('confirm')) {
+            print confirm();
+        } elsif (defined param('share')) {
+            print share();
+        } elsif (defined param('share_submit')) {
+            print share_submit();
+        }
 	} else {
 		print login_screen();
 		$bg_handler = "3"	
@@ -507,111 +520,766 @@ sub update_password() { # update user details into database
    
 }
 
-sub friend() {
-	my $search = param('friend');
-   	my $username = param('usernmae');
-   	my @words = split / /, $search;
-   	my @row;
-   	$driver = "SQLite";
-   	$database = "project.db";
+sub add() {
+    my $username = param('username');
+    my $password = param('password');
+    my $from = param('from');
+    my $to = param('to');
+
+
+
+    $database = "project.db";
 	$dsn = "DBI:$driver:dbname=$database";
 	$userid = ""; $dbpassword = "";
 	$dbh = DBI->connect($dsn, $userid, $dbpassword, { RaiseError => 1 }) or die $DBI::errstr;
-	$stmt = qq(select id from user where username = '$username');
+	$stmt = qq(insert into friends values ("$from", "$to", "0"));
+	$sth = $dbh->prepare($stmt);
+	$rv = $sth->execute() or die $DBI::errstr;
+	@info = $sth->fetchrow_array();
+    $dbh->disconnect();
+
+        $html = qq(<div class="header-bottom" id="tour">
+<div class="wrap">
+<h2>Friend request has been sent successfully.</h2>
+</div></div>
+);
+ 
+}
+
+sub share(){
+    my $username = param('username');
+    my $password = param('password');
+    my $from = param('from');
+    my $to = param('to');
+
+    $database = "project.db";
+	$dsn = "DBI:$driver:dbname=$database";
+	$userid = ""; $dbpassword = "";
+	$dbh = DBI->connect($dsn, $userid, $dbpassword, { RaiseError => 1 }) or die $DBI::errstr;
+	$stmt = qq(select * from user where username = "$username");
+	$sth = $dbh->prepare($stmt);
+	$rv = $sth->execute() or die $DBI::errstr;
+	@info = $sth->fetchrow_array();
+    $from_fName = $info[1];
+    $from_fName =~ s/^([a-z])/\u$1/;
+    $from_lName = $info[2];
+    $from_lName =~ s/^([a-z])/\u$1/;
+    $user_id = $info[0];
+    $dbh->disconnect();
+
+    $database = "project.db";
+	$dsn = "DBI:$driver:dbname=$database";
+	$userid = ""; $dbpassword = "";
+	$dbh = DBI->connect($dsn, $userid, $dbpassword, { RaiseError => 1 }) or die $DBI::errstr;
+	$stmt = qq(select * from user where username = "$to");
+	$sth = $dbh->prepare($stmt);
+	$rv = $sth->execute() or die $DBI::errstr;
+	@info = $sth->fetchrow_array();
+    $to_fName = $info[1];
+    $to_fName =~ s/^([a-z])/\u$1/;
+    $to_lName = $info[2];
+    $to_lName =~ s/^([a-z])/\u$1/;
+    $dbh->disconnect();
+
+
+    $database = "project.db";
+	$dsn = "DBI:$driver:dbname=$database";
+	$userid = ""; $dbpassword = "";
+	$dbh = DBI->connect($dsn, $userid, $dbpassword, { RaiseError => 1 }) or die $DBI::errstr;
+	$stmt = qq(select * from calories where uid = "$user_id");
+	$sth = $dbh->prepare($stmt);
+	$rv = $sth->execute() or die $DBI::errstr;
+	@info = $sth->fetchrow_array();
+    $current = $info[1];
+    $goal = $info[2];
+    $date = $info[3];
+    $dbh->disconnect();
+    $html = hidden('username');
+    $html .= hidden('password');
+        $html .= qq(<div class="header-bottom" id="tour">
+<div class="wrap">
+<h2>SHARE</h2>
+
+<form action="doyouevenfit.cgi" method="get">
+<center><h3 style="color:white;">From</h3></center></body>
+<input type="text" name="from_remark" size=28 style="width:350px;text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="$from_fName $from_lName" onfocus="javascript:if(this.value=='')this.value='';"><br>
+
+<pre> </pre>
+
+<center><h3 style="color:white;">To</h3></center></body>
+<input type="text" name="to_remark" size=28 style="width:350px;text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="$to_fName $to_lName" onfocus="javascript:if(this.value=='')this.value='';"><br>
+
+<pre> </pre>
+
+<center><h3 style="color:white;">Message</h3></center></body>
+<textarea name="message_remark"size=28 style="width:350px;text-align:left;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:400px;font-family:AmbleRegular;" onfocus="javascript:if(this.value=='')this.value='';">
+Your friend $from_fName $from_lName has achieved $current out of his $goal Calories goal on $date!
+</textarea>
+
+<pre> </pre>);
+$html .= hidden('username');
+$html .= hidden('password');
+$html .= hidden('from');
+$html .= hidden('to');
+
+$html .= qq(
+<input type="submit" name="share_submit" value="Share" class="button" style="height:45px;width:220px;"><br>
+<p>&nbsp</p>
+<input type="submit" name="cancel" value="Cancel" class="button" style="height:45px;width:220px;"><br>
+<p>&nbsp</p>
+
+</form>
+
+</div></div>
+);
+
+}
+
+sub share_submit() {
+    my $username = param('username');
+    my $password = param('password');
+    my $from = param('from');
+    my $to = param('to');
+    my $message = param('message_remark');
+    my $to_fName = param('to_fName');
+    my $to_lName = param('to_lName');
+
+    $database = "project.db";
+	$dsn = "DBI:$driver:dbname=$database";
+	$userid = ""; $dbpassword = "";
+	$dbh = DBI->connect($dsn, $userid, $dbpassword, { RaiseError => 1 }) or die $DBI::errstr;
+	$stmt = qq(insert into share values("$from", "$to", "$message", "1"));
+	$sth = $dbh->prepare($stmt);
+	$rv = $sth->execute() or die $DBI::errstr;
+    $dbh->disconnect();
+
+    $database = "project.db";
+	$dsn = "DBI:$driver:dbname=$database";
+	$userid = ""; $dbpassword = "";
+	$dbh = DBI->connect($dsn, $userid, $dbpassword, { RaiseError => 1 }) or die $DBI::errstr;
+	$stmt = qq(select * from user where username = "$to");
+	$sth = $dbh->prepare($stmt);
+	$rv = $sth->execute() or die $DBI::errstr;
+	@info = $sth->fetchrow_array();
+    $to_fName = $info[1];
+    $to_fName =~ s/^([a-z])/\u$1/;
+    $to_lName = $info[2];
+    $to_lName =~ s/^([a-z])/\u$1/;
+    $dbh->disconnect();
+ 
+$html = qq(<div class="header-bottom" id="tour">
+<div class="wrap">
+<h2>You have shared your achievement with $to_fName $to_lName!</h2>
+<h2>$message</h2>
+</div></div>
+);
+    
+}
+
+
+sub confirm() {
+    my $username = param('username');
+    my $password = param('password');
+    my $from = param('from');
+
+
+    $database = "project.db";
+	$dsn = "DBI:$driver:dbname=$database";
+	$userid = ""; $dbpassword = "";
+	$dbh = DBI->connect($dsn, $userid, $dbpassword, { RaiseError => 1 }) or die $DBI::errstr;
+	$stmt = qq(update friends set status = "1" where userid = "$from" and friendid = "$username");
+	$sth = $dbh->prepare($stmt);
+	$rv = $sth->execute() or die $DBI::errstr;
+	@info = $sth->fetchrow_array();
+    $dbh->disconnect();
+ 
+$html = qq(<div class="header-bottom" id="tour">
+<div class="wrap">
+<h2>You have confirmed this friend request.</h2>
+</div></div>
+);
+}
+
+sub messages() {
+    my $username = param('username');
+    my $password = param('password');
+
+    $html = qq(<div class="header-bottom" id="tour">
+<div class="wrap">
+<div class="container">
+            <div class="column-hardleft">);
+    $driver = "SQLite";
+    $size = 0;
+	$database = "project.db";
+	$dsn = "DBI:$driver:dbname=$database";
+	$userid = ""; $dbpassword = "";
+	$dbh = DBI->connect($dsn, $userid, $dbpassword, { RaiseError => 1 }) or die $DBI::errstr;
+	$stmt = qq(select userid from friends where friendid = "$username" and status = "0");
+	$sth = $dbh->prepare($stmt);
+	$rv = $sth->execute() or die $DBI::errstr;
+
+    $sth->bind_columns(\my $val1);
+    while ($sth->fetch) {
+        push @info, $val1;
+    }
+
+#	@info = $sth->fetchall_arrayref();
+    $dbh->disconnect();
+    
+    if (@info) {
+        $size = @info;
+        $database = "project.db";
+	    $dsn = "DBI:$driver:dbname=$database";
+	    $userid = ""; $dbpassword = "";
+	    $dbh = DBI->connect($dsn, $userid, $dbpassword, { RaiseError => 1 }) or die $DBI::errstr;
+        for ($a = 0; $a < $size; $a++) {
+	        $stmt = qq(select * from user where username = "$info[$a]");
+	        $sth = $dbh->prepare($stmt);
+	        $rv = $sth->execute() or die $DBI::errstr;
+	        @result = $sth->fetchrow_array();
+            $fName1[$a] = @result[1];
+            $fName1[$a] =~ s/^([a-z])/\u$1/;
+            $lName1[$a] = @result[2]; 
+            $lName1[$a] =~ s/^([a-z])/\u$1/;     
+        }
+        $dbh->disconnect();
+    } else {
+        $fName1[0] = 0;
+        $lName1[0] = 0;    
+    }  
+
+    if ($fName1[0] eq 0) {
+        $html .= qq(<h2 align="left">You have no friends requests currently.</h2> <pre> </pre>);
+    } else {
+        $html .= qq(<h2 align="left">There are $size people request you as friends.</h4> <pre> </pre>);
+    }
+
+    for ($a = 0; $a < $size; $a++) {
+        $html .= qq(<div class="container">
+            <div class="column-left1">
+                <img src="images/icon.jpg" alt="Mountain View" style="height:60px;">
+            </div>
+            <div class="column-center1">
+                <h4>&nbsp;&nbsp;$fName1[$a] $lName1[$a]</h4>
+            </div>
+            <div class="column-right1">
+                <a href="doyouevenfit.cgi?confirm=yes&username=$username&password=$password&from=$info[$a]"><h6>CONFIRM</h6><a>
+
+            </div>
+            </div>
+);
+    }
+
+    $driver = "SQLite";
+    $size = 0;
+	$database = "project.db";
+	$dsn = "DBI:$driver:dbname=$database";
+	$userid = ""; $dbpassword = "";
+	$dbh = DBI->connect($dsn, $userid, $dbpassword, { RaiseError => 1 }) or die $DBI::errstr;
+	$stmt = qq(select fromuser from share where touser = "$username");
+	$sth = $dbh->prepare($stmt);
+	$rv = $sth->execute() or die $DBI::errstr;
+
+    $sth->bind_columns(\my $val1);
+    while ($sth->fetch) {
+        push @info, $val1;
+    }
+    @info = reverse(@info);
+
+    $driver = "SQLite";
+    $size = 0;
+	$database = "project.db";
+	$dsn = "DBI:$driver:dbname=$database";
+	$userid = ""; $dbpassword = "";
+	$dbh = DBI->connect($dsn, $userid, $dbpassword, { RaiseError => 1 }) or die $DBI::errstr;
+	$stmt = qq(select message_remark from share where touser = "$username");
+	$sth = $dbh->prepare($stmt);
+	$rv = $sth->execute() or die $DBI::errstr;
+
+    $sth->bind_columns(\my $val1);
+    while ($sth->fetch) {
+        push @info1, $val1;
+    }
+    @info1 = reverse(@info1);
+
+$html .= qq(
+    </div>
+    <div class="column-hardright">
+    <h2 align="left">My messages.</h2> <pre> </pre>
+    <h4>From: System</h4> 
+    <p style="font-size:1.4 em;color:white;line-height:180%;background:rgba(255,255,255,0.2)">Congratiulations, you have reached your daily best.</p>
+<pre> </pre>
+    
+);
+
+$size = @info;
+
+for ($a = 0; $a < $size; $a++) {
+        $database = "project.db";
+	    $dsn = "DBI:$driver:dbname=$database";
+	    $userid = ""; $dbpassword = "";
+	    $dbh = DBI->connect($dsn, $userid, $dbpassword, { RaiseError => 1 }) or die $DBI::errstr;
+	        $stmt = qq(select * from user where username = "$info[$a]");
+	        $sth = $dbh->prepare($stmt);
+	        $rv = $sth->execute() or die $DBI::errstr;
+	        @result = $sth->fetchrow_array();
+            $fName2[$a] = @result[1];
+            $fName2[$a] =~ s/^([a-z])/\u$1/;
+            $lName2[$a] = @result[2]; 
+            $lName2[$a] =~ s/^([a-z])/\u$1/;     
+    $html .= qq(
+
+
+<h4>From: $fName2[0] $lName2[0]</h4> 
+<p style="font-size:1.4 em;color:white;line-height:180%;background:rgba(255,255,255,0.2)">$info1[$a]</p>
+
+
+
+<pre> </pre>);
+}
+
+    $html .= qq(</div></div></div></div></div>);
+}
+
+sub search_friends() {
+my $username = param('username');
+my $password = param('password');
+my $friend = param('friend');
+    my $html = qq(
+<div class="header-bottom" id="tour">
+<div class="wrap">
+
+    <div class="container">
+	    <div class="column-hardleft">
+
+        <form action="doyouevenfit.cgi" method="get">
+        <input type="text" name="friend" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="Search friends" onfocus="javascript:if(this.value=='Search friends')this.value='';"><br>
+        <pre> </pre>
+        <input type="submit" name="search_friends" value="Search" class="button" style="height:45px;"><br>
+        <pre> </pre>
+        
+        
+        
+    );
+
+    $driver = "SQLite";
+    $size = 0;
+	$database = "project.db";
+	$dsn = "DBI:$driver:dbname=$database";
+	$userid = ""; $dbpassword = "";
+	$dbh = DBI->connect($dsn, $userid, $dbpassword, { RaiseError => 1 }) or die $DBI::errstr;
+	$stmt = qq(select * from user where username = "$friend");
+	$sth = $dbh->prepare($stmt);
+	$rv = $sth->execute() or die $DBI::errstr;
+	@info = $sth->fetchrow_array();
+    $dbh->disconnect();
+        if (@info) {
+	        $searched_fName = @info[1];
+            $searched_fName =~ s/^([a-z])/\u$1/;
+            $searched_lName = @info[2];
+            $searched_lName =~ s/^([a-z])/\u$1/;
+            $html .= qq(
+            <div class="container">
+            <div class="column-left1">
+                <img src="images/icon.jpg" alt="Mountain View" style="height:60px;">
+            </div>
+            <div class="column-center1">
+                <h4>&nbsp;&nbsp;$searched_fName $searched_lName</h4>
+            </div>);
+                $driver = "SQLite";
+	            $database = "project.db";
+	            $dsn = "DBI:$driver:dbname=$database";
+	            $userid = ""; $dbpassword = "";
+	            $dbh = DBI->connect($dsn, $userid, $dbpassword, { RaiseError => 1 }) or die $DBI::errstr;
+	            $stmt = qq(select status from friends where userid = "$username" and friendid = "$friend");
+	            $sth = $dbh->prepare($stmt);
+	            $rv = $sth->execute() or die $DBI::errstr;
+	            @info = $sth->fetchrow_array();
+                $stmt = qq(select status from friends where userid = "$friend" and friendid = "$username");
+	            $sth = $dbh->prepare($stmt);
+	            $rv = $sth->execute() or die $DBI::errstr;
+	            @reverse = $sth->fetchrow_array();
+                $dbh->disconnect();
+                $rever = 0;
+                if (@reverse) {
+                    if ($reverse[0] eq 0) {
+                        $rever = 0;
+                    } elsif ($reverse[0] eq 1) {
+                        $rever = 1;
+                    }
+                } else {
+                    $rever = 0;
+                }
+
+                if (@info || @reverse) {
+                    if ($info[0] eq 0) {
+                        $html .= qq(<div class="column-right1"><h6>REQUESTED</h6></div></div><pre> </pre>);
+                    } if ($info[0] eq 1 || $rever eq 1) {
+                        $html .= qq(<div class="column-right1"><h5>FRIEND</h5></div></div><pre> </pre>);
+                    }
+                } else {
+                    $html .= qq(<div class="column-right1"><a href="doyouevenfit.cgi?add=yes&from=$username&to=$friend&username=$username&password=$password"><h6 style="background:rgba(51,51,255,0.8);">ADD FRIEND</h6></a></div></div><pre> </pre>);
+                }
+
+            
+        } else {
+            $html .= qq(<h4>No matches.</h4> <pre> </pre></div>);
+        }
+
+
+
+
+    $html .= qq(</div>
+        <div class="column-hardright">
+        <h2>My Friends List</h2>
+        <pre> </pre>);
+
+    $html .= hidden('username');
+	$html .= hidden('password');
+
+
+
+    $driver = "SQLite";
+    $size = 0;
+	$database = "project.db";
+	$dsn = "DBI:$driver:dbname=$database";
+	$userid = ""; $dbpassword = "";
+	$dbh = DBI->connect($dsn, $userid, $dbpassword, { RaiseError => 1 }) or die $DBI::errstr;
+	$stmt = qq(select friendid from friends where userid = "$username" and status = "0");
+	$sth = $dbh->prepare($stmt);
+	$rv = $sth->execute() or die $DBI::errstr;
+	@info = $sth->fetchrow_array();
+    my $size = @info; 
+    $dbh->disconnect();
+    for ($a = 0; $a < $size; $a++) {
+        $driver = "SQLite";
+	    $database = "project.db";
+	    $dsn = "DBI:$driver:dbname=$database";
+	    $userid = ""; $dbpassword = "";
+	    $dbh = DBI->connect($dsn, $userid, $dbpassword, { RaiseError => 1 }) or die $DBI::errstr;
+	    $stmt = qq(select * from user where username = "$info[a]");
+	    $sth = $dbh->prepare($stmt);
+	    $rv = $sth->execute() or die $DBI::errstr;
+	    @name = $sth->fetchrow_array();
+        $fName = $name[1];
+        $fName =~ s/^([a-z])/\u$1/;
+        $lName = $name[2];
+        $lName =~ s/^([a-z])/\u$1/;
+        $dbh->disconnect();
+        
+        $html .= qq(
+            <div class="container">
+            <div class="column-left1">
+                <img src="images/icon.jpg" alt="Mountain View" style="height:60px;">
+            </div>
+            <div class="column-center1">
+                <h4>&nbsp;&nbsp;$fName $lName</h4>
+            </div>
+            <div class="column-right1">
+                <h6>REQUESTED</h6>
+            </div>
+            </div>
+            <pre> </pre>
+);
+    }
+    $driver = "SQLite";
+    $size = 0;
+	$database = "project.db";
+	$dsn = "DBI:$driver:dbname=$database";
+	$userid = ""; $dbpassword = "";
+	$dbh = DBI->connect($dsn, $userid, $dbpassword, { RaiseError => 1 }) or die $DBI::errstr;
+	$stmt = qq(select friendid from friends where userid = "$username" and status = "1");
+	$sth = $dbh->prepare($stmt);
+	$rv = $sth->execute() or die $DBI::errstr;
+	@info = $sth->fetchrow_array();
+    my $size = @info; 
+    $dbh->disconnect();
+    for ($a = 0; $a < $size; $a++) {
+        $driver = "SQLite";
+	    $database = "project.db";
+	    $dsn = "DBI:$driver:dbname=$database";
+	    $userid = ""; $dbpassword = "";
+	    $dbh = DBI->connect($dsn, $userid, $dbpassword, { RaiseError => 1 }) or die $DBI::errstr;
+	    $stmt = qq(select * from user where username = "$info[a]");
+	    $sth = $dbh->prepare($stmt);
+	    $rv = $sth->execute() or die $DBI::errstr;
+	    @name = $sth->fetchrow_array();
+        $fName = $name[1];
+        $fName =~ s/^([a-z])/\u$1/;
+        $lName = $name[2];
+        $lName =~ s/^([a-z])/\u$1/;
+        $dbh->disconnect();
+        
+        $html .= qq(
+            <div class="container">
+            <div class="column-left1">
+                <img src="images/icon.jpg" alt="Mountain View" style="height:60px;">
+            </div>
+            <div class="column-center1">
+                <a href="doyouevenfit.cgi?share=yes&from=$username&to=$info[$a]&username=$username&password=$password"><h4>&nbsp;&nbsp;$fName $lName</h4></a>
+            </div>
+            <div class="column-right1">
+                <h5>FRIEND</h5>
+            </div>
+            </div>
+            <pre> </pre>
+);
+    }
+    $driver = "SQLite";
+    $size = 0;
+	$database = "project.db";
+	$dsn = "DBI:$driver:dbname=$database";
+	$userid = ""; $dbpassword = "";
+	$dbh = DBI->connect($dsn, $userid, $dbpassword, { RaiseError => 1 }) or die $DBI::errstr;
+	$stmt = qq(select userid from friends where friendid = "$username" and status = "1");
+	$sth = $dbh->prepare($stmt);
+	$rv = $sth->execute() or die $DBI::errstr;
+	@info = $sth->fetchrow_array();
+    my $size = @info; 
+    $dbh->disconnect();
+    for ($a = 0; $a < $size; $a++) {
+        $driver = "SQLite";
+	    $database = "project.db";
+	    $dsn = "DBI:$driver:dbname=$database";
+	    $userid = ""; $dbpassword = "";
+	    $dbh = DBI->connect($dsn, $userid, $dbpassword, { RaiseError => 1 }) or die $DBI::errstr;
+	    $stmt = qq(select * from user where username = "$info[a]");
+	    $sth = $dbh->prepare($stmt);
+	    $rv = $sth->execute() or die $DBI::errstr;
+	    @name = $sth->fetchrow_array();
+        $fName = $name[1];
+        $fName =~ s/^([a-z])/\u$1/;
+        $lName = $name[2];
+        $lName =~ s/^([a-z])/\u$1/;
+        $dbh->disconnect();
+        
+        $html .= qq(
+            <div class="container">
+            <div class="column-left1">
+                <img src="images/icon.jpg" alt="Mountain View" style="height:60px;">
+            </div>
+            <div class="column-center1">
+                <a href="doyouevenfit.cgi?share=yes&from=$username&to=$info[$a]&username=$username&password=$password"><h4>&nbsp;&nbsp;$fName $lName</h4></a>
+            </div>
+            <div class="column-right1">
+                <h5>FRIEND</h5>
+            </div>
+            </div>
+            <pre> </pre>
+);
+    }
+
+
+
+
+$html .= qq(        </div>      
+    </div>
+</div>
+</div>
+);
+
+
+}
+
+
+sub friend() {
+	my $search = param('friend');
+	my $username = param('username');
+	my @words = split / /, $search;
+	my @row;
+	$driver = "SQLite";
+	$database = "project.db";
+	$dsn = "DBI:$driver:dbname=$database";
+	$userid = ""; $dbpassword = "";
+	$dbh = DBI->connect($dsn, $userid, $dbpassword, { RaiseError => 1 }) or die $DBI::errstr;
+	$stmt = qq(select id from user where username = "$username");
 	$sth = $dbh->prepare($stmt);
 	$rv = $sth->execute() or die $DBI::errstr;
 	if ($rv < 0) {
-		print $DBI::errstr;
+	   print $DBI::errstr;
 	}
 	push @id, $sth->fetchrow_array();
 	my $uid = $id[0];
 	  
-   	foreach my $word (@words){
-      		$stmt = qq(select id from user where '$word' in (username, fName, lName));
-	  	$sth = $dbh->prepare($stmt);
-	   	$rv = $sth->execute() or die $DBI::errstr;
+	foreach my $word (@words){
+		$stmt = qq(select id from user where '$word' in (username, fName, lName));
+		$sth = $dbh->prepare($stmt);
+	 	$rv = $sth->execute() or die $DBI::errstr;
 	   	if ($rv < 0) {
-		   	print $DBI::errstr;
+			print $DBI::errstr;
 	   	}
-	   	push @row, $sth->fetchrow_array();
-   	}
+		push @row, $sth->fetchrow_array();
+	}
    
-   	my @frands = ();
-   	$stmt = qq(select friendid from friends where userid = "$uid" AND status = "1");
-   	$sth = $dbh->prepare($stmt);
-   	$rv = $sth->execute() or die $DBI::errstr;
-   	push @frands, $sth->fetchrow_array();
-   
-   	$stmt = qq(select friendid from friends where friendid = "$uid" AND status = "1");
-   	$sth = $dbh->prepare($stmt);
-   	$rv = $sth->execute() or die $DBI::errstr;
-   	push @frands, $sth->fetchrow_array();
-   
-   	my $frandList = @frands;
-   
-   	my $html = qq(<div class="header-bottom" id="update">
-	<form action="doyouevenfit.cgi" method="post">
-	<center><h2 style="color:white;">Friends ($frandList)</h2></center></body>);
-   	foreach my $frand (@frands){
-      		my @info = ();
-      		$stmt = qq(select username, fName, lName from user where id = "$frand");
-      		$sth = $dbh->prepare($stmt);
-	   	$rv = $sth->execute() or die $DBI::errstr;
-	   	@info = $sth->fetchrow_array();  
-	   	$html .= qq(<center><h3 style="color:white;">$info[0]: $info[1] $info[2]</h3></center></body>);
-	   	$html .= qq(<input type="submit" name="update_friend" value="Send Request to $info[0]" class="button" style="height:45px;width:600px;"><br>);
-   	}
-   
-   	my @pendings = ();
-   	$stmt = qq(select friendid from friends where friendid = "$uid" AND status = "0");
-   	$sth = $dbh->prepare($stmt);
-   	$rv = $sth->execute() or die $DBI::errstr;
-   	push @pendings, $sth->fetchrow_array();
-   	my $pendingList = @pendings;
-   
-   	$html .= qq(<center><h2 style="color:white;">Pending Requests ($pendingList)</h2></center></body>);
-   
-   	foreach my $pending (@pendings){
-      		@info = ();
-      		$stmt = qq(select username, fName, lName from user where id = "$pending");
-      		$sth = $dbh->prepare($stmt);
-	   	$rv = $sth->execute() or die $DBI::errstr;
-	   	@info = $sth->fetchrow_array();  
-	   	$html .= qq(<center><h3 style="color:white;">$info[0]: $info[1] $info[2]</h3></center></body>);
-	   	$html .= qq(<input type="submit" name="update_friend" value="Cancel Request to $info[0]" class="button" style="height:45px;width:600px;"><br>);
-   	}
-   
-   	my @waitings = ();
-   	$stmt = qq(select friendid from friends where friendid = "$uid" AND status = "0");
-   	$sth = $dbh->prepare($stmt);
-   	$rv = $sth->execute() or die $DBI::errstr;
-   	push @waitings, $sth->fetchrow_array();
-   	my $waitingList = @waitings;
-   	$html .= qq(<center><h2 style="color:white;">Confirm Requests ($waitingList)</h2></center></body>);
-   
-   	foreach my $waiting (@waiting){
-      		@info = ();
-      		$stmt = qq(select username, fName, lName from user where id = "$waiting");
-      		$sth = $dbh->prepare($stmt);
-	   	$rv = $sth->execute() or die $DBI::errstr;
-	   	@info = $sth->fetchrow_array();  
-	   	$html .= qq(<center><h3 style="color:white;">$info[0]: $info[1] $info[2]</h3></center></body>);
-	   	$html .= qq(<input type="submit" name="update_friend" value="Accept Request from $info[0]" class="button" style="height:45px;width:600px;"><br>);
-   	}
-   
-   	$html .= qq(<pre> </pre>
- 	<input type="text" name="friend" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="$search" onfocus="javascript:if(this.value=='')this.value='';">
-	<pre> <pre> <input type="submit" name="search_friends" value="SEARCH" class="button" style="height:45px;width:200px;"><br> <pre> </pre>);
+	my $html = qq(
+<div class="header-bottom" id="tour">
+<div class="wrap">
+
+    <div class="container">
+	    <div class="column-hardleft">
+
+        <form action="doyouevenfit.cgi" method="get">
+        <input type="text" name="friend" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:16pt;height:40px;font-family:AmbleRegular;"value="Search friends" onfocus="javascript:if(this.value=='Search friends')this.value='';"><br>
+        <pre> </pre>
+        <input type="submit" name="search_friends" value="Search" class="button" style="height:45px;"><br>
+        </div>
+        <pre> </pre>
+        <div class="column-hardright">
+        <h2>My Friends List</h2>
+        <pre> </pre>);
+    $driver = "SQLite";
+    $size = 0;
+	$database = "project.db";
+	$dsn = "DBI:$driver:dbname=$database";
+	$userid = ""; $dbpassword = "";
+	$dbh = DBI->connect($dsn, $userid, $dbpassword, { RaiseError => 1 }) or die $DBI::errstr;
+	$stmt = qq(select friendid from friends where userid = "$username" and status = "0");
+	$sth = $dbh->prepare($stmt);
+	$rv = $sth->execute() or die $DBI::errstr;
+	@info = $sth->fetchrow_array();
+    my $size = @info; 
+    $dbh->disconnect();
+    for ($a = 0; $a < $size; $a++) {
+        $driver = "SQLite";
+	    $database = "project.db";
+	    $dsn = "DBI:$driver:dbname=$database";
+	    $userid = ""; $dbpassword = "";
+	    $dbh = DBI->connect($dsn, $userid, $dbpassword, { RaiseError => 1 }) or die $DBI::errstr;
+	    $stmt = qq(select * from user where username = "$info[a]");
+	    $sth = $dbh->prepare($stmt);
+	    $rv = $sth->execute() or die $DBI::errstr;
+	    @name = $sth->fetchrow_array();
+        $fName = $name[1];
+        $fName =~ s/^([a-z])/\u$1/;
+        $lName = $name[2];
+        $lName =~ s/^([a-z])/\u$1/;
+        $dbh->disconnect();
+        
+        $html .= qq(
+            <div class="container">
+            <div class="column-left1">
+                <img src="images/icon.jpg" alt="Mountain View" style="height:60px;">
+            </div>
+            <div class="column-center1">
+                <h4>&nbsp;&nbsp;$fName $lName</h4>
+            </div>
+            <div class="column-right1">
+                <h6>REQUESTED</h6>
+            </div>
+            </div>
+            <pre> </pre>
+);
+
+
+    }
+    $driver = "SQLite";
+    $size = 0;
+	$database = "project.db";
+	$dsn = "DBI:$driver:dbname=$database";
+	$userid = ""; $dbpassword = "";
+	$dbh = DBI->connect($dsn, $userid, $dbpassword, { RaiseError => 1 }) or die $DBI::errstr;
+	$stmt = qq(select friendid from friends where userid = "$username" and status = "1");
+	$sth = $dbh->prepare($stmt);
+	$rv = $sth->execute() or die $DBI::errstr;
+	@info = $sth->fetchrow_array();
+    my $size = @info; 
+    $dbh->disconnect();
+    for ($a = 0; $a < $size; $a++) {
+        $driver = "SQLite";
+	    $database = "project.db";
+	    $dsn = "DBI:$driver:dbname=$database";
+	    $userid = ""; $dbpassword = "";
+	    $dbh = DBI->connect($dsn, $userid, $dbpassword, { RaiseError => 1 }) or die $DBI::errstr;
+	    $stmt = qq(select * from user where username = "$info[a]");
+	    $sth = $dbh->prepare($stmt);
+	    $rv = $sth->execute() or die $DBI::errstr;
+	    @name = $sth->fetchrow_array();
+        $fName = $name[1];
+        $fName =~ s/^([a-z])/\u$1/;
+        $lName = $name[2];
+        $lName =~ s/^([a-z])/\u$1/;
+        $dbh->disconnect();
+        
+        $html .= qq(
+            <div class="container">
+            <div class="column-left1">
+                <img src="images/icon.jpg" alt="Mountain View" style="height:60px;">
+            </div>
+            <div class="column-center1">
+                <a href="doyouevenfit.cgi?share=yes&from=$username&to=$info[$a]&username=$username&password=$password"><h4>&nbsp;&nbsp;$fName $lName</h4></a>
+            </div>
+            <div class="column-right1">
+                <h5>FRIEND</h5>
+            </div>
+            </div>
+            <pre> </pre>
+);
+    }
+    $driver = "SQLite";
+    $size = 0;
+	$database = "project.db";
+	$dsn = "DBI:$driver:dbname=$database";
+	$userid = ""; $dbpassword = "";
+	$dbh = DBI->connect($dsn, $userid, $dbpassword, { RaiseError => 1 }) or die $DBI::errstr;
+	$stmt = qq(select userid from friends where friendid = "$username" and status = "1");
+	$sth = $dbh->prepare($stmt);
+	$rv = $sth->execute() or die $DBI::errstr;
+	@info = $sth->fetchrow_array();
+    my $size = @info; 
+    $dbh->disconnect();
+    for ($a = 0; $a < $size; $a++) {
+        $driver = "SQLite";
+	    $database = "project.db";
+	    $dsn = "DBI:$driver:dbname=$database";
+	    $userid = ""; $dbpassword = "";
+	    $dbh = DBI->connect($dsn, $userid, $dbpassword, { RaiseError => 1 }) or die $DBI::errstr;
+	    $stmt = qq(select * from user where username = "$info[a]");
+	    $sth = $dbh->prepare($stmt);
+	    $rv = $sth->execute() or die $DBI::errstr;
+	    @name = $sth->fetchrow_array();
+        $fName = $name[1];
+        $fName =~ s/^([a-z])/\u$1/;
+        $lName = $name[2];
+        $lName =~ s/^([a-z])/\u$1/;
+        $dbh->disconnect();
+        
+        $html .= qq(
+            <div class="container">
+            <div class="column-left1">
+                <img src="images/icon.jpg" alt="Mountain View" style="height:60px;">
+            </div>
+            <div class="column-center1">
+                <a href="doyouevenfit.cgi?share=yes&from=$username&to=$info[$a]&username=$username&password=$password"><h4>&nbsp;&nbsp;$fName $lName</h4></a>
+            </div>
+            <div class="column-right1">
+                <h5>FRIEND</h5>
+            </div>
+            </div>
+            <pre> </pre>
+);
+    }
+
+
+
+
+$html .= qq(        </div>      
+    </div>
+</div>
+</div>
+);
 
 	foreach my $result (@row){
-	   	@info = ();
+		my @info = ();
 	   	$stmt = qq(select username, fName, lName from user where id = $result);
 	   	$sth = $dbh->prepare($stmt);
 	   	$rv = $sth->execute() or die $DBI::errstr;
+	   	if ($rv < 0) {
+		   	print $DBI::errstr;
+	   	} 
 	   	@info = $sth->fetchrow_array();  
 	   	$html .= qq(<center><h3 style="color:white;">$info[0]: $info[1] $info[2]</h3></center></body>);
 	   	my $status = friend_status($uid, $result);
-	   	$html .= qq(<input type="submit" name="update_friend" value="$status $info[0]" class="button" style="height:45px;width:600px;"><br>);
+	   	$html .= qq(<input type="submit" name="update_friend" value="$status $result" class="button" style="height:45px;width:220px;"><br>);
 	}
 	
 	
@@ -627,15 +1295,22 @@ sub friend_status(){
    	$database = "project.db";
 	$dsn = "DBI:$driver:dbname=$database";
 	$userid = ""; $dbpassword = "";
-	my $uid = $_[0];
-	my $friend_id = $_[1];
 	$dbh = DBI->connect($dsn, $userid, $dbpassword, { RaiseError => 1 }) or die $DBI::errstr;
-	$stmt = qq(select status from friends where userid = "$uid" AND friendid = "$friend_id");
+	$stmt = qq(select status from friends where userid = "$_[0]" AND friendid = "$_[1]");
 	$sth = $dbh->prepare($stmt);
 	$rv = $sth->execute() or die $DBI::errstr;
-	push @status1, $sth->fetchrow_array();
-	$size1 = @status1;
-	
+	push @status, $sth->fetchrow_array();
+	$size = @status;
+	if($size == 0){
+	   	return "Send Friend Request to";
+	} else {
+	   	my $stat = $status[0];
+	   	if($stat == 0){
+	      		return "Cancel Request from";
+	   	} elsif($stat == 1) {
+	      		return "Delete";
+	   	}
+	}
 	@status = ();
 	$stmt = qq(select status from friends where userid = "$friend_id" AND friendid = "$uid");
 	$sth = $dbh->prepare($stmt);
@@ -643,74 +1318,72 @@ sub friend_status(){
 	if ($rv < 0) {
 	   	print $DBI::errstr;
 	}
-	push @status2, $sth->fetchrow_array();
-	$size2 = @status2;
-	
-	if($size1 == 0){
-	   	if($size2 == 0){
-	      		return "Send Friend Request to";
-	   	} else {
-	      		$stat = $status2[0];
-         		if($stat == 0){
-            			return "Accept Request from";
-         		} else {
-            			return "Delete";
-         		}
-	   	}
-	} else {
-	   	my $stat = $status1[0];
-	   	if($stat == 0){
-	      		return "Cancel Request to";
-	   	} else {
-	      		return "Delete";
-	   	}
-	}
+	push @status, $sth->fetchrow_array();
+	$size = @status;
+   	if($size != 0){
+      		$stat = $status[0];
+      		if($stat == 0){
+         		return "Accept Request from";
+      		}
+   	}
 }
 
 sub update_friend(){
-
    	my $value = param('update_friend');
    	my @split_value = split / /, $value;
    	my $size = @split_value;
-   	my $friend_name = $split_value[$size-1];
-   	my $command = $split_value[0];
-   
+   	my $friend_id = $split_value[$size-1];
    	$driver = "SQLite";
    	$database = "project.db";
 	$dsn = "DBI:$driver:dbname=$database";
 	$userid = ""; $dbpassword = "";
 	$dbh = DBI->connect($dsn, $userid, $dbpassword, { RaiseError => 1 }) or die $DBI::errstr;
-	$stmt = qq(select id from user where username = '$username');
+	$stmt = qq(select id from user where username = $username);
 	$sth = $dbh->prepare($stmt);
 	$rv = $sth->execute() or die $DBI::errstr;
-	@id = $sth->fetchrow_array();
+	if ($rv < 0) {
+	   	print $DBI::errstr;
+	}
+	push @id, $sth->fetchrow_array();
 	my $uid = $id[0];
 	
-	$stmt = qq(select id from user where username = '$friend_name');
+	$stmt = qq(select status from friends where userid = "$uid" AND friendid = "$friend_id");
 	$sth = $dbh->prepare($stmt);
 	$rv = $sth->execute() or die $DBI::errstr;
-	@frid = $sth->fetchrow_array();
-	my $friend_id = $frid[0];
-	
-	if($command eq "Accept"){
-	   	$stmt = qq(delete from friends where userid = "$friend_id" AND friendid = "$uid");
-	   	$rv = $dbh->do($stmt) or die $DBI::errstr;
-      	   	my $stat = 1;
-           	$stmt = qq(insert into friends values ("$friend_id", "$uid", "$stat"));
-	   	$rv = $dbh->do($stmt) or die $DBI::errstr;
-	} elsif($command eq "Send"){
-	   	my $stat = 0;
+	if ($rv < 0) {
+	   	print $DBI::errstr;
+	}
+	push @status, $sth->fetchrow_array();
+	$size = @status;
+	if($size == 0){
+	   	$stat = 0;
 	   	$stmt = qq(insert into friends values ("$uid", "$friend_id", "$stat"));
 	   	$rv = $dbh->do($stmt) or die $DBI::errstr;
-	} elsif($command eq "Cancel"){
-	   	$stmt = qq(delete from friends where userid = "$uid" AND friendid = "$friend_id");
-	   	$rv = $dbh->do($stmt) or die $DBI::errstr;	   
-	} elsif($command eq "Delete"){
-	   	$stmt = qq(delete from friends where userid = "$uid" AND friendid = "$friend_id");
+	} else {
+	   	$stmt = qq(delete from friends where id = "$uid");
 	   	$rv = $dbh->do($stmt) or die $DBI::errstr;
-	   	$stmt = qq(delete from friends where userid = "$friend_id" AND friendid = "$uid");
-	   	$rv = $dbh->do($stmt) or die $DBI::errstr;
+	   if ($rv < 0) {
+	   	print $DBI::errstr;
+	   }
 	}
+	
+	@status = ();
+	$stmt = qq(select status from friends where userid = "$friend_id" AND friendid = "$uid");
+	$sth = $dbh->prepare($stmt);
+	$rv = $sth->execute() or die $DBI::errstr;
+	if ($rv < 0) {
+		print $DBI::errstr;
+	}
+	push @status, $sth->fetchrow_array();
+	$size = @status;
+   	if($size != 0){
+      		$stat = $status[0];
+      		if($stat == 0){
+        		$stat = 1;
+         		$stmt = qq(insert into friends values ("$uid", "$friend_id", "$stat"));
+	      		$rv = $dbh->do($stmt) or die $DBI::errstr;
+      		}
+   	}
 }
 
 
