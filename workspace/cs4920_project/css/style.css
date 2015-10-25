@@ -10,9 +10,9 @@ table{border-collapse:collapse;border-spacing:0;}
 /* start editing from here */
 a{text-decoration:none;}
 
-.column-left{ float: left; width: 33%; }
-.column-right{ float: right; width: 33%; }
-.column-center{ display: inline-block; width: 33%; }
+.column-left{ float: left; width: 33%; text-align: right; }
+.column-right{ float: right; width: 33%; text-align: left;}
+.column-center{ display: inline-block; width: 33%; text-align: center;}
 
 
 .txt-rt{text-align:right;}/* text align right */
@@ -272,6 +272,31 @@ color: #FFF;
    padding: 0px;
    font-size: 1px;
    color: rgba(255,255,255,1);
+}
+
+
+.button_nav {
+   font-family: 'AmbleRegular';
+   background-color: rgba(255,255,255,0.5);
+   border: solid 1.5px rgba(255,255,255,0);
+   -webkit-border-radius: 0px;
+      -moz-border-radius: 0px;
+           border-radius: 0px;
+   width: 60px;
+   height: 42px;
+   padding: 2px;
+   display: inline-block;
+   font-size: 22pt;
+   color: black;
+   align: center;
+}
+.button_nav:hover {
+   background-color: rgba(255,255,255,0.3);
+   border: solid 1.5px rgba(255,255,255,0);
+   color: white;
+}
+.button_nav:active {
+   background-color: rgba(255,255,255,0.8);
 }
 
 
