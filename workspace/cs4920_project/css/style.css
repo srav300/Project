@@ -14,6 +14,12 @@ a{text-decoration:none;}
 .column-right{ float: right; width: 33%; text-align: left;}
 .column-center{ display: inline-block; width: 33%; text-align: center;}
 
+.column-left1{ float: left; width: 15%; text-align: center; }
+.column-right1{ float: right; width: 35%; text-align: center;}
+.column-center1{ display: inline-block; width: 50%; text-align: left;}
+
+.column-hardleft{ float: left; width: 50%; text-align: center; }
+.column-hardright{ float: right; width: 50%; text-align: left; }
 
 .txt-rt{text-align:right;}/* text align right */
 .txt-lt{text-align:left;}/* text align left */
@@ -127,6 +133,55 @@ color: #FFF;
 .header-bottom h3 span{
   font-family: "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif, sans-serif;	
 }
+
+.header-bottom h4{
+  font-size:1.6em;
+  color: black;
+  font-family: 'AmbleRegular';
+    padding: 10 0 10 0;
+    line-height: 180%;
+background: rgba(255,255,255,0.5);
+overflow: hidden; 
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.header-bottom h10{
+  font-size:1.6em;
+  color: black;
+  font-family: 'AmbleRegular';
+    padding: 10 0 10 0;
+    line-height: 180%;
+background: rgba(255,255,255,0.5);
+
+}
+
+.header-bottom h5{
+  font-size:1.6em;
+  color: white;
+  font-family: 'AmbleRegular';
+    padding: 200 0 200 0;
+background: rgba(115,199,42,0.8);
+    line-height: 180%;
+/*overflow: hidden; 
+  text-overflow: ellipsis;
+  white-space: nowrap;*/
+}
+
+.header-bottom h6{
+  font-size:1.6em;
+  color: white;
+  font-family: 'AmbleRegular';
+    padding: 200 0 200 0;
+background: rgba(102,0,102,0.8);
+    line-height: 180%;
+overflow: hidden; 
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+
+
 
 .header-banner {
   padding-top: 0%;
