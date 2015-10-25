@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w
+#!/usr/bin/perl 
 
 use CGI qw/:all/;
 use CGI::Carp qw(fatalsToBrowser warningsToBrowser);
@@ -7,7 +7,7 @@ use List::Util qw/min max/;
 use Date::Calc qw/check_date/;
 use Date::Calc qw(Add_Delta_Days);
 use Date::Calc qw(Delta_Days);
-use WWW::Mechanize;
+#use WWW::Mechanize;
 use DBI;
 warningsToBrowser(1);
 
@@ -173,10 +173,27 @@ sub page_header {
 }
 
 sub banner {
+
+    $driver = "SQLite";
+	$database = "project.db";
+	$dsn = "DBI:$driver:dbname=$database";
+	$userid = ""; $dbpassword = "";
+	$dbh = DBI->connect($dsn, $userid, $dbpassword, { RaiseError => 1 }) or die $DBI::errstr;
+	$stmt = qq(select * from user where username = '$username');
+	$sth = $dbh->prepare($stmt);
+	$rv = $sth->execute() or die $DBI::errstr;
+	if ($rv < 0) {
+		print $DBI::errstr;
+	}
+	@row = $sth->fetchrow_array();
+	 $fname = $row[1];
+     $lName = $row[2];    
+
 	my $css = qq(
 	<div class="header-banner" id="banner">
 	<h1 align="right"><form action="doyouevenfit.cgi" method="post">
 	<input type="hidden" name="page" value="">
+
 	<input type="submit" name="messages" value="MESSAGES" class="button_small">
 	<input type="submit" name="settings" value="SETTINGS" class="button_small">
 	<input type="submit" name="logout" value="LOG OUT" class="button_small">
@@ -632,7 +649,7 @@ sub update_friend(){
 
 sub page_css {
 	$css = qq(
-	<link href="/css/style.css" rel="stylesheet" type="text/css" media="all" />
+	<link href="css/style.css" rel="stylesheet" type="text/css" media="all" />
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 	);
@@ -640,11 +657,11 @@ sub page_css {
     if ($bg_handler eq 0) {
         
     } if ($bg_handler eq 1) {
-        $css .= qq(<body background="/images/wood.jpg">);
+        $css .= qq(<body background="images/wood.jpg">);
     } if ($bg_handler eq 2) {
-        $css .= qq(<body background="/images/wood.jpg">);
+        $css .= qq(<body background="images/green.jpg">);
     } if ($bg_handler eq 3) {
- 		$css .= qq(<body background="/images/banner.jpg">);
+ 		$css .= qq(<body background="images/banner.jpg">);
     }       
 	$css .= qq(<body link="white">);
 	return $css;
@@ -696,7 +713,7 @@ sub home() {
 	}
 	@row = $sth->fetchrow_array();
 	 $existing_username = $row[0];
-
+     $row[0] =~ s/^([a-z])/\u$1/;
 	my $html = qq(
     <div class="header-banner" id="tour">
 	<div class="wrap">
@@ -1188,10 +1205,14 @@ sub diet_screen() {	# displays current calories out of goal calories and a list 
 	}
 	$html .= qq(<input type="submit" name="change_diet_date" value="" class="button_hide" style="height:0px;width;0px;"><br>
 	<div class="container">
-	<div class="column-center">
-	<input type="submit" name="change_diet_date" value="<" class="button" style="height:50px;width:50px;">
+	<div class="column-left">
+	<input type="submit" name="change_diet_date" align="right" value="<" class="button_nav">
+    </div>
+    <div class="column-center">
 	<input type="text" name="diet_date" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:22pt;height:40px;width:200px;font-family:AmbleRegular;"value="$date" onfocus="javascript:if(this.value=='')this.value='';">
-	<input type="submit" name="change_diet_date" value=">" class="button" style="height:50px;width:50px;">
+    </div>
+    <div class="column-right">
+	<input type="submit" name="change_diet_date" value=">" class="button_nav"">
 	</div>
 	</div>
 	<p>&nbsp</p>
@@ -2044,10 +2065,14 @@ sub exercise_screen() {
 	}
 	$html .= qq(<input type="submit" name="change_exercise_date" value="" class="button_hide" style="height:0px;width;0px;"><br>
 	<div class="container">
-	<div class="column-center">
-	<input type="submit" name="change_exercise_date" value="<" class="button" style="height:50px;width:50px;">
+	<div class="column-left">
+	<input type="submit" name="change_exercise_date" value="<" class="button_nav" >
+    </div>
+    <div class="column-center">
 	<input type="text" name="exercise_date" size=28 style="text-align:center;border:1px;solid:#ffffff;background-color:rgba(255,255,255,0.5);color:black;font-size:22pt;height:40px;width:200px;font-family:AmbleRegular;"value="$date" onfocus="javascript:if(this.value=='')this.value='';">
-	<input type="submit" name="change_exercise_date" value=">" class="button" style="height:50px;width:50px;">
+    </div>
+    <div class="column-right">
+	<input type="submit" name="change_exercise_date" value=">" class="button_nav" >
 	</div>
 	</div>
 	<p>&nbsp</p>
