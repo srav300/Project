@@ -611,19 +611,13 @@ sub update_friend(){
 	$stmt = qq(select id from user where username = '$username');
 	$sth = $dbh->prepare($stmt);
 	$rv = $sth->execute() or die $DBI::errstr;
-	if ($rv < 0) {
-	   	print $DBI::errstr;
-	}
 	push @id, $sth->fetchrow_array();
 	my $uid = $id[0];
 	$stmt = qq(select id from user where username = '$friend_name');
 	$sth = $dbh->prepare($stmt);
 	$rv = $sth->execute() or die $DBI::errstr;
-	if ($rv < 0) {
-	   	print $DBI::errstr;
-	}
-	push @id, $sth->fetchrow_array();
-	my $friend_id = $id[0];
+	push @frid, $sth->fetchrow_array();
+	my $friend_id = $frid[0];
 	$stmt = qq(select status from friends where userid = "$uid" AND friendid = "$friend_id");
 	$sth = $dbh->prepare($stmt);
 	$rv = $sth->execute() or die $DBI::errstr;
@@ -645,13 +639,13 @@ sub update_friend(){
 	   	} else {
 	      		$stat = $status2[0];
         		if($stat == 0){
-            			$stmt = qq(delete from friends values where userid = "$friend_id" AND friendid = "$uid");
+            			$stmt = qq(delete from friends where userid = "$friend_id" AND friendid = "$uid");
             			$rv = $dbh->do($stmt) or die $DBI::errstr;
             			$stat = 1;
             			$stmt = qq(insert into friends values ("$friend_id", "$uid", "$stat"));
 	         		$rv = $dbh->do($stmt) or die $DBI::errstr;
          		} else {
-            			$stmt = qq(delete from friends values where userid = "$friend_id" AND friendid = "$uid");
+            			$stmt = qq(delete from friends where userid = "$friend_id" AND friendid = "$uid");
             			$rv = $dbh->do($stmt) or die $DBI::errstr;
          		}
 		}
